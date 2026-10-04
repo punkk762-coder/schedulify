@@ -30,6 +30,7 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
             },
           },
           nutritionSnapshots: { where: { source: "ACTUAL" } },
+          completion: true,
         },
         orderBy: { scheduledDate: "asc" },
       });
@@ -256,25 +257,110 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
             : `${i.skippedCount} occurrences skipped during protocol adjust`,
         }));
 
+      // Average Hydration from occurrences
+      let totalHydrationMl = 0;
+      let hydrationDaysCount = 0;
+      const hydrationOccurrences = occurrences.filter((o) => o.routineItem.category === "HYDRATION");
+      for (const hOcc of hydrationOccurrences) {
+        if (hOcc.completion?.notes) {
+          const ml = parseInt(hOcc.completion.notes, 10);
+          if (!isNaN(ml)) {
+            totalHydrationMl += ml;
+            hydrationDaysCount++;
+          }
+        } else if (hOcc.status === "COMPLETED") {
+          totalHydrationMl += 3000;
+          hydrationDaysCount++;
+        }
+      }
+      const averageHydrationMl = hydrationDaysCount > 0 ? Math.round(totalHydrationMl / hydrationDaysCount) : 0;
+
+      // Workout / Mobility minutes from occurrences
+      let totalWalkMinutes = 0;
+      const workoutOccurrences = occurrences.filter(
+        (o) => o.routineItem.category === "WORKOUT" || o.routineItem.title.toLowerCase().includes("walk")
+      );
+      for (const wOcc of workoutOccurrences) {
+        if (wOcc.status === "COMPLETED") {
+          totalWalkMinutes += 60; // 1-hour walk completed
+        }
+      }
+      const averageWalkMinutes = daysCount > 0 ? Math.round(totalWalkMinutes / daysCount) : 0;
+
       // Body Status & Telemetry
       const bodyStatus = {
-        metabolicState: averageNutrition.calories >= 1700 ? "Optimal Fueling & Muscle Recovery" : "Lean Fueling & Active Cadence",
-        proteinAdherencePct: Math.min(100, Math.round((averageNutrition.protein / 150) * 100)),
+        metabolicState:
+          averageNutrition.calories >= 1700
+            ? "Optimal Fueling & Muscle Recovery"
+            : averageNutrition.calories > 0
+            ? "Lean Fueling & Active Cadence"
+            : "Pending Routine Log",
+        proteinAdherencePct: Math.min(100, Math.round(((averageNutrition.protein || 0) / 150) * 100)),
         proteinTarget: 150,
-        averageProtein: averageNutrition.protein,
+        averageProtein: averageNutrition.protein || 0,
         hydrationTargetMl: 3000,
-        estimatedWeeklyDeficitKcal: (1800 - averageNutrition.calories) * daysCount,
-        monthlyProjection: adherence >= 80 
-          ? "Peak consistency: Projected to maintain lean mass and achieve monthly habit execution above 85% with zero historical data loss."
-          : "Steady progress: Increasing morning meal consistency will elevate monthly score to 80%+.",
+        estimatedWeeklyDeficitKcal:
+          averageNutrition.calories > 0 ? Math.round((1800 - averageNutrition.calories) * daysCount) : 0,
+        monthlyProjection:
+          adherence >= 80
+            ? "Peak consistency: Projected to maintain lean mass and achieve monthly habit execution above 85% with zero historical data loss."
+            : adherence > 0
+            ? "Steady progress: Increasing morning meal consistency will elevate monthly score to 80%+."
+            : "Fresh routine: Complete and log your daily routine occurrences to track monthly body composition adaptation.",
       };
 
-      // Daily Goals
+      // Daily Goals computed strictly from actual data
       const dailyGoals = [
-        { name: "Daily Caloric Target", target: 1800, unit: "kcal", current: averageNutrition.calories || 1550, status: "On Track" },
-        { name: "Daily Protein Target", target: 150, unit: "g", current: averageNutrition.protein || 82, status: averageNutrition.protein >= 120 ? "Optimized" : "Building" },
-        { name: "Hydration Standard", target: 3000, unit: "ml", current: 2250, status: "Active (75%)" },
-        { name: "Evening Mobility / Walk", target: 60, unit: "mins", current: 60, status: "Achieved" },
+        {
+          name: "Daily Caloric Target",
+          target: 1800,
+          unit: "kcal",
+          current: averageNutrition.calories || 0,
+          status:
+            averageNutrition.calories >= 1700
+              ? "On Track"
+              : averageNutrition.calories > 0
+              ? "Under Target"
+              : "Pending Log",
+        },
+        {
+          name: "Daily Protein Target",
+          target: 150,
+          unit: "g",
+          current: averageNutrition.protein || 0,
+          status:
+            averageNutrition.protein >= 140
+              ? "Optimized"
+              : averageNutrition.protein >= 80
+              ? "Building"
+              : averageNutrition.protein > 0
+              ? "Developing"
+              : "Pending Log",
+        },
+        {
+          name: "Hydration Standard",
+          target: 3000,
+          unit: "ml",
+          current: averageHydrationMl,
+          status:
+            averageHydrationMl >= 2500
+              ? "Optimized"
+              : averageHydrationMl > 0
+              ? `Active (${Math.round((averageHydrationMl / 3000) * 100)}%)`
+              : "Pending Log",
+        },
+        {
+          name: "Evening Mobility / Walk",
+          target: 60,
+          unit: "mins",
+          current: averageWalkMinutes,
+          status:
+            averageWalkMinutes >= 50
+              ? "Achieved"
+              : averageWalkMinutes > 0
+              ? "In Progress"
+              : "Pending Log",
+        },
       ];
 
       return {

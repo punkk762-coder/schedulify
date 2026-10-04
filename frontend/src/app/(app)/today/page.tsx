@@ -23,7 +23,7 @@ export default function TodayPage() {
   const [submittingQuick, setSubmittingQuick] = useState(false);
   const [swapModalItem, setSwapModalItem] = useState<TodayOccurrence | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
-  const [waterIntakeMl, setWaterIntakeMl] = useState(2250);
+  const [waterIntakeMl, setWaterIntakeMl] = useState(0);
   const quickInputRef = useRef<HTMLInputElement>(null);
 
   const refreshData = useCallback(async () => {
@@ -38,6 +38,9 @@ export default function TodayPage() {
         setOccurrences(data.occurrences);
         setStats(data.stats);
         setDateStr(data.date);
+        if (data.waterIntakeMl !== undefined) {
+          setWaterIntakeMl(data.waterIntakeMl);
+        }
       }
     } catch (err) {
       console.error("Error refreshing today routine:", err);
@@ -58,6 +61,9 @@ export default function TodayPage() {
           setOccurrences(data.occurrences);
           setStats(data.stats);
           setDateStr(data.date);
+          if (data.waterIntakeMl !== undefined) {
+            setWaterIntakeMl(data.waterIntakeMl);
+          }
         }
       } catch (err) {
         console.error("Error loading today routine:", err);
@@ -212,12 +218,26 @@ export default function TodayPage() {
     }
   };
 
-  const handleAddWater = (delta: number) => {
-    setWaterIntakeMl((prev) => {
-      const next = Math.min(4500, prev + delta);
-      toast.info(`Hydration logged: +${delta}ml (${next.toLocaleString()} / 3,000 ml) 💧`);
-      return next;
-    });
+  const handleAddWater = async (delta: number) => {
+    const nextOptimistic = Math.min(6000, waterIntakeMl + delta);
+    setWaterIntakeMl(nextOptimistic);
+    toast.info(`Hydration logged: +${delta}ml (${nextOptimistic.toLocaleString()} / 3,000 ml) 💧`);
+
+    try {
+      const res = await fetch("/api/today/hydration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deltaMl: delta }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.waterIntakeMl !== undefined) {
+          setWaterIntakeMl(json.waterIntakeMl);
+        }
+      }
+    } catch (err) {
+      console.error("Hydration sync error:", err);
+    }
   };
 
   // Metrics computation
@@ -278,17 +298,19 @@ export default function TodayPage() {
         {/* Column B (5 Cols): Intelligence, Metabolic & Hearth */}
         <aside className="lg:col-span-5 flex flex-col gap-6">
           <MacroLedger
-            currentCalories={stats?.nutrition?.calories || 1550}
+            currentCalories={stats?.nutrition?.calories || 0}
             targetCalories={1800}
-            currentProtein={stats?.nutrition?.protein || 82}
+            currentProtein={stats?.nutrition?.protein || 0}
             targetProtein={150}
-            currentCarbs={stats?.nutrition?.carbs || 173}
+            currentCarbs={stats?.nutrition?.carbs || 0}
             targetCarbs={160}
-            currentFat={stats?.nutrition?.fat || 48}
+            currentFat={stats?.nutrition?.fat || 0}
             targetFat={45}
           />
 
-          <MomKitchenHub queuedCount={3} />
+          <MomKitchenHub
+            queuedCount={occurrences.filter((o) => o.category === "MEAL" && o.status === "PENDING").length}
+          />
 
           <HydrationWidget
             waterIntakeMl={waterIntakeMl}

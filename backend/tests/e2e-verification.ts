@@ -221,6 +221,36 @@ async function runFullE2ETest() {
     results["immutability"] = false;
   }
 
+  // 12. Hydration Logging & DB Verification
+  try {
+    const res = await fetch(`${BASE_URL}/api/today/hydration`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        cookie: sessionCookie,
+      },
+      body: JSON.stringify({ deltaMl: 250 }),
+    });
+    const data = await res.json();
+    const ok = res.status === 200 && data.success === true && typeof data.waterIntakeMl === "number";
+
+    // Verify GET /today reflects it
+    const todayRes = await fetch(`${BASE_URL}/api/today`, {
+      headers: { cookie: sessionCookie },
+    });
+    const todayData = await todayRes.json();
+    const todayReflects = todayData.waterIntakeMl === data.waterIntakeMl;
+
+    console.log("12. Hydration Live Log & DB Persistence:", ok && todayReflects ? "PASS ✅" : "FAIL ❌", {
+      waterIntakeMl: data.waterIntakeMl,
+      syncedWithTodayFeed: todayReflects,
+    });
+    results["hydration"] = ok && todayReflects;
+  } catch (err: any) {
+    console.error("12. Hydration Live Log FAILED:", err.message);
+    results["hydration"] = false;
+  }
+
   console.log("\n=================================================");
   const allPassed = Object.values(results).every(Boolean);
   console.log(allPassed ? "🎉 ALL END-TO-END TESTS PASSED (100% HEALTHY)" : "⚠️ SOME TESTS FAILED");

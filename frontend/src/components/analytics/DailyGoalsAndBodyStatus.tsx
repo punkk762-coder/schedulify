@@ -104,7 +104,7 @@ export const DailyGoalsAndBodyStatus: React.FC<DailyGoalsAndBodyStatusProps> = (
                   Metabolic State
                 </span>
                 <span className="text-xs font-bold text-[#1f1b14] block">
-                  {bodyStatus?.metabolicState || "Lean Fueling & Active Cadence"}
+                  {bodyStatus?.metabolicState || "Pending Routine Log"}
                 </span>
               </div>
             </div>
@@ -120,11 +120,15 @@ export const DailyGoalsAndBodyStatus: React.FC<DailyGoalsAndBodyStatusProps> = (
                     Muscle Protein Synthesis
                   </span>
                   <span className="text-xs font-mono font-bold text-[#52652a]">
-                    {bodyStatus?.averageProtein || 82}g / 150g
+                    {bodyStatus?.averageProtein ?? 0}g / 150g
                   </span>
                 </div>
                 <p className="text-[11px] text-[#58423c] mt-0.5">
-                  Consistent anabolic threshold maintained throughout active timeline.
+                  {(bodyStatus?.averageProtein ?? 0) >= 120
+                    ? "Consistent anabolic threshold maintained throughout active timeline."
+                    : (bodyStatus?.averageProtein ?? 0) > 0
+                    ? "Progressing towards daily target threshold."
+                    : "Awaiting meal completions for daily synthesis calculation."}
                 </p>
               </div>
             </div>
@@ -139,7 +143,7 @@ export const DailyGoalsAndBodyStatus: React.FC<DailyGoalsAndBodyStatusProps> = (
               </div>
               <p className="text-xs text-[#1f1b14] leading-relaxed">
                 {bodyStatus?.monthlyProjection ||
-                  "Projected to maintain lean mass and achieve monthly habit execution above 85% with zero historical data loss."}
+                  "Awaiting initial occurrence completions to project monthly trajectory."}
               </p>
             </div>
           </div>

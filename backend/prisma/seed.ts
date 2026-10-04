@@ -204,6 +204,8 @@ async function main() {
     }
   );
 
+  await upsertItem("Hydration Protocol (3L Target)", "HYDRATION", "08:00");
+
   // Clean any accidental schedules on alternatives
   await prisma.schedule.deleteMany({
     where: { routineItemId: { in: [wheyAlt.id, eggsAlt.id] } },

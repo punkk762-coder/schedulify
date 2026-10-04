@@ -104,6 +104,10 @@ class CacheService {
     this.memoryStore.delete(key);
   }
 
+  async delete(key: string): Promise<void> {
+    return this.del(key);
+  }
+
   /**
    * Invalidate keys matching a prefix/pattern
    */
@@ -122,6 +126,10 @@ class CacheService {
         this.memoryStore.delete(key);
       }
     }
+  }
+
+  async deletePattern(prefix: string): Promise<void> {
+    return this.invalidatePattern(prefix);
   }
 
   /**
