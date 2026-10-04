@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Household Kitchen &amp; Prep Deck — Schedulfy OS</title>
+<!-- Google Fonts: Newsreader (Editorial Serif) & Manrope (Clean Modern Sans) -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration Verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-on-surface": "#f9efe3",
+            "surface-container": "#f6ede0",
+            "tertiary-fixed-dim": "#93ccff",
+            "on-tertiary-container": "#fdfcff",
+            "on-surface": "#1f1b14",
+            "error": "#ba1a1a",
+            "surface-tint": "#a73918",
+            "primary-fixed-dim": "#ffb5a0",
+            "on-tertiary": "#ffffff",
+            "on-secondary-container": "#576b2f",
+            "background": "#fff8f2",
+            "on-secondary-fixed-variant": "#3b4d14",
+            "secondary-fixed": "#d4eca2",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed": "#141f00",
+            "tertiary": "#006194",
+            "outline-variant": "#dfc0b7",
+            "on-error": "#ffffff",
+            "tertiary-fixed": "#cce5ff",
+            "surface-container-highest": "#eae1d5",
+            "secondary-container": "#d4eca2",
+            "on-tertiary-fixed-variant": "#004b73",
+            "primary-container": "#c54f2c",
+            "on-primary-container": "#fffbff",
+            "surface-variant": "#eae1d5",
+            "secondary": "#52652a",
+            "on-background": "#1f1b14",
+            "surface-bright": "#fff8f2",
+            "on-primary-fixed-variant": "#862201",
+            "on-error-container": "#93000a",
+            "surface-container-lowest": "#ffffff",
+            "surface-dim": "#e2d9cd",
+            "primary-fixed": "#ffdbd1",
+            "primary": "#a43716",
+            "outline": "#8b716a",
+            "inverse-surface": "#343028",
+            "on-primary-fixed": "#3b0900",
+            "on-surface-variant": "#58423c",
+            "inverse-primary": "#ffb5a0",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#007bb9",
+            "on-primary": "#ffffff",
+            "surface-container-low": "#fcf2e6",
+            "secondary-fixed-dim": "#b8cf88",
+            "on-tertiary-fixed": "#001d31",
+            "surface-container-high": "#f0e7db",
+            "surface": "#fff8f2"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem",
+            "margin-mobile": "1.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "margin": "2rem",
+            "space-xl": "2.5rem",
+            "margin-desktop": "3.5rem",
+            "space-2xl": "4rem",
+            "gutter-sm": "1rem",
+            "gutter-lg": "2rem"
+          },
+          "fontFamily": {
+            "label-lg": ["Manrope"],
+            "headline-md": ["Newsreader"],
+            "label-sm": ["Manrope"],
+            "headline-lg": ["Newsreader"],
+            "display-lg-mobile": ["Newsreader"],
+            "display-lg": ["Newsreader"],
+            "label-md": ["Manrope"],
+            "body-md": ["Manrope"],
+            "title-lg": ["Newsreader"],
+            "headline-sm": ["Newsreader"],
+            "body-lg": ["Manrope"],
+            "title-md": ["Manrope"],
+            "headline-lg-mobile": ["Newsreader"],
+            "body-sm": ["Manrope"]
+          },
+          "fontSize": {
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.015em", "fontWeight": "400" }],
+            "display-lg-mobile": ["38px", { "lineHeight": "46px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "display-lg": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "body-md": ["15px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "title-lg": ["19px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "headline-sm": ["22px", { "lineHeight": "30px", "fontWeight": "500" }],
+            "body-lg": ["17px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "headline-lg-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "body-sm": ["13px", { "lineHeight": "20px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    /* Subtle Mediterranean linen cross-weave background */
+    body {
+      background-color: #fff8f2;
+      background-image: radial-gradient(#dfc0b7 0.75px, transparent 0.75px), radial-gradient(#dfc0b7 0.75px, #fff8f2 0.75px);
+      background-size: 32px 32px;
+      background-position: 0 0, 16px 16px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen antialiased flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TOP APP BAR (from Shared Components JSON: TopNavBar) -->
+<header class="bg-surface/80 backdrop-blur-md docked full-width top-0 sticky z-50 shadow-[0_4px_20px_-2px_rgba(167,57,24,0.03)] border-b border-outline-variant/40">
+<div class="flex justify-between items-center w-full px-6 md:px-12 max-w-7xl mx-auto h-20">
+<!-- Brand & Kitchen Deck Identity -->
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-primary" data-icon="skillet">skillet</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-title-lg text-title-lg font-semibold tracking-tight text-on-surface">Schedulfy Protocol</span>
+<span class="text-outline-variant">•</span>
+<span class="font-label-sm text-label-sm tracking-widest text-primary font-bold">KITCHEN NODE</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5">
+<span>Household Kitchen &amp; Prep Deck</span>
+</p>
+</div>
+</div>
+<!-- Navigation Links from JSON (Contextual active: Hearth Sync represents kitchen hearth/culinary) -->
+<nav class="hidden md:flex items-center gap-7">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors pb-1 font-label-md text-label-md" href="#sanctuary">Sanctuary</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors pb-1 font-label-md text-label-md" href="#rituals">Rituals</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors pb-1 font-label-md text-label-md" href="#amphora">Amphora</a>
+<a class="text-primary font-semibold border-b-2 border-primary pb-1 font-label-md text-label-md flex items-center gap-1.5" href="#hearth">
+<span>Hearth Sync</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</a>
+</nav>
+<!-- Trailing Action Badges & Buttons -->
+<div class="flex items-center gap-3">
+<!-- Date / Solstice Rhythm Pill -->
+<div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/50 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-secondary" data-icon="wb_sunny">wb_sunny</span>
+<span>Thu, Oct 24 • Solstice Rhythm / 12:15 PM IST</span>
+</div>
+<!-- Security Pill: Mom Mode Active -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm border border-secondary/20 shadow-xs">
+<span class="material-symbols-outlined text-secondary" data-icon="lock">lock</span>
+<span class="font-semibold">Mom Mode Active 🔒</span>
+<span class="opacity-75 hidden sm:inline">• Family PIN</span>
+</div>
+<!-- Trailing Icon Actions from JSON -->
+<div class="flex items-center gap-1">
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-low/60 transition-colors duration-200" title="Calendar Sequence">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-low/60 transition-colors duration-200" title="Wellness / Botanicals">
+<span class="material-symbols-outlined" data-icon="spa">spa</span>
+</button>
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-low/60 transition-colors duration-200 relative" title="Alerts">
+<span class="material-symbols-outlined" data-icon="notifications_none">notifications_none</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary"></span>
+</button>
+</div>
+<!-- Primary Action CTA from JSON -->
+<button class="transition-all duration-200 active:scale-95 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="play_arrow">play_arrow</span>
+<span>Begin Sequence</span>
+</button>
+</div>
+</div>
+</header>
+<!-- SUBHEADER / STATUS & UTILITY BAR -->
+<div class="bg-surface-container-low border-b border-outline-variant/30 py-3 px-6 md:px-12">
+<div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+<!-- Left: Real-time Kitchen Pulse -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold border border-primary/20">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Kitchen Active • 3 Preps Pending</span>
+</div>
+<div class="hidden sm:flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="outdoor_garden">outdoor_garden</span>
+<span>Sun-warmed terracotta prep table • Air temp: 24°C</span>
+</div>
+</div>
+<!-- Right Action Suite: Print & Mobile Sync -->
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/60 text-on-surface hover:bg-surface-container transition-colors font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-base text-outline" data-icon="print">print</span>
+<span>Print Prep Sheet</span>
+</button>
+<div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/60 text-on-surface font-label-sm text-label-sm shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span class="font-medium text-on-surface">Sync with Alex's Phone (Active 🟢)</span>
+<span class="text-outline-variant">|</span>
+<button class="hover:text-primary transition-colors text-on-surface-variant" title="Refresh Sync">
+<span class="material-symbols-outlined text-base" data-icon="sync">sync</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- MAIN CANVAS: Two-Column Structured Prep Hub -->
+<main class="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-12 py-8 flex-1">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- ========================================================
+           COLUMN 1 (LEFT / MAIN, 7 COLUMNS): 'READY TO PREPARE'
+           Today's Culinary Cadence
+      ========================================================= -->
+<section class="lg:col-span-7 flex flex-col gap-6">
+<!-- Section Header -->
+<div class="flex items-end justify-between border-b border-outline-variant/30 pb-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="restaurant_menu">restaurant_menu</span>
+<span class="font-label-sm text-label-sm tracking-wider uppercase text-outline">Sanctuary Nourishment</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mt-1">Ready to Prepare</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Today’s rhythmic culinary cadence &amp; family portion specs</p>
+</div>
+<span class="px-3 py-1 rounded-full bg-surface-container font-label-md text-label-md text-on-surface-variant border border-outline-variant/40">
+            3 Scheduled Phases
+          </span>
+</div>
+<!-- ====================================================
+             CARD 1 (HERO / NEXT UP URGENT): 12:30 PM Lunch
+        ==================================================== -->
+<div class="bg-surface-container-lowest rounded-2xl border-2 border-primary/30 p-6 md:p-7 shadow-[0_8px_24px_-4px_rgba(184,71,37,0.08),0_2px_6px_-1px_rgba(74,93,35,0.03)] relative overflow-hidden transition-all duration-200">
+<!-- Urgent / Next Up Terracotta Banner Ribbon -->
+<div class="absolute top-0 right-0 bg-primary text-on-primary px-4 py-1.5 rounded-bl-xl font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+<span>NEXT UP • 15 MIN WINDOW</span>
+</div>
+<!-- Card Header & Time -->
+<div class="flex items-start justify-between mb-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-primary font-semibold">12:30 PM Lunch</span>
+<span class="text-outline-variant font-serif">•</span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">Midday Solar Apex</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mt-1">
+                2 Stoneground Phulkas, Gobi Sabzi &amp; Fresh Probiotic Dahi
+              </h2>
+</div>
+</div>
+<!-- Tags & Macro Hint Row -->
+<div class="flex flex-wrap items-center gap-2 mb-5">
+<!-- Pre-Prep Required Tag (Terracotta/Amber) -->
+<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-semibold border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="priority_high">priority_high</span>
+              Pre-Prep Required
+            </span>
+<!-- Mom Verified Tag (Olive Green) -->
+<span class="px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold border border-secondary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="verified">verified</span>
+              Mom Verified
+            </span>
+<!-- 15 mins active Tag -->
+<span class="px-2.5 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant border border-outline-variant/40 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="schedule">schedule</span>
+              15 mins active
+            </span>
+<!-- Macro Badge (Aegean Azure / Mineral hint) -->
+<span class="ml-auto px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-bold border border-tertiary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="bolt">bolt</span>
+              420 kcal • 14g Protein
+            </span>
+</div>
+<!-- Interactive Ingredients Checklist -->
+<div class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/40 mb-5">
+<div class="flex items-center justify-between mb-2.5">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Ingredients &amp; Mise en Place</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">3 of 3 verified</span>
+</div>
+<div class="space-y-2">
+<label class="flex items-center gap-3 p-2 rounded-lg bg-surface-container-lowest/80 border border-outline-variant/30 hover:bg-surface-container-lowest cursor-pointer transition-colors">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface flex-1">Whole Wheat Sharbati Atta <span class="text-on-surface-variant text-sm">(2 portions, rolled thin)</span></span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Tawa Ready</span>
+</label>
+<label class="flex items-center gap-3 p-2 rounded-lg bg-surface-container-lowest/80 border border-outline-variant/30 hover:bg-surface-container-lowest cursor-pointer transition-colors">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface flex-1">Fresh Cauliflower Florets &amp; Green Peas <span class="text-on-surface-variant text-sm">(Parboiled with turmeric)</span></span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Pre-steamed</span>
+</label>
+<label class="flex items-center gap-3 p-2 rounded-lg bg-surface-container-lowest/80 border border-outline-variant/30 hover:bg-surface-container-lowest cursor-pointer transition-colors">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface flex-1">Homemade A2 Cow Milk Curd <span class="text-on-surface-variant text-sm">(150g ceramic bowl portion)</span></span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Ambient Temp</span>
+</label>
+</div>
+</div>
+<!-- Special Cooking Instruction Callout (Warm Linen / Sandstone Plaster) -->
+<div class="p-4 rounded-xl bg-surface-container border-l-4 border-primary mb-6 text-on-surface">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-base" data-icon="format_quote">format_quote</span>
+<span class="font-label-sm text-label-sm font-bold text-primary uppercase tracking-wider">Special Cooking Instruction Directive</span>
+</div>
+<p class="font-body-md text-body-md italic text-on-surface-variant">
+              “Low-oil directive: Light mustard oil tempering with hing and jeera. Keep phulkas steaming hot in terracotta hot-box for 1:00 PM.”
+            </p>
+</div>
+<!-- Card Actions Suite -->
+<div class="flex flex-wrap items-center gap-3 pt-2 border-t border-outline-variant/30">
+<!-- Mark Prepped Primary CTA -->
+<button class="px-5 py-2.5 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-md flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="check_circle">check_circle</span>
+<span>Mark Prepped ✓</span>
+</button>
+<!-- Recipe Specs Modal Trigger -->
+<button class="px-4 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-outline" data-icon="menu_book">menu_book</span>
+<span>Recipe &amp; Spec Details</span>
+</button>
+<!-- Quick Timer Button -->
+<button class="ml-auto px-4 py-2.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md hover:bg-secondary-fixed-dim transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="alarm">alarm</span>
+<span>Quick Timer (15m)</span>
+</button>
+</div>
+</div>
+<!-- ====================================================
+             CARD 2: 05:30 PM Evening Snack
+        ==================================================== -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-6 md:p-7 shadow-[0_8px_24px_-4px_rgba(184,71,37,0.04)] relative">
+<div class="flex items-start justify-between mb-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-secondary font-semibold">05:30 PM Evening Snack</span>
+<span class="text-outline-variant font-serif">•</span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">Post-Meridian Reboot</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mt-1">
+                Boiled Kala Chana (100g) with Chaat Spices &amp; Fresh Lime
+              </h2>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-outline border border-outline-variant/40">
+              In 5 hours
+            </span>
+</div>
+<!-- Tags & Details -->
+<div class="flex flex-wrap items-center gap-2 mb-4">
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold border border-tertiary/20">
+              Pre-Workout Fuel
+            </span>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold border border-secondary/20">
+              Zero Oil
+            </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+              180 kcal • 9g Fiber
+            </span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3.5 border border-outline-variant/30 text-on-surface-variant mb-5 font-body-sm text-body-sm">
+<p class="font-semibold text-on-surface mb-1 flex items-center gap-1.5 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="eco">eco</span>
+              Ingredients Breakdown:
+            </p>
+<p>100g soaked black chickpeas, roasted cumin powder (bhuna jeera), pink rock salt, Meyer lemon wedge, finely chopped shallots &amp; coriander sprigs.</p>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap items-center gap-3">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-xs flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="check_circle">check_circle</span>
+<span>Mark Prepped ✓</span>
+</button>
+<button class="px-3.5 py-2 rounded-full bg-surface-container border border-outline-variant/50 text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="notifications_active">notifications_active</span>
+<span>Set 5:15 PM Soak/Boil Alert</span>
+</button>
+</div>
+</div>
+<!-- ====================================================
+             CARD 3: 07:00 PM Dinner
+        ==================================================== -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-6 md:p-7 shadow-[0_8px_24px_-4px_rgba(184,71,37,0.04)] relative">
+<div class="flex items-start justify-between mb-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-tertiary font-semibold">07:00 PM Dinner</span>
+<span class="text-outline-variant font-serif">•</span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">Hearth Recovery</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mt-1">
+                High-Protein Paneer Bhurji &amp; Multigrain Rotis
+              </h2>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-outline border border-outline-variant/40">
+              Evening Cadence
+            </span>
+</div>
+<!-- Tags -->
+<div class="flex flex-wrap items-center gap-2 mb-4">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-semibold border border-primary/20">
+              Hypertrophy Target
+            </span>
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-bold border border-tertiary/20">
+              450 kcal • 22g Protein
+            </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+              Light &amp; Digestible
+            </span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3.5 border border-outline-variant/30 text-on-surface-variant mb-5 font-body-sm text-body-sm">
+<p class="font-semibold text-on-surface mb-1 flex items-center gap-1.5 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="kitchen">kitchen</span>
+              Ingredients Breakdown:
+            </p>
+<p>150g low-fat crumbled paneer, diced sun-ripened tomatoes &amp; crisp bell peppers, fresh green chillies, 2 multigrain rotis (warm off the flame).</p>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap items-center gap-3">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-xs flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="check_circle">check_circle</span>
+<span>Mark Prepped ✓</span>
+</button>
+<button class="px-3.5 py-2 rounded-full bg-surface-container border border-outline-variant/50 text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-outline" data-icon="hourglass_top">hourglass_top</span>
+<span>Prep Timer</span>
+</button>
+</div>
+</div>
+</section>
+<!-- ========================================================
+           COLUMN 2 (RIGHT COLUMN, 5 COLUMNS):
+           'Dietary & Portion Notes & Household Telemetry'
+      ========================================================= -->
+<aside class="lg:col-span-5 flex flex-col gap-6">
+<!-- 1. LIVE SYNC WITH ALEX'S MOBILE APP -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/50 p-6 shadow-sm">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></div>
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">Live Sync: Alex’s Phone</h3>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-mono bg-secondary-container px-2 py-0.5 rounded">
+              MQTT Relay • 12ms
+            </span>
+</div>
+<!-- Status Card -->
+<div class="bg-surface-container-low rounded-xl p-3.5 border border-outline-variant/40 mb-3 text-on-surface">
+<div class="flex items-center justify-between text-xs text-outline mb-1 font-label-sm text-label-sm">
+<span>CONNECTED (Home Wi-Fi 5GHz)</span>
+<span>10:28 AM IST</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">
+              Alex logged morning proats at 10:28 AM.
+            </p>
+<div class="mt-2 pt-2 border-t border-outline-variant/30 flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base" data-icon="chat_bubble_outline">chat_bubble_outline</span>
+<p class="font-body-sm text-body-sm font-medium text-primary">
+                “Alex requested dinner hot by 7:15 PM post-evening walk.”
+              </p>
+</div>
+</div>
+<!-- Quick Note Reply Sender Input -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block" for="alex-note-input">
+              Transmit note to Alex's lockscreen:
+            </label>
+<div class="flex items-center gap-2">
+<input class="w-full bg-surface-container rounded-xl px-3.5 py-2.5 text-sm border border-outline-variant/60 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface placeholder:text-outline outline-none transition-all" id="alex-note-input" type="text" value="Kala chana is seasoned and resting on dining counter"/>
+<button class="p-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-sm flex items-center justify-center" title="Send Transmit">
+<span class="material-symbols-outlined text-lg" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 2. DIETARY TARGETS & GOLDEN RULES -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/50 p-6 shadow-sm">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="balance">balance</span>
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">Dietary Targets &amp; Golden Rules</h3>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Daily Lock</span>
+</div>
+<!-- Calorie Progress Meter -->
+<div class="mb-4">
+<div class="flex justify-between items-center text-sm mb-1.5">
+<span class="font-label-md text-label-md text-on-surface-variant">Calorie Ceiling</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">1,550 / 1,800 kcal <span class="text-secondary font-normal">(86% locked)</span></span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+<div class="bg-primary h-2.5 rounded-full" style="width: 86.1%"></div>
+</div>
+</div>
+<!-- Protein Progress Meter -->
+<div class="mb-5">
+<div class="flex justify-between items-center text-sm mb-1.5">
+<span class="font-label-md text-label-md text-on-surface-variant">Daily Protein Target</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">140g / 150g</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+<div class="bg-secondary h-2.5 rounded-full" style="width: 93.3%"></div>
+</div>
+<p class="font-label-sm text-label-sm text-outline mt-1 text-right">Paneer dinner supplies remaining 22g surplus</p>
+</div>
+<!-- Olive/Terracotta Badge Rules -->
+<div class="space-y-2.5 pt-3 border-t border-outline-variant/30">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline block font-semibold">Enforced Estate Guidelines</span>
+<!-- Rule 1: Zero Refined Sugar -->
+<div class="flex items-center gap-3 p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="w-6 h-6 rounded-full bg-error-container text-error flex items-center justify-center">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="block">block</span>
+</div>
+<div class="text-sm">
+<span class="font-semibold text-on-surface">Zero Refined Sugar</span>
+<span class="text-error font-label-sm text-label-sm ml-1.5 font-bold uppercase">(Enforced)</span>
+</div>
+</div>
+<!-- Rule 2: Cold Pressed Mustard Oil / Gir Ghee -->
+<div class="flex items-center gap-3 p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="w-6 h-6 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="water_drop">water_drop</span>
+</div>
+<div class="text-sm">
+<span class="font-semibold text-on-surface">Cold-Pressed Mustard Oil / Gir Cow Ghee Only</span>
+<p class="text-xs text-on-surface-variant font-body-sm text-body-sm">Strict portion: Max 1 tsp per serving pan</p>
+</div>
+</div>
+<!-- Rule 3: Ceramic crock curd -->
+<div class="flex items-center gap-3 p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="w-6 h-6 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="soup_kitchen">soup_kitchen</span>
+</div>
+<div class="text-sm">
+<span class="font-semibold text-on-surface">Curd Served Fresh from Ceramic Crock</span>
+<p class="text-xs text-on-surface-variant font-body-sm text-body-sm">Never ice-cold; keep natural cultures active</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. PANTRY & FRESH PRODUCE RESERVES -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/50 p-6 shadow-sm">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="inventory_2">inventory_2</span>
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">Pantry &amp; Fresh Reserves</h3>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-medium">All Stocks Good</span>
+</div>
+<div class="space-y-3 font-body-md text-body-md">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<div>
+<p class="font-semibold text-on-surface text-sm">Fresh Low-fat Paneer</p>
+<p class="text-xs text-on-surface-variant">200g in chiller</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-md bg-secondary-fixed text-on-secondary-fixed-variant text-xs font-semibold">Ready</span>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<div>
+<p class="font-semibold text-on-surface text-sm">Fresh Mint &amp; Coriander</p>
+<p class="text-xs text-on-surface-variant">Restocked this morning</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold">Fresh</span>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<div>
+<p class="font-semibold text-on-surface text-sm">Sharbati Atta (Stoneground)</p>
+<p class="text-xs text-on-surface-variant">Dry airtight earthen bin</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold">Abundant</span>
+</div>
+</div>
+</div>
+<!-- 4. ONE-TOUCH KITCHEN TIMERS WIDGET -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/50 p-6 shadow-sm">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="hourglass_empty">hourglass_empty</span>
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">One-Touch Kitchen Timers</h3>
+</div>
+<span class="material-symbols-outlined text-outline text-base" data-icon="volume_up">volume_up</span>
+</div>
+<div class="grid grid-cols-3 gap-2.5">
+<!-- Timer 1: Phulka Tawa 3m -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container hover:bg-primary-fixed hover:border-primary/40 border border-outline-variant/40 transition-all group active:scale-95">
+<span class="font-headline-sm text-headline-sm text-primary group-hover:scale-105 transition-transform font-bold">3<span class="text-xs font-normal">m</span></span>
+<span class="font-label-sm text-label-sm text-on-surface mt-1 text-center font-medium">Phulka Tawa</span>
+<span class="text-[10px] text-outline mt-0.5">High Flame</span>
+</button>
+<!-- Timer 2: Sabzi Simmer 12m -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container hover:bg-secondary-fixed hover:border-secondary/40 border border-outline-variant/40 transition-all group active:scale-95">
+<span class="font-headline-sm text-headline-sm text-secondary group-hover:scale-105 transition-transform font-bold">12<span class="text-xs font-normal">m</span></span>
+<span class="font-label-sm text-label-sm text-on-surface mt-1 text-center font-medium">Sabzi Simmer</span>
+<span class="text-[10px] text-outline mt-0.5">Lid On</span>
+</button>
+<!-- Timer 3: Chana Steam 20m -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-surface-container hover:bg-tertiary-fixed hover:border-tertiary/40 border border-outline-variant/40 transition-all group active:scale-95">
+<span class="font-headline-sm text-headline-sm text-tertiary group-hover:scale-105 transition-transform font-bold">20<span class="text-xs font-normal">m</span></span>
+<span class="font-label-sm text-label-sm text-on-surface mt-1 text-center font-medium">Chana Steam</span>
+<span class="text-[10px] text-outline mt-0.5">3 Whistles</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- FOOTER -->
+<footer class="mt-auto border-t border-outline-variant/40 bg-surface-container-low py-6 px-6 md:px-12 text-center">
+<div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-primary font-serif">Schedulfy OS</span>
+<span class="text-outline-variant">•</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mediterranean Summer Protocol Sanctuary</span>
+</div>
+<div class="flex items-center gap-4 text-xs text-outline font-label-md text-label-md">
+<span>Estate Archive: Culinary Log #4881</span>
+<span>•</span>
+<span>Sanctuary Settings</span>
+<span>•</span>
+<span class="text-secondary font-semibold">Kitchen Node Verified</span>
+</div>
+</div>
+</footer>
+</body></html>

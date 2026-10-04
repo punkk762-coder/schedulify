@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schedulfy — Mobile Handheld App (Theme 14)</title>
+  <!-- Google Fonts: Newsreader & Manrope -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            linen: "#fff8f2",
+            sandstone: "#fcf2e6",
+            porcelain: "#ffffff",
+            terracotta: {
+              DEFAULT: "#a43716",
+              dark: "#862201",
+              light: "#ffdbd1",
+            },
+            olive: {
+              DEFAULT: "#52652a",
+              dark: "#3b4d14",
+              light: "#d4eca2",
+            },
+            amberSun: "#f59e0b",
+            azureSea: "#0284c7",
+            ink: "#1f1b14",
+            clayMuted: "#58423c",
+            warmBorder: "#dfc0b7",
+          },
+          fontFamily: {
+            serif: ["Newsreader", "Georgia", "serif"],
+            sans: ["Manrope", "-apple-system", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #111418;
+      color: #1f1b14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 12px;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 22;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    /* Mobile Device Shell */
+    .mobile-phone-frame {
+      width: 100%;
+      max-width: 400px;
+      height: 844px;
+      background: #fff8f2;
+      border-radius: 48px;
+      border: 10px solid #262b33;
+      box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .mobile-screen-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 90px;
+      scrollbar-width: none;
+    }
+    .mobile-screen-content::-webkit-scrollbar {
+      display: none;
+    }
+    .dynamic-island {
+      width: 110px;
+      height: 28px;
+      background: #000;
+      border-radius: 20px;
+      margin: 10px auto 4px auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Studio Bar with View Switchers & Desktop Link -->
+  <div class="w-full max-w-4xl flex items-center justify-between gap-4 mb-6 px-2 text-white">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-terracotta flex items-center justify-center font-serif font-bold text-white text-base">
+        S
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white">Schedulfy Mobile Handheld Suite</h1>
+        <p class="text-[11px] text-slate-400">Theme 14 (Mediterranean Orchard) • Touch-Native Ergonomics</p>
+      </div>
+    </div>
+
+    <!-- Active Mobile View Selector -->
+    <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-full border border-white/10 text-xs">
+      <button onclick="switchMobileView('today')" id="btn-m-today" class="px-3 py-1 rounded-full bg-terracotta text-white font-semibold">
+        Today Stream
+      </button>
+      <button onclick="switchMobileView('kitchen')" id="btn-m-kitchen" class="px-3 py-1 rounded-full text-slate-300 hover:text-white">
+        Mom's Hearth
+      </button>
+      <button onclick="switchMobileView('coach')" id="btn-m-coach" class="px-3 py-1 rounded-full text-slate-300 hover:text-white">
+        AI Coach
+      </button>
+      <button onclick="switchMobileView('macros')" id="btn-m-macros" class="px-3 py-1 rounded-full text-slate-300 hover:text-white">
+        Macros
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="desktop-suite.html" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-all">
+        <span class="material-symbols-outlined text-[16px]">desktop_windows</span>
+        <span>View Desktop</span>
+      </a>
+      <a href="connected-studio.html" class="px-3 py-1.5 rounded-full bg-olive-light text-olive-dark text-xs font-bold flex items-center gap-1.5 transition-all">
+        <span class="material-symbols-outlined text-[16px]">sync_alt</span>
+        <span>Dual Connected</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       AUTHENTIC MOBILE PHONE VIEWPORT (390 x 844)
+       ========================================================================= -->
+  <div class="mobile-phone-frame">
+    
+    <!-- Phone Top Status Bar & Dynamic Island -->
+    <div class="w-full bg-[#fff8f2] pt-2 px-6 flex flex-col z-20 shrink-0">
+      <div class="flex items-center justify-between text-[11px] font-semibold text-ink">
+        <span>9:41</span>
+        <div class="dynamic-island"></div>
+        <div class="flex items-center gap-1.5">
+          <span>5G</span>
+          <span class="text-xs">🔋</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollable Screen Content Container -->
+    <div class="mobile-screen-content">
+
+      <!-- =====================================================================
+           SCREEN 1: MOBILE TODAY EXECUTION STREAM
+           ===================================================================== -->
+      <section id="mobile-view-today" class="p-4 space-y-4">
+        
+        <!-- Mobile Top App Bar -->
+        <div class="flex items-center justify-between pt-1">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-olive animate-pulse"></span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-olive font-mono">Solstice Rhythm</span>
+            </div>
+            <h2 class="text-2xl font-serif font-bold text-ink mt-0.5">Today's Routine</h2>
+            <p class="text-[11px] text-clayMuted">Sun, Oct 4 • 4 of 6 Completed</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-sandstone text-terracotta border border-warmBorder">
+              ☀️ 6 Days
+            </span>
+          </div>
+        </div>
+
+        <!-- Horizontal 7-Day Date Scroller -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-center text-xs">
+          <div class="p-2 rounded-xl bg-sandstone text-clayMuted shrink-0 w-11">
+            <span class="text-[9px] block">M</span>
+            <span class="font-bold">28</span>
+          </div>
+          <div class="p-2 rounded-xl bg-sandstone text-clayMuted shrink-0 w-11">
+            <span class="text-[9px] block">T</span>
+            <span class="font-bold">29</span>
+          </div>
+          <div class="p-2 rounded-xl bg-sandstone text-clayMuted shrink-0 w-11">
+            <span class="text-[9px] block">W</span>
+            <span class="font-bold">30</span>
+          </div>
+          <div class="p-2 rounded-xl bg-sandstone text-clayMuted shrink-0 w-11">
+            <span class="text-[9px] block">T</span>
+            <span class="font-bold">01</span>
+          </div>
+          <div class="p-2 rounded-xl bg-sandstone text-clayMuted shrink-0 w-11">
+            <span class="text-[9px] block">F</span>
+            <span class="font-bold">02</span>
+          </div>
+          <div class="p-2 rounded-xl bg-sandstone text-clayMuted shrink-0 w-11">
+            <span class="text-[9px] block">S</span>
+            <span class="font-bold">03</span>
+          </div>
+          <!-- Today Active -->
+          <div class="p-2 rounded-xl bg-terracotta text-white shrink-0 w-11 shadow-xs font-bold">
+            <span class="text-[9px] block opacity-80">S</span>
+            <span>04</span>
+          </div>
+        </div>
+
+        <!-- Mobile Circular Progress Dial Banner -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="relative w-12 h-12 flex items-center justify-center">
+              <svg class="w-12 h-12 transform -rotate-90">
+                <circle cx="24" cy="24" r="19" stroke="#dfc0b7" stroke-width="4" fill="transparent"/>
+                <circle cx="24" cy="24" r="19" stroke="#52652a" stroke-width="4" stroke-dasharray="119" stroke-dashoffset="33" stroke-linecap="round" fill="transparent"/>
+              </svg>
+              <span class="absolute text-[11px] font-bold text-ink font-mono">72%</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-olive block">Adherence Ratio</span>
+              <h3 class="text-sm font-serif font-bold text-ink">4 of 6 Done</h3>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-clayMuted block">Protein Target</span>
+            <span class="text-xs font-mono font-bold text-olive">82 / 150g</span>
+          </div>
+        </div>
+
+        <!-- Thumb Quick Log Chips -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button onclick="alert('Quick Logged: Walked 60m!')" class="shrink-0 px-3 py-1.5 rounded-full bg-sandstone hover:bg-white text-ink border border-warmBorder text-[11px] font-semibold flex items-center gap-1 shadow-2xs">
+            <span>🚶</span> 60m Walk
+          </button>
+          <button onclick="alert('Quick Logged: 30g Whey!')" class="shrink-0 px-3 py-1.5 rounded-full bg-sandstone hover:bg-white text-ink border border-warmBorder text-[11px] font-semibold flex items-center gap-1 shadow-2xs">
+            <span>⚡</span> 30g Whey
+          </button>
+          <button onclick="alert('Quick Logged: +250ml Water!')" class="shrink-0 px-3 py-1.5 rounded-full bg-sandstone hover:bg-white text-ink border border-warmBorder text-[11px] font-semibold flex items-center gap-1 shadow-2xs">
+            <span>💧</span> +250ml
+          </button>
+        </div>
+
+        <!-- Mobile Card 1: 10:15 AM (Done) -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-olive-light text-olive flex items-center justify-center font-bold text-sm">✓</div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-[11px] font-bold text-terracotta">10:15 AM</span>
+                <span class="text-[9px] uppercase font-bold text-clayMuted">Breakfast</span>
+              </div>
+              <h4 class="text-sm font-serif font-bold text-ink line-through text-clayMuted">Chocolate Proats</h4>
+              <span class="text-[10px] text-olive font-medium">32g Protein • 380 kcal</span>
+            </div>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-olive-light text-olive-dark text-[10px] font-bold">Done</span>
+        </div>
+
+        <!-- Mobile Card 2: 12:30 PM (Active Hero Card) -->
+        <div class="bg-white rounded-2xl p-4 border-2 border-terracotta/40 shadow-sm space-y-3 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-terracotta text-white px-2.5 py-0.5 rounded-bl-lg text-[9px] font-bold">
+            NEXT UP • 12:30 PM
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-terracotta-light text-terracotta flex items-center justify-center text-lg">🍲</div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-xs font-bold text-terracotta">12:30 PM</span>
+                <span class="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded-full bg-sandstone text-clayMuted">Lunch</span>
+                <span class="text-[9px] font-bold text-olive">Mom Prepping 🟢</span>
+              </div>
+              <h4 class="text-base font-serif font-bold text-ink mt-0.5">2 Phulkas, Sabzi & Probiotic Dahi</h4>
+              <p class="text-[11px] text-clayMuted">420 kcal • 14g P • Low mustard oil</p>
+            </div>
+          </div>
+
+          <!-- Mobile Action Buttons -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-warmBorder/60">
+            <button onclick="alert('Marked Done on Mobile!')" class="py-2.5 rounded-full bg-olive text-white text-xs font-bold shadow-xs active:scale-95 transition-all text-center">
+              Mark Done ✓
+            </button>
+            <button onclick="alert('Swap Requested!')" class="py-2.5 rounded-full bg-sandstone text-ink border border-warmBorder text-xs font-semibold active:scale-95 transition-all text-center">
+              Swap ⇄
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Card 3: 05:30 PM -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-2xl bg-sandstone text-clayMuted flex items-center justify-center text-base">🥣</div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-[11px] font-bold text-ink">05:30 PM</span>
+                <span class="text-[9px] uppercase font-bold text-clayMuted">Snack</span>
+              </div>
+              <h4 class="text-sm font-serif font-bold text-ink">Boiled Kala Chana (100g)</h4>
+              <span class="text-[10px] text-clayMuted">10g Protein • Lemon & Chaat</span>
+            </div>
+          </div>
+          <span class="text-[10px] text-clayMuted font-mono">In 5h</span>
+        </div>
+
+        <!-- Mobile Card 4: 07:00 PM -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-2xl bg-sandstone text-clayMuted flex items-center justify-center text-base">🧀</div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-[11px] font-bold text-ink">07:00 PM</span>
+                <span class="text-[9px] uppercase font-bold text-clayMuted">Dinner</span>
+              </div>
+              <h4 class="text-sm font-serif font-bold text-ink">Paneer Bhurji (100g) & Phulkas</h4>
+              <span class="text-[10px] text-olive font-bold">22g Protein • 450 kcal</span>
+            </div>
+          </div>
+          <span class="text-[10px] text-clayMuted font-mono">7 PM</span>
+        </div>
+
+      </section>
+
+      <!-- =====================================================================
+           SCREEN 2: MOBILE MOM'S KITCHEN HEARTH DISPATCH
+           ===================================================================== -->
+      <section id="mobile-view-kitchen" class="p-4 space-y-4 hidden">
+        <div class="pt-1">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-olive font-mono">Mom Mode Active 🔒</span>
+          </div>
+          <h2 class="text-2xl font-serif font-bold text-ink mt-0.5">Kitchen Prep Board</h2>
+          <p class="text-[11px] text-clayMuted">Exact portions & culinary specs for Alex</p>
+        </div>
+
+        <!-- Prep Item 1 -->
+        <div class="bg-white rounded-2xl p-4 border-2 border-terracotta/40 shadow-xs space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-warmBorder">
+            <span class="font-mono text-xs font-bold text-terracotta">12:30 PM Lunch</span>
+            <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-terracotta text-white">Prepping</span>
+          </div>
+          <h3 class="text-base font-serif font-bold text-ink">2 Phulkas, Gobi Sabzi & Curd</h3>
+          
+          <div class="bg-sandstone rounded-xl p-3 space-y-1.5 text-xs">
+            <span class="text-[10px] font-bold text-clayMuted uppercase tracking-wider block">Portions:</span>
+            <div class="flex justify-between">
+              <span>Whole Wheat Atta</span>
+              <strong class="font-mono text-terracotta">2 thin phulkas</strong>
+            </div>
+            <div class="flex justify-between">
+              <span>Gobi & Peas Sabzi</span>
+              <strong class="font-mono text-terracotta">1 bowl steamed</strong>
+            </div>
+            <div class="flex justify-between">
+              <span>Fresh Cow Curd</span>
+              <strong class="font-mono text-terracotta">150g bowl</strong>
+            </div>
+          </div>
+
+          <button onclick="this.classList.toggle('bg-olive'); this.classList.toggle('text-white'); this.innerText = this.innerText === 'Mark Prepped ✓' ? 'Prepped on Hearth ✓' : 'Mark Prepped ✓';" class="w-full py-2.5 rounded-full bg-sandstone hover:bg-olive hover:text-white text-olive border border-warmBorder text-xs font-bold transition-all text-center">
+            Mark Prepped ✓
+          </button>
+        </div>
+
+        <!-- Prep Item 2 -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs space-y-2">
+          <div class="flex items-center justify-between pb-2 border-b border-warmBorder">
+            <span class="font-mono text-xs font-bold text-ink">05:30 PM Snack</span>
+            <span class="text-[9px] font-bold text-clayMuted">Evening</span>
+          </div>
+          <h3 class="text-sm font-serif font-bold text-ink">Boiled Kala Chana (100g)</h3>
+          <p class="text-xs text-clayMuted">Drain well, sprinkle rock salt & lemon wedge.</p>
+          <button class="w-full py-2 rounded-full bg-sandstone text-olive border border-warmBorder text-xs font-bold mt-2">
+            Mark Prepped ✓
+          </button>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           SCREEN 3: MOBILE AI COACH CHAT
+           ===================================================================== -->
+      <section id="mobile-view-coach" class="p-4 space-y-4 hidden flex flex-col h-[680px]">
+        <div class="pt-1">
+          <h2 class="text-2xl font-serif font-bold text-ink">Schedulfy Coach</h2>
+          <p class="text-[11px] text-clayMuted">Voice & conversational routine logger</p>
+        </div>
+
+        <!-- Chat Stream -->
+        <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+          <div class="bg-sandstone p-3.5 rounded-2xl rounded-tl-sm text-ink border border-warmBorder">
+            Good morning! You hit 32g protein with breakfast. Tell me any meal swap or tap a suggestion chip below.
+          </div>
+
+          <div class="flex justify-end">
+            <div class="bg-terracotta text-white p-3.5 rounded-2xl rounded-tr-sm max-w-[80%] shadow-xs">
+              I had 30g whey + banana instead of oats
+            </div>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl rounded-tl-sm text-ink border border-olive/30 shadow-2xs space-y-1.5">
+            <p>Logged! Updated: <strong class="text-olive">210 kcal, 27g protein</strong>. Daily protein is now at 85g/150g.</p>
+          </div>
+        </div>
+
+        <!-- Mobile Composer -->
+        <div class="pt-2 border-t border-warmBorder">
+          <div class="flex items-center gap-1.5">
+            <input type="text" placeholder="Tell me what you ate..." class="flex-1 px-4 py-2.5 rounded-full bg-sandstone border border-warmBorder text-xs text-ink focus:outline-none"/>
+            <button class="w-9 h-9 rounded-full bg-terracotta text-white flex items-center justify-center text-sm shadow-xs">
+              ➤
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           SCREEN 4: MOBILE MACROS & HYDRATION
+           ===================================================================== -->
+      <section id="mobile-view-macros" class="p-4 space-y-4 hidden">
+        <div class="pt-1">
+          <h2 class="text-2xl font-serif font-bold text-ink">Metabolic Cockpit</h2>
+          <p class="text-[11px] text-clayMuted">Nutrient fulfillment & hydration status</p>
+        </div>
+
+        <!-- Macro Progress Bars -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs space-y-3.5">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-semibold text-ink">Calories</span>
+              <span class="font-mono text-terracotta font-bold">1,550 / 1,800 kcal</span>
+            </div>
+            <div class="w-full bg-sandstone rounded-full h-2.5 overflow-hidden">
+              <div class="bg-terracotta h-2.5 rounded-full" style="width: 86%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-bold text-olive">Protein</span>
+              <span class="font-mono text-olive font-bold">82 / 150g (55%)</span>
+            </div>
+            <div class="w-full bg-sandstone rounded-full h-2.5 overflow-hidden">
+              <div class="bg-olive h-2.5 rounded-full" style="width: 55%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-semibold text-ink">Carbs</span>
+              <span class="font-mono text-amberSun font-bold">173 / 160g</span>
+            </div>
+            <div class="w-full bg-sandstone rounded-full h-2 overflow-hidden">
+              <div class="bg-amberSun h-2 rounded-full" style="width: 95%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-semibold text-ink">Healthy Fats</span>
+              <span class="font-mono text-azureSea font-bold">48 / 45g</span>
+            </div>
+            <div class="w-full bg-sandstone rounded-full h-2 overflow-hidden">
+              <div class="bg-azureSea h-2 rounded-full" style="width: 90%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hydration Logger Pill -->
+        <div class="bg-white rounded-2xl p-4 border border-warmBorder shadow-xs flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-azureSea block">Water Intake</span>
+            <span class="text-base font-serif font-bold text-ink">2,250 / 3,000 ml</span>
+          </div>
+          <button onclick="alert('+250ml Water Logged!')" class="px-3.5 py-1.5 rounded-full bg-azureSea text-white text-xs font-bold shadow-xs">
+            + 250ml
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- =========================================================================
+         ERGONOMIC BOTTOM NAVIGATION BAR (Thumb Zone)
+         ========================================================================= -->
+    <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-warmBorder px-4 py-2 flex items-center justify-around z-30">
+      <button onclick="switchMobileView('today')" id="tab-today" class="flex flex-col items-center gap-0.5 text-terracotta font-bold">
+        <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+        <span class="text-[10px]">Today</span>
+      </button>
+      <button onclick="switchMobileView('kitchen')" id="tab-kitchen" class="flex flex-col items-center gap-0.5 text-clayMuted hover:text-ink">
+        <span class="material-symbols-outlined text-[20px]">skillet</span>
+        <span class="text-[10px]">Hearth</span>
+      </button>
+      <button onclick="switchMobileView('coach')" id="tab-coach" class="flex flex-col items-center gap-0.5 text-clayMuted hover:text-ink">
+        <span class="material-symbols-outlined text-[20px]">chat</span>
+        <span class="text-[10px]">Coach</span>
+      </button>
+      <button onclick="switchMobileView('macros')" id="tab-macros" class="flex flex-col items-center gap-0.5 text-clayMuted hover:text-ink">
+        <span class="material-symbols-outlined text-[20px]">monitoring</span>
+        <span class="text-[10px]">Macros</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    function switchMobileView(viewName) {
+      const views = ['today', 'kitchen', 'coach', 'macros'];
+      views.forEach(v => {
+        const el = document.getElementById('mobile-view-' + v);
+        const topBtn = document.getElementById('btn-m-' + v);
+        const botTab = document.getElementById('tab-' + v);
+        if (v === viewName) {
+          el.classList.remove('hidden');
+          topBtn.className = 'px-3 py-1 rounded-full bg-terracotta text-white font-semibold';
+          botTab.className = 'flex flex-col items-center gap-0.5 text-terracotta font-bold';
+        } else {
+          el.classList.add('hidden');
+          topBtn.className = 'px-3 py-1 rounded-full text-slate-300 hover:text-white';
+          botTab.className = 'flex flex-col items-center gap-0.5 text-clayMuted hover:text-ink';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Schedulfy OS — Weekly Routine Matrix</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "outline-variant": "#dfc0b7",
+            "on-primary-fixed-variant": "#862201",
+            "tertiary-fixed-dim": "#93ccff",
+            "on-secondary-fixed-variant": "#3b4d14",
+            "on-primary": "#ffffff",
+            "secondary-fixed-dim": "#b8cf88",
+            "inverse-on-surface": "#f9efe3",
+            "on-background": "#1f1b14",
+            "surface-dim": "#e2d9cd",
+            "surface-container-low": "#fcf2e6",
+            "on-error": "#ffffff",
+            "primary-container": "#c54f2c",
+            "on-primary-container": "#fffbff",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-container": "#fdfcff",
+            "outline": "#8b716a",
+            "inverse-primary": "#ffb5a0",
+            "surface-bright": "#fff8f2",
+            "tertiary": "#006194",
+            "surface-container-highest": "#eae1d5",
+            "on-tertiary-fixed": "#001d31",
+            "tertiary-container": "#007bb9",
+            "tertiary-fixed": "#cce5ff",
+            "surface-variant": "#eae1d5",
+            "secondary-fixed": "#d4eca2",
+            "secondary-container": "#d4eca2",
+            "on-surface": "#1f1b14",
+            "on-tertiary-fixed-variant": "#004b73",
+            "on-surface-variant": "#58423c",
+            "error": "#ba1a1a",
+            "primary-fixed-dim": "#ffb5a0",
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#343028",
+            "on-secondary-container": "#576b2f",
+            "primary-fixed": "#ffdbd1",
+            "surface-container": "#f6ede0",
+            "on-primary-fixed": "#3b0900",
+            "surface-container-high": "#f0e7db",
+            "on-secondary-fixed": "#141f00",
+            "error-container": "#ffdad6",
+            "surface-tint": "#a73918",
+            "background": "#fff8f2",
+            "surface": "#fff8f2",
+            "secondary": "#52652a",
+            "on-error-container": "#93000a",
+            "primary": "#a43716",
+            "on-tertiary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "margin-mobile": "1.25rem",
+            "gutter": "1.5rem",
+            "margin-desktop": "3.5rem",
+            "margin": "2rem",
+            "space-lg": "1.5rem",
+            "gutter-lg": "2rem",
+            "space-md": "1rem",
+            "gutter-sm": "1rem",
+            "space-2xl": "4rem"
+          },
+          "fontFamily": {
+            "label-md": ["Manrope"],
+            "headline-lg": ["Newsreader"],
+            "display-lg": ["Newsreader"],
+            "headline-sm": ["Newsreader"],
+            "display-lg-mobile": ["Newsreader"],
+            "label-lg": ["Manrope"],
+            "headline-md": ["Newsreader"],
+            "headline-lg-mobile": ["Newsreader"],
+            "title-md": ["Manrope"],
+            "title-lg": ["Newsreader"],
+            "body-sm": ["Manrope"],
+            "label-sm": ["Manrope"],
+            "body-lg": ["Manrope"],
+            "body-md": ["Manrope"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.015em", "fontWeight": "400" }],
+            "display-lg": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+            "headline-sm": ["22px", { "lineHeight": "30px", "fontWeight": "500" }],
+            "display-lg-mobile": ["38px", { "lineHeight": "46px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-lg-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "title-lg": ["19px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "body-lg": ["17px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "body-md": ["15px", { "lineHeight": "24px", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-[#FAF6F0] text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed min-h-screen flex flex-col font-body-md text-body-md">
+<!-- Top Navigation Shared Component (TopNavBar) -->
+<header class="bg-surface/80 dark:bg-surface/90 backdrop-blur-md text-primary dark:text-primary-fixed-dim docked full-width top-0 sticky z-50 shadow-[0_4px_20px_-2px_rgba(167,57,24,0.03)] border-b border-outline-variant/40 dark:border-outline/30">
+<div class="flex justify-between items-center w-full px-6 md:px-12 max-w-7xl mx-auto h-20">
+<!-- Brand & Protocol Label -->
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container/60 border border-secondary/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]" data-icon="eco">eco</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-lg text-title-lg font-semibold tracking-tight text-on-surface dark:text-on-surface">Schedulfy Protocol</span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Mediterranean Summer</span>
+</div>
+</div>
+<!-- Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-8 font-label-lg text-label-lg">
+<a class="text-on-surface-variant dark:text-outline hover:text-on-surface transition-colors pb-1 hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low/60 transition-colors duration-200" href="#">Sanctuary</a>
+<a class="text-primary dark:text-primary-fixed font-semibold border-b-2 border-primary dark:border-primary-fixed pb-1" href="#">Rituals</a>
+<a class="text-on-surface-variant dark:text-outline hover:text-on-surface transition-colors pb-1 hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low/60 transition-colors duration-200" href="#">Amphora</a>
+<a class="text-on-surface-variant dark:text-outline hover:text-on-surface transition-colors pb-1 hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low/60 transition-colors duration-200" href="#">Hearth Sync</a>
+</nav>
+<!-- Trailing Quick Actions & Controls -->
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5EFEB] border border-[#E7E0D3] text-on-surface-variant font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span>Sync Status: Active</span>
+</div>
+<button class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-transparent border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors" title="Quiet Mode" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="bedtime">bedtime</span>
+<span>Quiet Mode</span>
+</button>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors" title="Calendar Matrix" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors" title="Circadian Balance" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="spa">spa</span>
+</button>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md transition-all duration-200 active:scale-95 shadow-[0_2px_8px_-1px_rgba(164,55,22,0.3)] hover:bg-[#862201] flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="play_arrow">play_arrow</span>
+<span>Begin Sequence</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Canvas Container -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-8 space-y-8">
+<!-- Editorial Header & Circadian Matrix Sub-Header -->
+<section class="space-y-6">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-[#E7E0D3]">
+<div>
+<div class="flex items-center gap-2 text-secondary mb-1 font-label-md text-label-md tracking-wider uppercase">
+<span class="material-symbols-outlined text-[16px]" data-icon="local_fire_department">local_fire_department</span>
+<span>Hearth &amp; Metabolic Synchrony</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-normal text-on-background tracking-tight">Weekly Routine Matrix</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mt-1">Synchronized 7-day culinary, workout &amp; circadian rhythm protocol anchored in seasonal nutrition and ancestral pacing.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFFFFF] border border-[#E7E0D3] text-on-surface font-label-md text-label-md hover:bg-[#F5EFEB] transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px] text-outline" data-icon="file_download">file_download</span>
+<span>Export Matrix</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-container/60 border border-secondary/30 text-on-secondary-container font-label-md text-label-md hover:bg-secondary-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="history_edu">history_edu</span>
+<span>Estate Archive</span>
+</button>
+</div>
+</div>
+<!-- 7-Day Horizontal Calendar & Adherence Ribbon -->
+<div class="bg-[#FFFDF9] border border-[#E7E0D3] rounded-2xl p-4 md:p-5 shadow-[0_8px_24px_-4px_rgba(184,71,37,0.02)]">
+<div class="flex items-center justify-between mb-3 px-1">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-outline">Oct 21 — Oct 27, 2024 · Week 43 Cycle</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Weekly Cadence: Optimal (94.2%)
+          </span>
+</div>
+<div class="grid grid-cols-7 gap-2 md:gap-3">
+<!-- Mon 21 -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3] hover:border-outline-variant transition-all text-center" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mon 21</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">21</span>
+<span class="mt-2 text-[10px] font-semibold text-secondary bg-[#EDF2E6] px-2 py-0.5 rounded-full border border-secondary/20">100%</span>
+</button>
+<!-- Tue 22 -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3] hover:border-outline-variant transition-all text-center" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tue 22</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">22</span>
+<span class="mt-2 text-[10px] font-semibold text-secondary bg-[#EDF2E6] px-2 py-0.5 rounded-full border border-secondary/20">100%</span>
+</button>
+<!-- Wed 23 -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3] hover:border-outline-variant transition-all text-center" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Wed 23</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">23</span>
+<span class="mt-2 text-[10px] font-semibold text-secondary bg-[#EDF2E6] px-2 py-0.5 rounded-full border border-secondary/20">94%</span>
+</button>
+<!-- Thu 24 (Active Terracotta Pill) -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#D95D39] text-on-primary border border-primary-container shadow-[0_4px_14px_rgba(217,93,57,0.35)] scale-[1.02] text-center relative" type="button">
+<span class="font-label-sm text-label-sm text-white/90 font-medium">Thu 24</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">24</span>
+<span class="mt-2 text-[10px] font-semibold text-on-primary bg-black/20 px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+              72% In Progress
+            </span>
+</button>
+<!-- Fri 25 -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3] hover:border-outline-variant transition-all text-center" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Fri 25</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">25</span>
+<span class="mt-2 text-[10px] font-semibold text-outline bg-surface-container-high px-2 py-0.5 rounded-full">Planned</span>
+</button>
+<!-- Sat 26 -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3] hover:border-outline-variant transition-all text-center" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sat 26</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">26</span>
+<span class="mt-2 text-[10px] font-semibold text-outline bg-surface-container-high px-2 py-0.5 rounded-full">Planned</span>
+</button>
+<!-- Sun 27 -->
+<button class="flex flex-col items-center justify-center p-3 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3] hover:border-outline-variant transition-all text-center" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sun 27</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">27</span>
+<span class="mt-2 text-[10px] font-semibold text-outline bg-surface-container-high px-2 py-0.5 rounded-full">Sanctuary</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Master Layout: 2-Column Board (Left: Input & Daily Routine / Right: Macro Telemetry & Pantry Sync) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column (8 cols): Fast AI Import & Day Schedule Board -->
+<section class="lg:col-span-8 space-y-6">
+<!-- Fast AI Schedule Import Container -->
+<div class="bg-[#FFFDF9] border border-[#E7E0D3] rounded-2xl p-6 shadow-[0_8px_24px_-4px_rgba(184,71,37,0.03)]">
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-fixed/50 border border-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-background">Fast AI Schedule Import</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Translate informal kitchen notes, WhatsApp meal messages, or trainer protocols into the Schedulfy matrix.</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] px-2.5 py-1 rounded-full whitespace-nowrap">
+              Natural Language NLP
+            </span>
+</div>
+<div class="relative">
+<textarea class="w-full bg-[#FAF6F0] border border-[#DCD3C3] rounded-xl p-3.5 font-body-sm text-body-sm text-on-surface placeholder:text-outline/70 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-none" placeholder='Paste raw meal plan, doctor notes, or workout schedule (e.g., "Lunch: 2 phulkas, dal, boiled chana at 5pm...")' rows="3"></textarea>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E7E0D3]/60">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="verified">verified</span>
+<span>Grammatical macro calibration tuned for Indian &amp; Mediterranean recipes</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-4 py-2 rounded-xl bg-[#FAF6F0] border border-[#DCD3C3] text-on-surface font-label-md text-label-md hover:bg-[#F1F4EB] transition-colors" type="button">
+                Parse Natural Text
+              </button>
+<button class="px-5 py-2 rounded-xl bg-[#D95D39] text-[#FAF6F0] font-label-md text-label-md hover:bg-[#B84725] transition-all flex items-center gap-1.5 shadow-[0_2px_8px_-1px_rgba(217,93,57,0.3)]" type="button">
+<span>Import with Schedulfy AI</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="bolt">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Day Schedule Board: Thursday, Oct 24 -->
+<div class="space-y-4">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary" data-icon="event_note">event_note</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Thursday Cadence Timeline</h3>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant font-normal">4 Synchronized Windows</span>
+</div>
+<!-- Card 1: Breakfast (10:15 AM) -->
+<article class="bg-[#FFFFFF] border border-[#E7E0D3] rounded-2xl p-5 shadow-[0_4px_16px_-2px_rgba(82,101,42,0.03)] hover:border-outline-variant/60 transition-all">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-[#FAF6F0]">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] flex flex-col items-center justify-center font-label-sm text-label-sm font-semibold shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="light_mode">light_mode</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Breakfast · 10:15 AM</span>
+<span class="text-xs px-2 py-0.5 rounded-full bg-[#EDF2E6] text-secondary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="check_circle">check_circle</span>
+                      Completed ✓
+                    </span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">Chocolate Proats Formulation</h4>
+</div>
+</div>
+<!-- Macros -->
+<div class="flex items-center gap-2.5 bg-[#FAF6F0] px-3 py-1.5 rounded-xl border border-[#E7E0D3]/80 font-label-sm text-label-sm text-on-surface-variant tabular-nums">
+<span class="font-semibold text-on-surface">380 kcal</span>
+<span class="text-outline">·</span>
+<span class="text-primary font-medium">32g P</span>
+<span class="text-outline">·</span>
+<span>42g C</span>
+<span class="text-outline">·</span>
+<span>8g Lipids</span>
+</div>
+</div>
+<!-- Tags & Provenance -->
+<div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-1">
+<div class="flex flex-wrap items-center gap-1.5">
+<span class="px-2.5 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E7E0D3] font-label-sm text-label-sm text-on-surface-variant">Rolled Oats (50g)</span>
+<span class="px-2.5 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E7E0D3] font-label-sm text-label-sm text-on-surface-variant">Whey Isolate (1 Scoop)</span>
+<span class="px-2.5 py-0.5 rounded-md bg-[#FAF6F0] border border-[#E7E0D3] font-label-sm text-label-sm text-on-surface-variant">Chia Seeds &amp; Cinnamon</span>
+</div>
+<span class="font-body-sm text-body-sm italic text-outline">Metabolic warmth initiated · 250ml Spring Water</span>
+</div>
+</article>
+<!-- Card 2: Midday (12:30 PM) -->
+<article class="bg-[#FFFFFF] border border-[#E7E0D3] rounded-2xl p-5 shadow-[0_4px_16px_-2px_rgba(82,101,42,0.03)] hover:border-outline-variant/60 transition-all">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-[#FAF6F0]">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#EDF2E6] text-secondary border border-secondary/20 flex flex-col items-center justify-center font-label-sm text-label-sm font-semibold shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="sunny">sunny</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Midday · 12:30 PM</span>
+<span class="text-xs px-2.5 py-0.5 rounded-full bg-[#FAF6F0] border border-[#DCD3C3] text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary" data-icon="workspace_premium">workspace_premium</span>
+                      Mom Verified Seal ✓
+                    </span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">2 Stoneground Phulkas, Seasonal Sabzi &amp; Probiotic Dahi</h4>
+</div>
+</div>
+<!-- Macros -->
+<div class="flex items-center gap-2.5 bg-[#FAF6F0] px-3 py-1.5 rounded-xl border border-[#E7E0D3]/80 font-label-sm text-label-sm text-on-surface-variant tabular-nums">
+<span class="font-semibold text-on-surface">420 kcal</span>
+<span class="text-outline">·</span>
+<span class="text-primary font-medium">14g P</span>
+<span class="text-outline">·</span>
+<span>64g C</span>
+<span class="text-outline">·</span>
+<span>6g Ghee</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-1">
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Sharbati stoneground wheat with ridge gourd sabzi &amp; artisanal cultured curd</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-[#EDF2E6] px-2 py-0.5 rounded-full">Digestive Ease High</span>
+</div>
+</article>
+<!-- Card 3: Evening Cadence (05:30 PM - Active Spotlight with terracotta hairline border) -->
+<article class="bg-[#FFFDF9] border-2 border-[#D95D39] rounded-2xl p-5 shadow-[0_12px_28px_-6px_rgba(217,93,57,0.12)] relative transition-all">
+<!-- Active Spotlight Marker -->
+<div class="absolute -top-3 left-6 bg-[#D95D39] text-[#FAF6F0] font-label-sm text-label-sm px-3 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+<span>Active Cadence Window · Due Now</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-[#E7E0D3] mt-1">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed text-on-primary-fixed border border-primary/20 flex flex-col items-center justify-center font-label-sm text-label-sm font-semibold shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="wb_twilight">wb_twilight</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-semibold uppercase tracking-wider">Evening Cadence · 05:30 PM</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">Steamed Boiled Kala Chana (100g) with Chaat Spices &amp; Lime</h4>
+</div>
+</div>
+<!-- Macros -->
+<div class="flex items-center gap-2.5 bg-[#FAF6F0] px-3 py-1.5 rounded-xl border border-primary-container/30 font-label-sm text-label-sm text-on-surface-variant tabular-nums">
+<span class="font-semibold text-primary">180 kcal</span>
+<span class="text-outline">·</span>
+<span class="text-primary font-bold">10g P</span>
+<span class="text-outline">·</span>
+<span>28g C</span>
+<span class="text-outline">·</span>
+<span class="text-secondary font-medium">0g Added Oil</span>
+</div>
+</div>
+<div class="mt-3 text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="psychology">psychology</span>
+<span>Pre-twilight endurance sustenance: fresh Meyer lime zest, roasted cumin, and garden coriander sprigs.</span>
+</div>
+<!-- Spotlight Interactive Actions -->
+<div class="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E7E0D3]">
+<div class="flex items-center gap-2">
+<button class="px-4 py-2 rounded-xl bg-[#D95D39] text-[#FAF6F0] font-label-md text-label-md hover:bg-[#B84725] transition-colors flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="check">check</span>
+<span>Mark Concluded</span>
+</button>
+<button class="px-3.5 py-2 rounded-xl bg-[#FAF6F0] border border-[#DCD3C3] text-on-surface font-label-md text-label-md hover:bg-[#F1F4EB] transition-colors" type="button">
+                  Alternate
+                </button>
+<button class="px-3.5 py-2 rounded-xl bg-[#FAF6F0] border border-[#DCD3C3] text-outline font-label-md text-label-md hover:text-on-surface transition-colors" type="button">
+                  Defer (30m)
+                </button>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="timer">timer</span>
+                Target Window: 17:15 – 17:45 IST
+              </span>
+</div>
+</article>
+<!-- Card 4: Night & Restorative (07:00 PM & 09:30 PM) -->
+<article class="bg-[#FFFFFF] border border-[#E7E0D3] rounded-2xl p-5 shadow-[0_4px_16px_-2px_rgba(82,101,42,0.03)] hover:border-outline-variant/60 transition-all opacity-95">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-[#FAF6F0]">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] flex flex-col items-center justify-center font-label-sm text-label-sm font-semibold shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="bedtime">bedtime</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Night &amp; Restorative · 07:00 PM &amp; 09:30 PM</span>
+<span class="text-xs px-2 py-0.5 rounded-full bg-[#FAF6F0] border border-[#E7E0D3] text-outline font-label-sm text-label-sm">
+                      Queued in Hearth Vessel
+                    </span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">High-Protein Paneer Bhurji &amp; Warm Turmeric Haldi Elixir</h4>
+</div>
+</div>
+<!-- Macros -->
+<div class="flex items-center gap-2.5 bg-[#FAF6F0] px-3 py-1.5 rounded-xl border border-[#E7E0D3]/80 font-label-sm text-label-sm text-on-surface-variant tabular-nums">
+<span class="font-semibold text-on-surface">570 kcal</span>
+<span class="text-outline">·</span>
+<span class="text-primary font-medium">28g P</span>
+<span class="text-outline">·</span>
+<span>24g C</span>
+<span class="text-outline">·</span>
+<span>Deep Glycemic Rest</span>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-1">
+<div class="p-2.5 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3]/70">
+<span class="font-label-sm text-label-sm text-primary font-semibold block">Dinner (19:00 IST)</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">200g A2 paneer crumbled with diced shallots, tomatoes &amp; pinch of hing.</p>
+</div>
+<div class="p-2.5 rounded-xl bg-[#FAF6F0] border border-[#E7E0D3]/70">
+<span class="font-label-sm text-label-sm text-secondary font-semibold block">Circadian Elixir (21:30 IST)</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">A2 warm milk infused with wild Lakadong turmeric and nutmeg sprinkle.</p>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Right Panel (4 cols): Macro Forecast, Mediterranean Pantry & Hearth Sync -->
+<aside class="lg:col-span-4 space-y-6">
+<!-- Weekly Macro Adherence Forecast -->
+<div class="bg-[#FFFDF9] border border-[#E7E0D3] rounded-2xl p-6 shadow-[0_8px_24px_-4px_rgba(82,101,42,0.03)] space-y-5">
+<div class="flex items-center justify-between pb-3 border-b border-[#E7E0D3]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="donut_large">donut_large</span>
+<h3 class="font-title-lg text-title-lg text-on-surface">Macro Adherence Forecast</h3>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-bold">W-Avg 91%</span>
+</div>
+<!-- Gauges Grid -->
+<div class="space-y-4">
+<!-- Caloric Target -->
+<div>
+<div class="flex justify-between items-center text-body-sm font-label-md text-label-md mb-1.5">
+<span class="text-on-surface">Caloric Target (Daily Mean)</span>
+<span class="text-on-surface font-semibold tabular-nums">91% (1,550 / 1,700 kcal)</span>
+</div>
+<div class="w-full bg-[#FAF6F0] border border-[#E7E0D3] h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 91%"></div>
+</div>
+</div>
+<!-- Protein Synthesis -->
+<div>
+<div class="flex justify-between items-center text-body-sm font-label-md text-label-md mb-1.5">
+<span class="text-on-surface">Protein Synthesis Target</span>
+<span class="text-primary font-semibold tabular-nums">95% (142g / 150g)</span>
+</div>
+<div class="w-full bg-[#FAF6F0] border border-[#E7E0D3] h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 95%"></div>
+</div>
+</div>
+<!-- Hydration Protocol -->
+<div>
+<div class="flex justify-between items-center text-body-sm font-label-md text-label-md mb-1.5">
+<span class="text-on-surface">Amphora Hydration Track</span>
+<span class="text-[#006194] font-semibold tabular-nums">83% (2.9L / 3.5L)</span>
+</div>
+<div class="w-full bg-[#FAF6F0] border border-[#E7E0D3] h-2 rounded-full overflow-hidden">
+<div class="bg-[#007bb9] h-full rounded-full" style="width: 83%"></div>
+</div>
+</div>
+</div>
+<!-- Daily Sparkline Rhythm Bars -->
+<div class="pt-3 border-t border-[#E7E0D3]">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider block mb-2">7-Day Synthesis Cadence</span>
+<div class="flex items-end justify-between gap-1.5 h-16 pt-2 px-1">
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-secondary/80 rounded-t-sm" style="height: 100%"></div>
+<span class="text-[10px] text-outline font-label-sm">M</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-secondary/80 rounded-t-sm" style="height: 100%"></div>
+<span class="text-[10px] text-outline font-label-sm">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-secondary/80 rounded-t-sm" style="height: 94%"></div>
+<span class="text-[10px] text-outline font-label-sm">W</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-[#D95D39] rounded-t-sm animate-pulse" style="height: 72%"></div>
+<span class="text-[10px] font-bold text-primary font-label-sm">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-[#E7E0D3] rounded-t-sm" style="height: 60%"></div>
+<span class="text-[10px] text-outline font-label-sm">F</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-[#E7E0D3] rounded-t-sm" style="height: 50%"></div>
+<span class="text-[10px] text-outline font-label-sm">S</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full bg-[#E7E0D3] rounded-t-sm" style="height: 50%"></div>
+<span class="text-[10px] text-outline font-label-sm">S</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Mediterranean Pantry & Grocery Checklist -->
+<div class="bg-[#FFFDF9] border border-[#E7E0D3] rounded-2xl p-6 shadow-[0_8px_24px_-4px_rgba(82,101,42,0.03)] space-y-4">
+<div class="flex items-center justify-between pb-3 border-b border-[#E7E0D3]">
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Pantry &amp; Grove Inventory</h3>
+<span class="font-label-sm text-label-sm text-outline">3 of 8 items procured</span>
+</div>
+<button class="text-xs font-label-md text-label-md text-primary hover:underline flex items-center gap-0.5" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="add">add</span>
+              Add Quick Item
+            </button>
+</div>
+<div class="space-y-3 font-body-sm text-body-sm">
+<!-- Category: Fresh Produce -->
+<div>
+<span class="font-label-sm text-label-sm text-secondary font-semibold uppercase tracking-wider block mb-1">Botanical &amp; Orchard Produce</span>
+<ul class="space-y-1.5 pl-0.5">
+<li class="flex items-center justify-between p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E7E0D3]/60">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded-[4px] border-[#DCD3C3] text-secondary focus:ring-0" type="checkbox"/>
+<span class="line-through text-outline">Meyer Lemons (Citrus Grove)</span>
+</label>
+<span class="text-[11px] text-outline">5 units</span>
+</li>
+<li class="flex items-center justify-between p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E7E0D3]/60">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded-[4px] border-[#DCD3C3] text-secondary focus:ring-0" type="checkbox"/>
+<span class="line-through text-outline">Fresh Mint &amp; Garden Coriander</span>
+</label>
+<span class="text-[11px] text-outline">2 bunches</span>
+</li>
+</ul>
+</div>
+<!-- Category: Proteins -->
+<div>
+<span class="font-label-sm text-label-sm text-primary font-semibold uppercase tracking-wider block mb-1">Estate Proteins</span>
+<ul class="space-y-1.5 pl-0.5">
+<li class="flex items-center justify-between p-1.5 rounded-lg bg-[#FAF6F0] border border-[#E7E0D3]/60">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded-[4px] border-[#DCD3C3] text-secondary focus:ring-0" type="checkbox"/>
+<span class="line-through text-outline">Kala Chana (Desi Heirloom)</span>
+</label>
+<span class="text-[11px] text-outline">500g</span>
+</li>
+<li class="flex items-center justify-between p-1.5 rounded-lg bg-[#FFFFFF] border border-[#DCD3C3]">
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="rounded-[4px] border-[#DCD3C3] text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface font-medium">A2 Cow Milk Paneer (Fresh Block)</span>
+</label>
+<span class="text-[11px] text-primary font-semibold">400g Needed</span>
+</li>
+</ul>
+</div>
+<!-- Category: Grains -->
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider block mb-1">Stoneground Heritage Grains</span>
+<ul class="space-y-1.5 pl-0.5">
+<li class="flex items-center justify-between p-1.5 rounded-lg bg-[#FFFFFF] border border-[#DCD3C3]">
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="rounded-[4px] border-[#DCD3C3] text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface font-medium">Sharbati Atta (Hand-milled)</span>
+</label>
+<span class="text-[11px] text-outline">2.5 kg</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Hearth Sync Note / Mom's Relay Notification Card -->
+<div class="bg-[#FAF6F0] border border-outline-variant/60 rounded-2xl p-5 space-y-3 relative overflow-hidden shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2 text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="cottage">cottage</span>
+<span class="font-bold">Mom’s Hearth Relay</span>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm uppercase tracking-wider">
+              Dispatch Badge
+            </span>
+</div>
+<p class="font-headline-sm text-[17px] leading-snug text-on-surface italic">
+            “Low-oil Paneer Bhurji prep set for 18:30 IST. Hot phulkas ready by 19:00 IST sharp.”
+          </p>
+<div class="flex items-center justify-between pt-2 border-t border-[#E7E0D3] text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary" data-icon="check_circle">check_circle</span>
+              Confirmed from Domestic Kitchen
+            </span>
+<span class="text-outline">Sent 16:42 IST</span>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Editorial Sanctuary Footer -->
+<footer class="w-full border-t border-[#E7E0D3] bg-[#F5EFEB]/50 mt-12 py-8 px-6 md:px-12 text-on-surface-variant">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="font-headline-sm text-headline-sm italic text-on-surface">Schedulfy OS</span>
+<span class="text-outline">·</span>
+<span class="font-body-sm text-body-sm">Mediterranean Summer Protocol 2024</span>
+</div>
+<div class="flex items-center gap-6 font-label-md text-label-md text-outline">
+<a class="hover:text-primary transition-colors" href="#">Estate Archive</a>
+<a class="hover:text-primary transition-colors" href="#">Circadian Chrono-Map</a>
+<a class="hover:text-primary transition-colors" href="#">Sanctuary Settings</a>
+</div>
+<div class="text-xs font-label-sm text-label-sm text-outline">
+        Hand-crafted with sandstone, terracotta &amp; botanical calm.
+      </div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schedulfy — Desktop Command Center (Theme 14)</title>
+  <!-- Google Fonts: Newsreader & Manrope -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            linen: "#fff8f2",
+            sandstone: "#fcf2e6",
+            porcelain: "#ffffff",
+            terracotta: {
+              DEFAULT: "#a43716",
+              dark: "#862201",
+              light: "#ffdbd1",
+              container: "#c54f2c",
+            },
+            olive: {
+              DEFAULT: "#52652a",
+              dark: "#3b4d14",
+              light: "#d4eca2",
+              container: "#e5f4c5",
+            },
+            amberSun: "#f59e0b",
+            azureSea: "#0284c7",
+            ink: "#1f1b14",
+            clayMuted: "#58423c",
+            warmBorder: "#dfc0b7",
+          },
+          fontFamily: {
+            serif: ["Newsreader", "Georgia", "serif"],
+            sans: ["Manrope", "-apple-system", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #fff8f2;
+      background-image: radial-gradient(#dfc0b7 0.8px, transparent 0.8px), radial-gradient(#dfc0b7 0.8px, #fff8f2 0.8px);
+      background-size: 28px 28px;
+      background-position: 0 0, 14px 14px;
+      color: #1f1b14;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 22;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-warm-shadow {
+      box-shadow: 0 8px 24px -4px rgba(164, 55, 22, 0.06), 0 2px 6px -1px rgba(82, 101, 42, 0.04);
+    }
+    .active-nav-indicator {
+      border-bottom: 2px solid #a43716;
+      color: #a43716;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans flex flex-col antialiased selection:bg-terracotta-light selection:text-terracotta-dark">
+
+  <!-- =========================================================================
+       DESKTOP TOP COMMAND BAR (Sticky 1440px Panoramic)
+       ========================================================================= -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-warmBorder shadow-xs">
+    <div class="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between gap-6">
+      
+      <!-- Brand & Node Identity -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-terracotta-light flex items-center justify-center text-terracotta font-serif font-bold text-xl shadow-xs border border-terracotta/20">
+          S
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-serif font-bold text-xl tracking-tight text-ink">Schedulfy</span>
+            <span class="text-warmBorder">•</span>
+            <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-sandstone text-terracotta border border-warmBorder">
+              Desktop Cockpit
+            </span>
+          </div>
+          <p class="text-xs text-clayMuted">Mediterranean Routine OS • Command Node</p>
+        </div>
+      </div>
+
+      <!-- Desktop View Switcher Tabs -->
+      <nav class="flex items-center gap-1 bg-sandstone p-1.5 rounded-full border border-warmBorder">
+        <button id="nav-today" onclick="switchDesktopView('today')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all bg-white text-ink shadow-xs">
+          ☀️ Executive Today
+        </button>
+        <button id="nav-kitchen" onclick="switchDesktopView('kitchen')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all text-clayMuted hover:text-ink">
+          🍲 Mom's Hearth Station
+        </button>
+        <button id="nav-matrix" onclick="switchDesktopView('matrix')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all text-clayMuted hover:text-ink">
+          🗓️ Weekly Matrix
+        </button>
+        <button id="nav-coach" onclick="switchDesktopView('coach')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all text-clayMuted hover:text-ink">
+          💬 AI Coach Studio
+        </button>
+      </nav>
+
+      <!-- Trailing Status Cluster: Hearth Sync + Timezone + Mobile Link -->
+      <div class="flex items-center gap-3">
+        <div class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone border border-warmBorder text-xs text-clayMuted font-medium">
+          <span class="w-2 h-2 rounded-full bg-olive animate-pulse"></span>
+          <span>Hearth Sync: <strong class="text-ink">Mom's Kitchen Linked</strong></span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-olive-light text-olive-dark border border-olive/30 text-xs font-semibold">
+          <span>Asia/Kolkata • 12:15 PM</span>
+        </div>
+        <a href="mobile-suite.html" class="px-3.5 py-1.5 rounded-full bg-terracotta hover:bg-terracotta-dark text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs">
+          <span class="material-symbols-outlined text-[16px]">smartphone</span>
+          <span>View Mobile Screen</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       VIEW 1: EXECUTIVE TODAY COMMAND CENTER (Default Active)
+       ========================================================================= -->
+  <main id="view-today" class="max-w-7xl mx-auto px-6 py-8 w-full flex-1">
+    
+    <!-- Hero Summary Strip -->
+    <div class="bg-white rounded-3xl p-6 border border-warmBorder shadow-xs mb-8 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-80 h-80 bg-terracotta/5 rounded-full blur-3xl pointer-events-none -mr-24 -mt-24"></div>
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-olive animate-ping"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-olive">Protocol Active • Solar Apex Midday</span>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-sandstone text-terracotta border border-warmBorder font-semibold">
+              ☀️ 6-Day Streak
+            </span>
+          </div>
+          <h1 class="text-3xl lg:text-4xl font-serif font-bold text-ink">Sunday, October 4, 2026</h1>
+          <p class="text-xs text-clayMuted mt-1">4 of 6 prescribed occurrences completed • 150g Daily Protein Target in Progress</p>
+        </div>
+
+        <!-- Quick Execution Ring & Top Indicators -->
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-4 bg-sandstone p-3.5 rounded-2xl border border-warmBorder">
+            <div class="relative w-16 h-16 flex items-center justify-center">
+              <svg class="w-16 h-16 transform -rotate-90">
+                <circle cx="32" cy="32" r="26" stroke="#dfc0b7" stroke-width="5" fill="transparent"/>
+                <circle cx="32" cy="32" r="26" stroke="#a43716" stroke-width="5" stroke-dasharray="163" stroke-dashoffset="46" stroke-linecap="round" fill="transparent"/>
+              </svg>
+              <div class="absolute text-center">
+                <span class="text-sm font-bold text-ink font-mono">72%</span>
+              </div>
+            </div>
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-clayMuted block">Execution Ratio</span>
+              <span class="text-sm font-semibold text-ink">4 Completed</span>
+              <span class="text-xs text-olive block font-medium">Ahead of schedule</span>
+            </div>
+          </div>
+
+          <div class="hidden sm:flex flex-col gap-1.5">
+            <button onclick="logQuickAction('walk')" class="px-4 py-2 rounded-full bg-sandstone hover:bg-white text-ink border border-warmBorder text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs">
+              <span class="material-symbols-outlined text-[16px] text-olive">directions_walk</span>
+              <span>+ Log 60m Walk</span>
+            </button>
+            <button onclick="logQuickAction('whey')" class="px-4 py-2 rounded-full bg-sandstone hover:bg-white text-ink border border-warmBorder text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs">
+              <span class="material-symbols-outlined text-[16px] text-terracotta">bolt</span>
+              <span>+ Log 30g Whey</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Triple-Column Panoramic Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- ====================================================
+           COLUMN A (7 COLS): CHRONOLOGICAL TIMELINE LEDGER
+           ==================================================== -->
+      <section class="lg:col-span-7 flex flex-col gap-5">
+        <div class="flex items-center justify-between pb-2 border-b border-warmBorder">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-ink font-mono">Day Schedule Ledger</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder font-semibold">6 items</span>
+          </div>
+          <div class="flex items-center gap-1 bg-sandstone p-1 rounded-full border border-warmBorder text-xs">
+            <button class="px-2.5 py-0.5 rounded-full bg-white text-ink font-semibold shadow-2xs">All</button>
+            <button class="px-2.5 py-0.5 rounded-full text-clayMuted hover:text-ink">Meals</button>
+            <button class="px-2.5 py-0.5 rounded-full text-clayMuted hover:text-ink">Movement</button>
+          </div>
+        </div>
+
+        <!-- Routine Item 1: Breakfast (Done) -->
+        <div class="bg-white rounded-2xl p-5 border border-warmBorder shadow-xs flex items-start justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-olive-light border border-olive/30 flex items-center justify-center text-olive font-serif text-lg font-bold shrink-0">
+              ✓
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-terracotta">10:15 AM</span>
+                <span class="text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Breakfast</span>
+              </div>
+              <h3 class="text-base font-serif font-bold text-ink mt-1">Chocolate Proats with Almond Milk & Whey</h3>
+              <p class="text-xs text-clayMuted mt-0.5">50g Rolled Oats, 1 scoop Whey Isolate, 200ml Almond milk</p>
+              <div class="flex items-center gap-3 mt-3 text-xs text-clayMuted font-mono">
+                <span class="text-ink font-semibold">380 kcal</span>
+                <span>•</span>
+                <span class="text-olive font-bold">32g Protein</span>
+                <span>•</span>
+                <span>45g Carbs</span>
+                <span>•</span>
+                <span>8g Fat</span>
+              </div>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-olive-light text-olive-dark border border-olive/30 text-xs font-bold shrink-0">
+            Completed ✓
+          </span>
+        </div>
+
+        <!-- Routine Item 2: Midday Lunch (Active Pending) -->
+        <div class="bg-white rounded-2xl p-5 border-2 border-terracotta/40 shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-terracotta text-white px-3.5 py-1 rounded-bl-xl text-[10px] font-bold uppercase tracking-wider">
+            NEXT UP • 12:30 PM
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-terracotta-light border border-terracotta/30 flex items-center justify-center text-terracotta font-serif text-lg font-bold shrink-0">
+              🍲
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-terracotta">12:30 PM</span>
+                <span class="text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Lunch</span>
+                <span class="text-[10px] font-semibold text-olive bg-olive-light px-2 py-0.5 rounded-full">Mom Prepping 🟢</span>
+              </div>
+              <h3 class="text-base font-serif font-bold text-ink mt-1">2 Phulkas, Cabbage-Capsicum Sabzi & Fresh Probiotic Dahi</h3>
+              <p class="text-xs text-clayMuted mt-0.5">Low-oil mustard tempering, 150g fresh curd portion</p>
+              <div class="flex items-center gap-3 mt-3 text-xs text-clayMuted font-mono">
+                <span class="text-ink font-semibold">420 kcal</span>
+                <span>•</span>
+                <span class="text-olive font-bold">14g Protein</span>
+                <span>•</span>
+                <span>55g Carbs</span>
+                <span>•</span>
+                <span>12g Fat</span>
+              </div>
+              <div class="flex items-center gap-2 mt-4 pt-3 border-t border-warmBorder/60">
+                <button onclick="alert('Marked Lunch Complete!')" class="px-4 py-2 rounded-full bg-olive text-white hover:bg-olive-dark text-xs font-bold transition-all shadow-xs">
+                  Mark Done ✓
+                </button>
+                <button onclick="alert('Swap option selected!')" class="px-3.5 py-2 rounded-full bg-sandstone text-ink hover:bg-white border border-warmBorder text-xs font-semibold transition-all">
+                  Swap Meal ⇄
+                </button>
+                <button onclick="alert('Skipped item logged.')" class="px-3.5 py-2 rounded-full text-clayMuted hover:text-ink text-xs font-medium">
+                  Skip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Routine Item 3: Evening Snack -->
+        <div class="bg-white rounded-2xl p-5 border border-warmBorder shadow-xs flex items-start justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-sandstone border border-warmBorder flex items-center justify-center text-clayMuted font-serif text-lg font-bold shrink-0">
+              🥣
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-ink">05:30 PM</span>
+                <span class="text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Snack</span>
+              </div>
+              <h3 class="text-base font-serif font-bold text-ink mt-1">Boiled Kala Chana with Lemon & Chaat Masala</h3>
+              <p class="text-xs text-clayMuted mt-0.5">100g boiled portion, zero added oil</p>
+              <div class="flex items-center gap-3 mt-3 text-xs text-clayMuted font-mono">
+                <span class="text-ink font-semibold">180 kcal</span>
+                <span>•</span>
+                <span class="text-olive font-bold">10g Protein</span>
+                <span>•</span>
+                <span>28g Carbs</span>
+                <span>•</span>
+                <span>3g Fat</span>
+              </div>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-sandstone text-clayMuted border border-warmBorder text-xs font-semibold shrink-0">
+            In 5 hrs
+          </span>
+        </div>
+
+        <!-- Routine Item 4: Dinner -->
+        <div class="bg-white rounded-2xl p-5 border border-warmBorder shadow-xs flex items-start justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-sandstone border border-warmBorder flex items-center justify-center text-clayMuted font-serif text-lg font-bold shrink-0">
+              🧀
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-ink">07:00 PM</span>
+                <span class="text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Dinner</span>
+              </div>
+              <h3 class="text-base font-serif font-bold text-ink mt-1">Paneer Bhurji (100g), 2 Phulkas & Green Salad</h3>
+              <p class="text-xs text-clayMuted mt-0.5">Fresh low-fat paneer, diced tomatoes & cucumbers</p>
+              <div class="flex items-center gap-3 mt-3 text-xs text-clayMuted font-mono">
+                <span class="text-ink font-semibold">450 kcal</span>
+                <span>•</span>
+                <span class="text-olive font-bold">22g Protein</span>
+                <span>•</span>
+                <span>35g Carbs</span>
+                <span>•</span>
+                <span>20g Fat</span>
+              </div>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-sandstone text-clayMuted border border-warmBorder text-xs font-semibold shrink-0">
+            Scheduled
+          </span>
+        </div>
+
+        <!-- Routine Item 5: Movement -->
+        <div class="bg-white rounded-2xl p-5 border border-warmBorder shadow-xs flex items-start justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-sandstone border border-warmBorder flex items-center justify-center text-clayMuted font-serif text-lg font-bold shrink-0">
+              🚶
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-ink">08:00 PM</span>
+                <span class="text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Movement</span>
+              </div>
+              <h3 class="text-base font-serif font-bold text-ink mt-1">60-minute Post-Dinner Brisk Walk</h3>
+              <p class="text-xs text-clayMuted mt-0.5">Outdoor botanical loop • Target: 6,500 steps</p>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-sandstone text-clayMuted border border-warmBorder text-xs font-semibold shrink-0">
+            Scheduled
+          </span>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           COLUMN B (5 COLS): INTELLIGENCE, METABOLIC & HEARTH
+           ==================================================== -->
+      <aside class="lg:col-span-5 flex flex-col gap-6">
+
+        <!-- Macro Amphora Ledger -->
+        <div class="bg-white rounded-2xl p-6 border border-warmBorder shadow-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-warmBorder">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-terracotta">Metabolic Target</span>
+              <h2 class="text-lg font-serif font-bold text-ink">Daily Nutrition Ledger</h2>
+            </div>
+            <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-sandstone text-ink border border-warmBorder">
+              1,550 / 1,800 kcal
+            </span>
+          </div>
+
+          <!-- Progress Bars -->
+          <div class="space-y-4 mt-4">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-ink font-semibold">Calories</span>
+                <span class="font-mono font-medium text-clayMuted">1,550 / 1,800 kcal (86%)</span>
+              </div>
+              <div class="w-full bg-sandstone rounded-full h-2.5 overflow-hidden border border-warmBorder">
+                <div class="bg-terracotta h-2.5 rounded-full" style="width: 86%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-olive font-bold">Protein (Priority)</span>
+                <span class="font-mono font-bold text-olive">82 / 150g</span>
+              </div>
+              <div class="w-full bg-sandstone rounded-full h-2.5 overflow-hidden border border-warmBorder">
+                <div class="bg-olive h-2.5 rounded-full" style="width: 55%;"></div>
+              </div>
+              <span class="text-[10px] text-clayMuted mt-1 block">68g remaining for dinner + proats swap</span>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-ink font-semibold">Carbohydrates</span>
+                <span class="font-mono font-medium text-clayMuted">173 / 160g</span>
+              </div>
+              <div class="w-full bg-sandstone rounded-full h-2 overflow-hidden border border-warmBorder">
+                <div class="bg-amberSun h-2 rounded-full" style="width: 95%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-ink font-semibold">Healthy Fats</span>
+                <span class="font-mono font-medium text-clayMuted">48 / 45g</span>
+              </div>
+              <div class="w-full bg-sandstone rounded-full h-2 overflow-hidden border border-warmBorder">
+                <div class="bg-azureSea h-2 rounded-full" style="width: 90%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mom's Hearth Hub Dock -->
+        <div class="bg-white rounded-2xl p-6 border border-warmBorder shadow-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-warmBorder">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🍲</span>
+              <div>
+                <h3 class="text-sm font-serif font-bold text-ink">Mom's Kitchen Sync</h3>
+                <span class="text-[11px] text-olive font-medium">Household Dispatch Active</span>
+              </div>
+            </div>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-sandstone text-terracotta border border-warmBorder font-bold">
+              3 Queued
+            </span>
+          </div>
+
+          <div class="mt-3.5 space-y-2.5 text-xs">
+            <div class="p-3 rounded-xl bg-sandstone border border-warmBorder flex items-center justify-between">
+              <div>
+                <span class="font-bold text-ink block">12:30 PM Lunch</span>
+                <span class="text-clayMuted">2 Phulkas, Sabzi, Curd</span>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-olive-light text-olive-dark font-semibold text-[10px] border border-olive/30">
+                Prepping 🟢
+              </span>
+            </div>
+            <div class="p-3 rounded-xl bg-white border border-warmBorder flex items-center justify-between">
+              <div>
+                <span class="font-bold text-ink block">05:30 PM Kala Chana</span>
+                <span class="text-clayMuted">100g Boiled</span>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-sandstone text-clayMuted text-[10px]">
+                Pending
+              </span>
+            </div>
+          </div>
+
+          <button onclick="switchDesktopView('kitchen')" class="w-full mt-4 py-2.5 rounded-full bg-sandstone hover:bg-terracotta hover:text-white text-terracotta border border-warmBorder text-xs font-bold transition-all shadow-2xs">
+            Open Full Hearth Station Board →
+          </button>
+        </div>
+
+        <!-- Hydration Tracker Amphora -->
+        <div class="bg-white rounded-2xl p-5 border border-warmBorder shadow-xs flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-azureSea/10 border border-azureSea/30 flex items-center justify-center text-azureSea text-lg">
+              💧
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-azureSea">Hydration Status</span>
+              <span class="text-sm font-bold text-ink block font-mono" id="water-intake-text">2,250 / 3,000 ml</span>
+            </div>
+          </div>
+          <button onclick="addWater(250)" class="px-3.5 py-1.5 rounded-full bg-azureSea hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-all active:scale-95">
+            + 250ml
+          </button>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       VIEW 2: MOM'S HEARTH PREPARATION STATION (Hidden initially)
+       ========================================================================= -->
+  <main id="view-kitchen" class="max-w-7xl mx-auto px-6 py-8 w-full flex-1 hidden">
+    <div class="bg-white rounded-3xl p-6 border border-warmBorder shadow-xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-olive">Household Kitchen Dispatch • Family Sync Node</span>
+        <h1 class="text-3xl font-serif font-bold text-ink mt-0.5">Mom's Meal Preparation Board</h1>
+        <p class="text-xs text-clayMuted mt-1">Prescribed portion weights, ingredient specs & low-oil cooking instructions</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="window.print()" class="px-4 py-2 rounded-full bg-sandstone hover:bg-white text-ink border border-warmBorder text-xs font-semibold shadow-xs">
+          🖨️ Print Kitchen Sheet
+        </button>
+        <button class="px-4 py-2 rounded-full bg-olive-light text-olive-dark border border-olive/30 text-xs font-bold">
+          Son Sync Active 🟢
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Kitchen Card 1 -->
+      <div class="bg-white rounded-2xl p-6 border-2 border-terracotta/40 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-warmBorder">
+            <span class="font-mono text-sm font-bold text-terracotta">12:30 PM Lunch</span>
+            <span class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-terracotta text-white">Next Up</span>
+          </div>
+          <h2 class="text-lg font-serif font-bold text-ink mt-3">2 Phulkas, Gobi Sabzi & Curd</h2>
+          <div class="mt-4 p-3.5 rounded-xl bg-sandstone border border-warmBorder space-y-2 text-xs">
+            <span class="text-[10px] font-bold text-clayMuted uppercase tracking-wider block">Portion & Prep Directives:</span>
+            <div class="flex justify-between text-ink py-0.5 border-b border-warmBorder/40">
+              <span>Whole Wheat Sharbati Atta</span>
+              <strong class="font-mono text-terracotta">2 portions (thin)</strong>
+            </div>
+            <div class="flex justify-between text-ink py-0.5 border-b border-warmBorder/40">
+              <span>Cauliflower & Green Peas</span>
+              <strong class="font-mono text-terracotta">1 bowl steamed</strong>
+            </div>
+            <div class="flex justify-between text-ink py-0.5">
+              <span>A2 Cow Milk Curd</span>
+              <strong class="font-mono text-terracotta">150g ceramic bowl</strong>
+            </div>
+          </div>
+          <p class="text-xs italic text-clayMuted mt-3">
+            “Directive: Light mustard oil tempering with hing and jeera. Keep hot in terracotta casserole for 1:00 PM.”
+          </p>
+        </div>
+        <button onclick="this.classList.toggle('bg-olive'); this.classList.toggle('text-white'); this.innerText = this.innerText === 'Mark Prepped ✓' ? 'Prepped on Hearth ✓' : 'Mark Prepped ✓';" class="mt-5 w-full py-2.5 rounded-full bg-sandstone hover:bg-olive hover:text-white text-olive border border-warmBorder text-xs font-bold transition-all shadow-xs">
+          Mark Prepped ✓
+        </button>
+      </div>
+
+      <!-- Kitchen Card 2 -->
+      <div class="bg-white rounded-2xl p-6 border border-warmBorder shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-warmBorder">
+            <span class="font-mono text-sm font-bold text-ink">05:30 PM Snack</span>
+            <span class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Evening</span>
+          </div>
+          <h2 class="text-lg font-serif font-bold text-ink mt-3">Boiled Kala Chana Chaat</h2>
+          <div class="mt-4 p-3.5 rounded-xl bg-sandstone border border-warmBorder space-y-2 text-xs">
+            <span class="text-[10px] font-bold text-clayMuted uppercase tracking-wider block">Portion & Prep Directives:</span>
+            <div class="flex justify-between text-ink py-0.5 border-b border-warmBorder/40">
+              <span>Kala Chana (Black Chickpeas)</span>
+              <strong class="font-mono text-terracotta">100g boiled</strong>
+            </div>
+            <div class="flex justify-between text-ink py-0.5">
+              <span>Fresh Lemon & Chaat Masala</span>
+              <strong class="font-mono text-terracotta">1 wedge</strong>
+            </div>
+          </div>
+          <p class="text-xs italic text-clayMuted mt-3">
+            “Directive: Pressure cook with pinch of rock salt. Drain well; serve warm with lime.”
+          </p>
+        </div>
+        <button class="mt-5 w-full py-2.5 rounded-full bg-sandstone hover:bg-olive hover:text-white text-olive border border-warmBorder text-xs font-bold transition-all shadow-xs">
+          Mark Prepped ✓
+        </button>
+      </div>
+
+      <!-- Kitchen Card 3 -->
+      <div class="bg-white rounded-2xl p-6 border border-warmBorder shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-warmBorder">
+            <span class="font-mono text-sm font-bold text-ink">07:00 PM Dinner</span>
+            <span class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Night</span>
+          </div>
+          <h2 class="text-lg font-serif font-bold text-ink mt-3">Paneer Bhurji & 2 Phulkas</h2>
+          <div class="mt-4 p-3.5 rounded-xl bg-sandstone border border-warmBorder space-y-2 text-xs">
+            <span class="text-[10px] font-bold text-clayMuted uppercase tracking-wider block">Portion & Prep Directives:</span>
+            <div class="flex justify-between text-ink py-0.5 border-b border-warmBorder/40">
+              <span>Fresh Malai Paneer</span>
+              <strong class="font-mono text-terracotta">100g crumbled</strong>
+            </div>
+            <div class="flex justify-between text-ink py-0.5 border-b border-warmBorder/40">
+              <span>Phulkas</span>
+              <strong class="font-mono text-terracotta">2 thin round</strong>
+            </div>
+            <div class="flex justify-between text-ink py-0.5">
+              <span>Cucumber & Tomato Salad</span>
+              <strong class="font-mono text-terracotta">1 plate fresh</strong>
+            </div>
+          </div>
+          <p class="text-xs italic text-clayMuted mt-3">
+            “Directive: Saute with fresh coriander and green chilies. Minimal ghee (1/2 tsp).”
+          </p>
+        </div>
+        <button class="mt-5 w-full py-2.5 rounded-full bg-sandstone hover:bg-olive hover:text-white text-olive border border-warmBorder text-xs font-bold transition-all shadow-xs">
+          Mark Prepped ✓
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       VIEW 3: WEEKLY PROTOCOL MATRIX (Hidden initially)
+       ========================================================================= -->
+  <main id="view-matrix" class="max-w-7xl mx-auto px-6 py-8 w-full flex-1 hidden">
+    <div class="bg-white rounded-3xl p-6 border border-warmBorder shadow-xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-terracotta">7-Day Protocol Architecture</span>
+        <h1 class="text-3xl font-serif font-bold text-ink mt-0.5">Weekly Routine Protocol Matrix</h1>
+        <p class="text-xs text-clayMuted mt-1">Multi-day cadence, metabolic forecasting and automated text plan ingestion</p>
+      </div>
+      <button onclick="alert('Import Modal opened!')" class="px-4 py-2 rounded-full bg-terracotta hover:bg-terracotta-dark text-white text-xs font-semibold shadow-xs">
+        + Import Weekly Plan via AI
+      </button>
+    </div>
+
+    <!-- 7-Day Matrix Table -->
+    <div class="bg-white rounded-2xl border border-warmBorder shadow-xs overflow-x-auto">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="bg-sandstone border-b border-warmBorder text-clayMuted">
+            <th class="p-3.5 font-bold uppercase tracking-wider">Time Slot</th>
+            <th class="p-3.5 font-bold text-ink">Mon</th>
+            <th class="p-3.5 font-bold text-ink">Tue</th>
+            <th class="p-3.5 font-bold text-ink">Wed</th>
+            <th class="p-3.5 font-bold text-ink">Thu</th>
+            <th class="p-3.5 font-bold text-ink">Fri</th>
+            <th class="p-3.5 font-bold text-ink">Sat</th>
+            <th class="p-3.5 font-bold text-terracotta bg-terracotta/5">Sun (Today)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-warmBorder">
+          <tr>
+            <td class="p-3.5 font-mono font-bold text-terracotta bg-sandstone/50">10:15 AM</td>
+            <td class="p-3.5 text-ink">Proats (380k)</td>
+            <td class="p-3.5 text-ink">Proats (380k)</td>
+            <td class="p-3.5 text-ink">Proats (380k)</td>
+            <td class="p-3.5 text-ink">Proats (380k)</td>
+            <td class="p-3.5 text-ink">Proats (380k)</td>
+            <td class="p-3.5 text-ink">Poha + Whey</td>
+            <td class="p-3.5 font-semibold text-olive bg-terracotta/5">Proats (Done ✓)</td>
+          </tr>
+          <tr>
+            <td class="p-3.5 font-mono font-bold text-terracotta bg-sandstone/50">12:30 PM</td>
+            <td class="p-3.5 text-ink">2 Roti, Dal, Dahi</td>
+            <td class="p-3.5 text-ink">2 Roti, Sabzi</td>
+            <td class="p-3.5 text-ink">Rajma Chawal (150g)</td>
+            <td class="p-3.5 text-ink">2 Roti, Bhindi</td>
+            <td class="p-3.5 text-ink">2 Roti, Paneer</td>
+            <td class="p-3.5 text-ink">Khichdi Bowl</td>
+            <td class="p-3.5 font-semibold text-terracotta bg-terracotta/5">2 Roti, Gobi Sabzi</td>
+          </tr>
+          <tr>
+            <td class="p-3.5 font-mono font-bold text-terracotta bg-sandstone/50">05:30 PM</td>
+            <td class="p-3.5 text-ink">Kala Chana (100g)</td>
+            <td class="p-3.5 text-ink">Sprouted Moong</td>
+            <td class="p-3.5 text-ink">Kala Chana (100g)</td>
+            <td class="p-3.5 text-ink">Roasted Makhana</td>
+            <td class="p-3.5 text-ink">Kala Chana (100g)</td>
+            <td class="p-3.5 text-ink">Fruit Salad</td>
+            <td class="p-3.5 font-semibold text-ink bg-terracotta/5">Boiled Kala Chana</td>
+          </tr>
+          <tr>
+            <td class="p-3.5 font-mono font-bold text-terracotta bg-sandstone/50">07:00 PM</td>
+            <td class="p-3.5 text-ink">Tofu Stir Fry</td>
+            <td class="p-3.5 text-ink">Paneer Bhurji</td>
+            <td class="p-3.5 text-ink">Dal Tadka & Roti</td>
+            <td class="p-3.5 text-ink">Paneer Bhurji</td>
+            <td class="p-3.5 text-ink">Soya Chunks Sabzi</td>
+            <td class="p-3.5 text-ink">Paneer Tikka Salad</td>
+            <td class="p-3.5 font-semibold text-ink bg-terracotta/5">Paneer Bhurji (100g)</td>
+          </tr>
+          <tr>
+            <td class="p-3.5 font-mono font-bold text-terracotta bg-sandstone/50">08:00 PM</td>
+            <td class="p-3.5 text-ink">60m Brisk Walk</td>
+            <td class="p-3.5 text-ink">Upper Body Gym</td>
+            <td class="p-3.5 text-ink">60m Brisk Walk</td>
+            <td class="p-3.5 text-ink">Lower Body Gym</td>
+            <td class="p-3.5 text-ink">60m Brisk Walk</td>
+            <td class="p-3.5 text-ink">Active Rest / Stretch</td>
+            <td class="p-3.5 font-semibold text-ink bg-terracotta/5">60m Evening Walk</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       VIEW 4: AI COACH STUDIO (Hidden initially)
+       ========================================================================= -->
+  <main id="view-coach" class="max-w-7xl mx-auto px-6 py-8 w-full flex-1 hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Chat Conversation Area (8 cols) -->
+      <section class="lg:col-span-8 bg-white rounded-3xl p-6 border border-warmBorder shadow-xs flex flex-col h-[640px]">
+        <div class="pb-3 border-b border-warmBorder flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-full bg-terracotta-light text-terracotta flex items-center justify-center font-bold text-sm">AI</span>
+            <div>
+              <h2 class="text-base font-serif font-bold text-ink">Schedulfy Coach Studio</h2>
+              <span class="text-[11px] text-olive font-medium">Context active: Sunday Protocol</span>
+            </div>
+          </div>
+          <span class="text-xs px-2.5 py-0.5 rounded-full bg-sandstone text-clayMuted border border-warmBorder">Real-time DB Sync</span>
+        </div>
+
+        <!-- Chat messages stream -->
+        <div class="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+          <!-- Assistant Message -->
+          <div class="flex items-start gap-3 max-w-xl">
+            <div class="w-8 h-8 rounded-full bg-sandstone text-clayMuted flex items-center justify-center text-xs shrink-0">🌿</div>
+            <div class="bg-sandstone p-4 rounded-2xl rounded-tl-sm text-xs leading-relaxed text-ink border border-warmBorder">
+              Good morning Alex. You completed your 10:15 AM Chocolate Proats with 32g protein. Lunch is queued at Mom's Hearth (2 Phulkas, Cabbage Sabzi, Curd). Tell me if you need to swap or adjust any portions today.
+            </div>
+          </div>
+
+          <!-- User Message -->
+          <div class="flex items-end justify-end">
+            <div class="bg-terracotta text-white p-4 rounded-2xl rounded-tr-sm text-xs leading-relaxed max-w-md shadow-xs">
+              I had 30g whey isolate and a banana instead of proats.
+            </div>
+          </div>
+
+          <!-- Assistant Confirmation -->
+          <div class="flex items-start gap-3 max-w-xl">
+            <div class="w-8 h-8 rounded-full bg-sandstone text-clayMuted flex items-center justify-center text-xs shrink-0">🌿</div>
+            <div class="bg-white p-4 rounded-2xl rounded-tl-sm text-xs leading-relaxed text-ink border border-olive/30 shadow-2xs space-y-2">
+              <p>Logged! Replaced Breakfast with <strong class="text-terracotta">30g Whey + Banana</strong> (210 kcal, 27g protein). Daily protein is now at 85g/150g.</p>
+              <div class="p-2.5 rounded-xl bg-sandstone border border-warmBorder flex items-center justify-between text-[11px]">
+                <span class="text-clayMuted">Metabolic Delta:</span>
+                <span class="font-bold text-olive">-170 kcal | -5g Protein</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="pt-3 border-t border-warmBorder">
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Type prompt (e.g. 'swap evening snack', 'suggest high-protein dinner')..." class="flex-1 px-4 py-3 rounded-full bg-sandstone border border-warmBorder text-xs text-ink placeholder-clayMuted focus:outline-none focus:border-terracotta"/>
+            <button class="px-5 py-3 rounded-full bg-terracotta hover:bg-terracotta-dark text-white text-xs font-bold shadow-xs">Send</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Side Context Panel (4 cols) -->
+      <aside class="lg:col-span-4 bg-white rounded-3xl p-6 border border-warmBorder shadow-xs space-y-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-clayMuted">Quick Coach Prompts</h3>
+        <div class="space-y-2">
+          <button class="w-full text-left p-3 rounded-xl bg-sandstone hover:bg-white border border-warmBorder text-xs font-medium text-ink transition-all">
+            👉 "Suggest high-protein alternative to Paneer Bhurji"
+          </button>
+          <button class="w-full text-left p-3 rounded-xl bg-sandstone hover:bg-white border border-warmBorder text-xs font-medium text-ink transition-all">
+            👉 "How is my hydration and sodium balance today?"
+          </button>
+          <button class="w-full text-left p-3 rounded-xl bg-sandstone hover:bg-white border border-warmBorder text-xs font-medium text-ink transition-all">
+            👉 "Draft grocery requisition for Mom's kitchen"
+          </button>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <script>
+    function switchDesktopView(viewName) {
+      ['today', 'kitchen', 'matrix', 'coach'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        const btn = document.getElementById('nav-' + v);
+        if (v === viewName) {
+          el.classList.remove('hidden');
+          btn.className = 'px-4 py-1.5 rounded-full text-xs font-semibold transition-all bg-white text-ink shadow-xs';
+        } else {
+          el.classList.add('hidden');
+          btn.className = 'px-4 py-1.5 rounded-full text-xs font-semibold transition-all text-clayMuted hover:text-ink';
+        }
+      });
+    }
+
+    let waterMl = 2250;
+    function addWater(amount) {
+      waterMl += amount;
+      document.getElementById('water-intake-text').innerText = waterMl.toLocaleString() + ' / 3,000 ml';
+    }
+
+    function logQuickAction(type) {
+      if (type === 'walk') alert('Logged 60-min Brisk Walk! Steps incremented by 6,500.');
+      if (type === 'whey') alert('Logged 30g Whey Protein (+25g Protein, +120 kcal)!');
+    }
+  </script>
+</body>
+</html>

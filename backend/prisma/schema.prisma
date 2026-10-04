@@ -1,0 +1,317 @@
+// ─── Schedulfy — Prisma Schema ───
+// Personal Routine OS database model
+// Versioning: effectiveFrom/effectiveUntil on Schedule (no version tables)
+// Analytics: computed on-the-fly from Occurrence + Completion (no event tables)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Auth ───
+
+enum Role {
+  USER
+  MOM
+}
+
+model User {
+  id        String   @id @default(cuid())
+  role      Role     @unique
+  createdAt DateTime @default(now())
+
+  conversations     Conversation[]
+  pushSubscriptions PushSubscription[]
+}
+
+// ─── Plans ───
+
+enum PlanStatus {
+  DRAFT
+  REVIEW
+  ACTIVE
+  PAUSED
+  SUPERSEDED
+  ARCHIVED
+}
+
+model Plan {
+  id        String     @id @default(cuid())
+  name      String
+  status    PlanStatus @default(DRAFT)
+  category  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  routineItems RoutineItem[]
+}
+
+// ─── Routine Items ───
+
+enum ItemCategory {
+  MEAL
+  WORKOUT
+  SUPPLEMENT
+  ACTIVITY
+  HYDRATION
+  OTHER
+}
+
+model RoutineItem {
+  id        String       @id @default(cuid())
+  planId    String
+  title     String
+  category  ItemCategory
+  type      String? // freeform: "meal", "workout", "supplement", etc.
+  sortOrder Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  plan      Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  schedules Schedule[]
+  meal      Meal?
+
+  // Occurrence / completion links
+  occurrences       Occurrence[]
+  completionsAsActual Completion[] @relation("ActualItem")
+
+  // Alternative links
+  primaryAlternatives Alternative[] @relation("PrimaryItem")
+  alternativeFor      Alternative[] @relation("AlternativeItem")
+
+  nutritionSnapshots NutritionSnapshot[]
+
+  @@index([planId])
+}
+
+// ─── Schedules (versioned via effective dates) ───
+
+model Schedule {
+  id                    String    @id @default(cuid())
+  routineItemId         String
+  recurrenceRule        String // DAILY, WEEKDAYS, MON,WED,FRI, ONCE, etc.
+  scheduledTime         String // HH:mm (24h)
+  effectiveFrom         DateTime
+  effectiveUntil        DateTime?
+  reminderOffsetMinutes Int?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  routineItem   RoutineItem    @relation(fields: [routineItemId], references: [id], onDelete: Cascade)
+  occurrences   Occurrence[]
+  notifications Notification[]
+
+  @@index([routineItemId])
+  @@index([effectiveFrom, effectiveUntil])
+}
+
+// ─── Occurrences (immutable historical facts) ───
+
+enum OccurrenceStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+  MISSED
+  REPLACED
+  PARTIAL
+}
+
+model Occurrence {
+  id            String           @id @default(cuid())
+  scheduleId    String
+  routineItemId String
+  scheduledDate DateTime // date portion (start of day UTC)
+  scheduledTime String // HH:mm
+  status        OccurrenceStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  schedule    Schedule    @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  routineItem RoutineItem @relation(fields: [routineItemId], references: [id])
+
+  completion         Completion?
+  notifications      Notification[]
+  nutritionSnapshots NutritionSnapshot[]
+
+  @@unique([scheduleId, scheduledDate])
+  @@index([routineItemId])
+  @@index([scheduledDate])
+}
+
+// ─── Completions ───
+
+model Completion {
+  id           String           @id @default(cuid())
+  occurrenceId String           @unique
+  status       OccurrenceStatus
+  actualItemId String? // if replaced, ID of item actually consumed/done
+  notes        String?
+  completedAt  DateTime         @default(now())
+  createdAt    DateTime         @default(now())
+
+  occurrence Occurrence   @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  actualItem RoutineItem? @relation("ActualItem", fields: [actualItemId], references: [id])
+}
+
+// ─── Alternatives ───
+
+model Alternative {
+  id                String   @id @default(cuid())
+  primaryItemId     String
+  alternativeItemId String
+  scope             String? // "breakfast", "any", etc.
+  startDate         DateTime?
+  conditions        String?
+  createdAt         DateTime @default(now())
+
+  primaryItem     RoutineItem @relation("PrimaryItem", fields: [primaryItemId], references: [id], onDelete: Cascade)
+  alternativeItem RoutineItem @relation("AlternativeItem", fields: [alternativeItemId], references: [id], onDelete: Cascade)
+
+  @@unique([primaryItemId, alternativeItemId])
+}
+
+// ─── Meals ───
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  SNACK
+  DINNER
+  PRE_WORKOUT
+  POST_WORKOUT
+  BEDTIME
+  OTHER
+}
+
+model Meal {
+  id            String   @id @default(cuid())
+  routineItemId String   @unique
+  mealType      MealType
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  routineItem        RoutineItem         @relation(fields: [routineItemId], references: [id], onDelete: Cascade)
+  components         MealComponent[]
+  nutritionSnapshots NutritionSnapshot[]
+}
+
+model MealComponent {
+  id        String   @id @default(cuid())
+  mealId    String
+  name      String
+  quantity  String?
+  unit      String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@index([mealId])
+}
+
+// ─── Nutrition ───
+
+enum NutritionSource {
+  PLANNED
+  ACTUAL
+}
+
+model NutritionSnapshot {
+  id            String          @id @default(cuid())
+  routineItemId String?
+  mealId        String?
+  occurrenceId  String?
+  source        NutritionSource @default(PLANNED)
+  calories      Float?
+  protein       Float?
+  carbs         Float?
+  fat           Float?
+  fiber         Float?
+  createdAt     DateTime        @default(now())
+
+  routineItem RoutineItem? @relation(fields: [routineItemId], references: [id])
+  meal        Meal?        @relation(fields: [mealId], references: [id])
+  occurrence  Occurrence?  @relation(fields: [occurrenceId], references: [id])
+
+  @@index([occurrenceId])
+}
+
+// ─── Chat ───
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  messages Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  actionType     String? // COMPLETE, SKIP, REPLACE, IMPORT, etc.
+  actionPayload  Json? // structured action data
+  actionStatus   String? // PROPOSED, CONFIRMED, EXECUTED, REJECTED
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+// ─── Notifications ───
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model Notification {
+  id           String             @id @default(cuid())
+  scheduleId   String?
+  occurrenceId String?
+  scheduledFor DateTime
+  sentAt       DateTime?
+  status       NotificationStatus @default(PENDING)
+  title        String
+  body         String?
+  createdAt    DateTime           @default(now())
+
+  schedule   Schedule?   @relation(fields: [scheduleId], references: [id])
+  occurrence Occurrence? @relation(fields: [occurrenceId], references: [id])
+
+  @@index([status, scheduledFor])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

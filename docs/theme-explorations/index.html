@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedulfy — Theme Showcase & Evaluation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b0f17;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 18px 28px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .title-group h1 { font-size: 18px; font-weight: 700; color: #fff; }
+    .title-group p { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+    .theme-selector {
+      display: flex;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-x: auto;
+      max-width: 880px;
+      scrollbar-width: none;
+    }
+    .theme-selector::-webkit-scrollbar { display: none; }
+    .theme-btn {
+      border: none;
+      background: transparent;
+      padding: 7px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .theme-btn:hover { color: #fff; }
+    .theme-btn.active {
+      background: #6366f1;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    .view-toggle {
+      display: flex;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px;
+      border-radius: 8px;
+    }
+    .view-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .view-btn.active { background: rgba(255, 255, 255, 0.15); color: #fff; font-weight: 600; }
+    main {
+      flex: 1;
+      padding: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .theme-info-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .preview-frame-wrap {
+      flex: 1;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 860px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      min-height: 860px;
+      border: none;
+      display: block;
+    }
+    .preview-img {
+      width: 100%;
+      height: auto;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-group">
+      <h1>Schedulfy — Aesthetic Exploration Lab</h1>
+      <p>Theme 14 Selected: Mediterranean Orchard & Terracotta (Full Screen Suite)</p>
+    </div>
+
+    <div class="theme-selector">
+      <button class="theme-btn active" data-id="connected-studio">⚡ Connected Dual Studio</button>
+      <button class="theme-btn" data-id="desktop-suite">🖥️ Desktop Command Center</button>
+      <button class="theme-btn" data-id="mobile-suite">📱 Mobile Handheld App</button>
+      <span style="display:inline-block; width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 4px; align-self:center;"></span>
+      <button class="theme-btn" data-id="theme-14-mediterranean-orchard">✨ 14. Today Dashboard</button>
+      <button class="theme-btn" data-id="theme-14-mom-kitchen">✨ 14b. Mom's Kitchen</button>
+      <button class="theme-btn" data-id="theme-14-weekly-plan">✨ 14c. Weekly Plan</button>
+      <button class="theme-btn" data-id="theme-14-ai-coach">✨ 14d. AI Coach</button>
+      <span style="display:inline-block; width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 4px; align-self:center;"></span>
+      <button class="theme-btn" data-id="theme-1-neo-brutalist">1. Neo-Brutalist</button>
+      <button class="theme-btn" data-id="theme-2-nordic-sage">2. Nordic Sage</button>
+      <button class="theme-btn" data-id="theme-6-swiss-grid">6. Swiss Editorial</button>
+      <button class="theme-btn" data-id="theme-8-espresso-leather">8. Vintage Espresso</button>
+      <button class="theme-btn" data-id="theme-15-kyoto-botanical">15. Kyoto Blossom</button>
+      <button class="theme-btn" data-id="theme-16-destijl-grid">16. De Stijl Grid</button>
+      <button class="theme-btn" data-id="theme-17-scandi-chromatic">17. Scandi Neo-Grid</button>
+      <button class="theme-btn" data-id="theme-18-botanical-apothecary">18. Amber Apothecary</button>
+      <button class="theme-btn" data-id="theme-19-art-deco-velvet">19. Art Deco Velvet</button>
+    </div>
+
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-interactive">Interactive HTML</button>
+      <button class="view-btn" id="btn-screenshot">Hi-Res Screenshot</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="theme-info-card" id="theme-info">
+      <div>
+        <h2 id="theme-name" style="font-size: 16px; font-weight: 700; color: #fff;">⚡ Connected Dual-Screen Studio (Desktop ⇄ Mobile Live Sync)</h2>
+        <p id="theme-desc" style="font-size: 13px; color: #94a3b8; margin-top: 3px;">
+          Panoramic Desktop Command Cockpit linked in real-time to the Handheld Mobile App. Actions on phone update desktop ledger instantly.
+        </p>
+      </div>
+      <a id="direct-link" href="connected-studio.html" target="_blank" style="padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 8px; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; white-space: nowrap;">
+        Open Fullscreen ↗
+      </a>
+    </div>
+
+    <div class="preview-frame-wrap">
+      <iframe id="preview-iframe" src="connected-studio.html"></iframe>
+      <img id="preview-image" class="preview-img" src="theme-14-mediterranean-orchard.png" alt="Theme Preview">
+    </div>
+  </main>
+
+  <script>
+    const themeData = {
+      'connected-studio': {
+        name: '⚡ Connected Dual-Screen Studio (Desktop ⇄ Mobile Live Sync)',
+        desc: 'Panoramic Desktop Command Cockpit linked in real-time to the Handheld Mobile App. Actions on phone update desktop ledger instantly.',
+        file: 'connected-studio'
+      },
+      'desktop-suite': {
+        name: '🖥️ Schedulfy Desktop Command Center (Theme 14 Panoramic)',
+        desc: 'Full 1440px multi-column command deck: Executive timeline, live Hearth kitchen prep status, macro amphoras, weekly matrix & AI studio.',
+        file: 'desktop-suite'
+      },
+      'mobile-suite': {
+        name: '📱 Schedulfy Mobile Handheld App (Theme 14 Touch-Native)',
+        desc: 'Ergonomic 390px handheld experience: Dynamic island, thumb log chips, circular progress dial, swipe cards, bottom navigation.',
+        file: 'mobile-suite'
+      },
+      'theme-14-mediterranean-orchard': {
+        name: '14. Mediterranean Orchard & Terracotta (Today Dashboard)',
+        desc: 'Warm linen (#FAF6F0), sun-baked terracotta (#D95D39), Kalamata olive green, lemon amber & azure accents, serene editorial serif.',
+        file: 'theme-14-mediterranean-orchard'
+      },
+      'theme-14-mom-kitchen': {
+        name: '14b. Mediterranean Orchard — Household Kitchen & Meal Prep Deck',
+        desc: 'Sunlit meal preparation queue, ingredient checklists, low-oil & portion notes, live sync indicator with son\'s mobile routine.',
+        file: 'theme-14-mom-kitchen'
+      },
+      'theme-14-weekly-plan': {
+        name: '14c. Mediterranean Orchard — Weekly Routine Matrix & Protocol',
+        desc: '7-day horizontal calendar selector, clean routine matrix cards for meals and workouts, AI text plan import box.',
+        file: 'theme-14-weekly-plan'
+      },
+      'theme-14-ai-coach': {
+        name: '14d. Mediterranean Orchard — Schedulfy AI Routine & Nutrition Coach',
+        desc: 'Conversational routine assistant, meal swap confirmation cards, quick action suggestion chips, warm terracotta chat bubbles.',
+        file: 'theme-14-ai-coach'
+      },
+      'theme-1-neo-brutalist': {
+        name: '1. Neo-Brutalist Bauhaus Editorial (Light)',
+        desc: 'Warm paper (#F5F3EC), bold 2px black grid lines, electric cobalt blue headers, tactile hard shadow stamps.',
+        file: 'theme-1-neo-brutalist'
+      },
+      'theme-2-nordic-sage': {
+        name: '2. Nordic Minimalist & Sage Botanical (Warm Light)',
+        desc: 'Serene oat milk (#FAF7F2), matcha herbal sage, terracotta clay accents, elegant editorial serif typography.',
+        file: 'theme-2-nordic-sage'
+      },
+      'theme-6-swiss-grid': {
+        name: '6. Swiss International Style / Massimo Vignelli Editorial',
+        desc: 'Stark white & pure ink black, Klein blue / vermilion punch, uncompromising mathematical grid, huge grotesque numerals.',
+        file: 'theme-6-swiss-grid'
+      },
+      'theme-8-espresso-leather': {
+        name: '8. Warm Espresso & Leather / Vintage Academic Study',
+        desc: 'Deep espresso roast (#16120E), warm parchment cards, burnished brass accents, literary serif typography, wax seal stamps.',
+        file: 'theme-8-espresso-leather'
+      },
+      'theme-15-kyoto-botanical': {
+        name: '15. Kyoto Ceremonial Matcha & Ume Plum (Inspired by #2)',
+        desc: 'Porcelain washi canvas, ceremonial matcha green (#2D6A4F), vibrant ume plum magenta, golden yuzu, pure zen whitespace.',
+        file: 'theme-15-kyoto-botanical'
+      },
+      'theme-16-destijl-grid': {
+        name: '16. De Stijl & Bauhaus Primary Color Grid (Inspired by #6)',
+        desc: 'Gallery white (#FFFFFF), 2px black grid, Yves Klein cobalt, cadmium canary yellow, vermilion red, stark mathematical modernism.',
+        file: 'theme-16-destijl-grid'
+      },
+      'theme-17-scandi-chromatic': {
+        name: '17. Scandinavian Neo-Chromatic Grid (Inspired by #6)',
+        desc: 'Milk white canvas, clean 1px borders, Scandinavian color-blocking in iris violet, Nordic cobalt, persimmon orange, and mint.',
+        file: 'theme-17-scandi-chromatic'
+      },
+      'theme-18-botanical-apothecary': {
+        name: '18. Vintage Apothecary & Botanical Herbarium (Inspired by #8)',
+        desc: 'Polished walnut & tortoiseshell (#181310), cream parchment, forest emerald, cognac amber, ruby port wine, copper foil borders.',
+        file: 'theme-18-botanical-apothecary'
+      },
+      'theme-19-art-deco-velvet': {
+        name: '19. Art Deco Jazz Age & Gilded Velvet (Inspired by #8)',
+        desc: 'Toasted mahogany (#1B1310), champagne silk cards, stepped gold foil lines, imperial velvet emerald, royal sapphire blue, marigold gold.',
+        file: 'theme-19-art-deco-velvet'
+      }
+    };
+
+    let activeThemeId = 'theme-14-mediterranean-orchard';
+    let viewMode = 'interactive';
+
+    const btns = document.querySelectorAll('.theme-btn');
+    const iframe = document.getElementById('preview-iframe');
+    const img = document.getElementById('preview-image');
+    const nameEl = document.getElementById('theme-name');
+    const descEl = document.getElementById('theme-desc');
+    const directLink = document.getElementById('direct-link');
+
+    function updateView() {
+      const data = themeData[activeThemeId];
+      nameEl.textContent = data.name;
+      descEl.textContent = data.desc;
+      directLink.href = `${data.file}.html`;
+
+      if (viewMode === 'interactive') {
+        iframe.style.display = 'block';
+        img.style.display = 'none';
+        iframe.src = `${data.file}.html`;
+      } else {
+        iframe.style.display = 'none';
+        img.style.display = 'block';
+        img.src = `${data.file}.png`;
+      }
+    }
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeThemeId = btn.dataset.id;
+        updateView();
+      });
+    });
+
+    document.getElementById('btn-interactive').addEventListener('click', (e) => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      viewMode = 'interactive';
+      updateView();
+    });
+
+    document.getElementById('btn-screenshot').addEventListener('click', (e) => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      viewMode = 'screenshot';
+      updateView();
+    });
+  </script>
+</body>
+</html>
