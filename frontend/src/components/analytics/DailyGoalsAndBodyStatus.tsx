@@ -44,7 +44,7 @@ export const DailyGoalsAndBodyStatus: React.FC<DailyGoalsAndBodyStatusProps> = (
               </h3>
             </div>
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#fcf2e6] text-[#52652a] border border-[#dfc0b7]">
-              4 Active Goals
+              {dailyGoals.length} Active {dailyGoals.length === 1 ? "Goal" : "Goals"}
             </span>
           </div>
 
@@ -120,7 +120,7 @@ export const DailyGoalsAndBodyStatus: React.FC<DailyGoalsAndBodyStatusProps> = (
                     Muscle Protein Synthesis
                   </span>
                   <span className="text-xs font-mono font-bold text-[#52652a]">
-                    {bodyStatus?.averageProtein ?? 0}g / 150g
+                    {bodyStatus?.averageProtein ?? 0}g / {bodyStatus?.proteinTarget || 150}g
                   </span>
                 </div>
                 <p className="text-[11px] text-[#58423c] mt-0.5">
