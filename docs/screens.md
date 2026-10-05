@@ -450,6 +450,48 @@ Layout:
 
 ---
 
+### Screen 11: 3D Interactive Protocol Calendar & Fluid Engine
+- **Route**: `/calendar`
+- **Concept**: Interactive 3D calendar grid tracking daily Winter Arc routine compliance. Each day cell features a procedural animated floating water wave filling up to the day's adherence percentage (0-100%). Visual change detection highlights days where routine modifications occurred (meal swaps, time shifts, skipped items) with an interactive day ledger modal. Elevated by Three.js WebGL 3D glass fluid sphere with real-time wave physics, bubbles, and interactive tilt.
+
+#### 🪡 Stitch Prompt for Screen 11
+```text
+Screen: 3D Interactive Protocol Calendar & Fluid Adherence Cockpit
+Platform: Web & Mobile Responsive
+Theme: [Insert Your Finalized Theme]
+Layout:
+1. Three.js 3D Fluid Header Banner:
+   - Left side: Title "Protocol Calendar", Subtitle "Winter Arc adherence, routine changes, and daily execution matrix".
+   - Right side: Interactive 3D WebGL glass fluid orb canvas (180x180) with floating bubbles, undulating azure liquid surface, and mouse tilt physics.
+   - Month Selector Pills: "Oct 2026 (Phase 1)" active terracotta pill, "Nov 2026 (Phase 2)", "Dec 2026 (Phase 3)", "Jan 2027 (Phase 4)", "Feb 2027 (Phase 5)".
+
+2. 4 Metric Overview Cards:
+   - Card 1: "Avg Adherence" (e.g. "86% Complete", progress ring).
+   - Card 2: "Perfect Days" (e.g. "18 Days", green check pill).
+   - Card 3: "Routine Shifts" (e.g. "4 Changes", orange alert pill - meal swaps/skips).
+   - Card 4: "Total Water Logged" (e.g. "84.2 L", cyan drop icon).
+
+3. 7-Column Calendar Grid:
+   - Days of week header: Mon, Tue, Wed, Thu, Fri, Sat, Sun.
+   - Dynamic Day Cells:
+     * Background: Animated floating water liquid wave filling bottom-to-top to the exact adherence percentage.
+     * Top row: Day number (e.g. "05", bold), Today dot indicator if current date.
+     * Center: Large bold adherence percentage (e.g. "100%", "75%", "0%").
+     * Badge (if routine modified): "🔄 1 Shift" terracotta badge indicating meal swap or routine override.
+     * Bottom stats: Daily water intake ("3,000ml") and step count ("8,500").
+     * Hover state: Glassmorphism lift, liquid glow border, clickable cursor.
+
+4. Day Detail Audit Modal (on Day click):
+   - Header: Selected date (e.g. "Monday, October 5, 2026") and overall adherence pill ("88% Followed").
+   - 3-Item Biometric Row: Water Level, Steps Logged, Routine Count.
+   - Section "Protocol Audit & Routine Changes":
+     * Tagged ledger of changes (e.g. "Meal Swap: Paneer Salad → Dal Makhani", "Skipped: Morning Sun Walk").
+   - Section "Scheduled Routine Ledger":
+     * Chronological checklist of routines with timestamp, macro tags, and DONE / REPLACED / SKIPPED status badges.
+```
+
+---
+
 ## 🛠️ Summary Matrix of All Screens
 
 | # | Screen Name | Route | Desktop | Mobile | Primary Purpose |
@@ -464,4 +506,6 @@ Layout:
 | 8 | PIN Keypad Access | `/login` | Centered | Centered | USER (1234) & MOM (5678) dual login |
 | 9 | Meal Swap Modal | Overlay | Modal | Sheet | Substitute meals with healthy alternatives |
 | 10 | Confirmation & Success Modal | Overlay | Modal | Sheet | Verification, loader & checkmark animation |
+| 11 | 3D Interactive Protocol Calendar | `/calendar` | Yes (Grid) | Yes (Stack) | Protocol adherence %, floating water wave cells, change audit, 3D fluid engine |
+
 

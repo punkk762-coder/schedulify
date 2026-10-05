@@ -8,6 +8,7 @@ export default function DesktopHeader() {
 
   const navItems = [
     { label: "☀️ Today", href: "/today" },
+    { label: "📅 3D Calendar", href: "/calendar" },
     { label: "📊 Analytics", href: "/analytics" },
     { label: "💬 AI Coach", href: "/chat" },
     { label: "🍲 Mom's Deck", href: "/mom" },

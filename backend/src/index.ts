@@ -14,6 +14,7 @@ import plansRouter from "./routes/plans";
 import analyticsRouter from "./routes/analytics";
 import historyRouter from "./routes/history";
 import settingsRouter from "./routes/settings";
+import calendarRouter from "./routes/calendar";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -44,6 +45,7 @@ app.use("/api", plansRouter);
 app.use("/api", analyticsRouter);
 app.use("/api", historyRouter);
 app.use("/api", settingsRouter);
+app.use("/api", calendarRouter);
 
 // Start server
 if (process.env.NODE_ENV !== "test") {

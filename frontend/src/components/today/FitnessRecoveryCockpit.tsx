@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { ThreeFluidOrb } from "../3d/ThreeFluidOrb";
 
 export interface FitnessRecoveryData {
   sleepHours: number;
@@ -321,17 +322,24 @@ export function FitnessRecoveryCockpit({
 
       {/* ─── DRAG SLIDER 2: WATER INTAKE & TIME OF DAY ─── */}
       <div className="p-4 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0284c7] block">
-              Hydration Drag Slider
-            </span>
-            <h4 className="text-xs font-serif font-bold text-[#1f1b14]">
-              Water Intake (ml) &amp; Time Slot
-            </h4>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <ThreeFluidOrb
+              level={Math.min(100, Math.round((waterMl / 3000) * 100))}
+              size={56}
+              color="#0284c7"
+            />
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0284c7] block">
+                3D Hydration Fluid Tank
+              </span>
+              <h4 className="text-xs font-serif font-bold text-[#1f1b14]">
+                Water Intake &amp; Time Slot
+              </h4>
+            </div>
           </div>
 
-          <div className="text-right font-mono">
+          <div className="text-right font-mono shrink-0">
             <span className="text-base font-bold text-[#0284c7]">{waterMl.toLocaleString()}</span>
             <span className="text-[11px] text-[#58423c] ml-1">/ 3,000 ml</span>
           </div>
