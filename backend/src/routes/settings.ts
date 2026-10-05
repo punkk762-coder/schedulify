@@ -1,6 +1,11 @@
 import { Router, type Request, type Response } from "express";
 import { prisma } from "../db";
 import { verifyPin, requireUserMiddleware } from "../auth";
+import {
+  getGeminiUsageStats,
+  testGeminiApiKey,
+  updateGeminiApiKey,
+} from "../ai/geminiQuota";
 
 const router = Router();
 
@@ -193,4 +198,58 @@ router.post("/settings/profiles", requireUserMiddleware, async (req: Request, re
   }
 });
 
+// GET /api/settings/gemini — Fetch real-time Gemini token & request quota metrics
+router.get("/settings/gemini", requireUserMiddleware, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const stats = await getGeminiUsageStats();
+    res.json(stats);
+  } catch (err) {
+    console.error("GET /api/settings/gemini error:", err);
+    res.status(500).json({ error: "Failed to load Gemini quota stats" });
+  }
+});
+
+// POST /api/settings/gemini — Test and swap Gemini API key or revert to .env
+router.post("/settings/gemini", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { apiKey, action } = req.body || {};
+
+    if (action === "revert" || !apiKey || apiKey.trim() === "") {
+      await updateGeminiApiKey(null);
+      const updated = await getGeminiUsageStats();
+      res.json({
+        success: true,
+        message: "Reverted to default .env Gemini API key.",
+        stats: updated,
+      });
+      return;
+    }
+
+    const cleanKey = apiKey.trim();
+
+    // Verify key validity with Google AI endpoint before committing
+    const testResult = await testGeminiApiKey(cleanKey);
+    if (!testResult.valid) {
+      res.status(400).json({
+        error: `Google Gemini verification failed: ${testResult.error || "Invalid API key"}. Key was not saved.`,
+      });
+      return;
+    }
+
+    // Persist validated key in DB
+    await updateGeminiApiKey(cleanKey);
+    const updated = await getGeminiUsageStats();
+
+    res.json({
+      success: true,
+      message: "Gemini API Key verified with Google AI and activated successfully!",
+      stats: updated,
+    });
+  } catch (err) {
+    console.error("POST /api/settings/gemini error:", err);
+    res.status(500).json({ error: "Failed to update Gemini API key" });
+  }
+});
+
 export default router;
+

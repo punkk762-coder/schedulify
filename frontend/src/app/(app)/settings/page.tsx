@@ -15,6 +15,27 @@ interface ManagedUser {
   createdAt: string;
 }
 
+export interface GeminiQuotaStats {
+  configured: boolean;
+  source: "DATABASE" | "ENV" | "NONE";
+  maskedKey: string;
+  model: string;
+  dailyRequestLimit: number;
+  requestsToday: number;
+  remainingRequests: number;
+  totalTokensToday: number;
+  promptTokensToday: number;
+  candidateTokensToday: number;
+  minuteRateLimit: number;
+  minuteTokenLimit: number;
+  quotaPercentageUsed: number;
+  quotaStatus: "HEALTHY" | "MODERATE" | "NEARING_LIMIT" | "EXHAUSTED";
+  needsChange: boolean;
+  lastUsedAt: string | null;
+  lastError: string | null;
+  resetInfo: string;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [seeding, setSeeding] = useState(false);
@@ -41,6 +62,29 @@ export default function SettingsPage() {
   const [userError, setUserError] = useState<string | null>(null);
   const [userSuccess, setUserSuccess] = useState<string | null>(null);
 
+  // Gemini token quota and dynamic key management
+  const [geminiStats, setGeminiStats] = useState<GeminiQuotaStats | null>(null);
+  const [loadingGemini, setLoadingGemini] = useState(true);
+  const [newApiKey, setNewApiKey] = useState("");
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [savingApiKey, setSavingApiKey] = useState(false);
+  const [apiKeyMsg, setApiKeyMsg] = useState<{ text: string; error?: boolean } | null>(null);
+
+  const fetchGeminiStats = useCallback(async () => {
+    try {
+      setLoadingGemini(true);
+      const res = await fetch("/api/settings/gemini");
+      if (res.ok) {
+        const data = await res.json();
+        setGeminiStats(data);
+      }
+    } catch (err) {
+      console.error("Failed to load Gemini quota:", err);
+    } finally {
+      setLoadingGemini(false);
+    }
+  }, []);
+
   const fetchSettings = useCallback(async () => {
     try {
       setLoadingUsers(true);
@@ -60,7 +104,65 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchSettings();
-  }, [fetchSettings]);
+    fetchGeminiStats();
+  }, [fetchSettings, fetchGeminiStats]);
+
+  const handleSaveGeminiKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (savingApiKey || !newApiKey.trim()) return;
+    setSavingApiKey(true);
+    setApiKeyMsg(null);
+
+    try {
+      const res = await fetch("/api/settings/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: newApiKey.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setApiKeyMsg({ text: data.message || "Gemini API key verified and updated!" });
+        setNewApiKey("");
+        setShowKeyInput(false);
+        if (data.stats) setGeminiStats(data.stats);
+        else fetchGeminiStats();
+        setTimeout(() => setApiKeyMsg(null), 5000);
+      } else {
+        setApiKeyMsg({ text: data.error || "Failed to update API key.", error: true });
+      }
+    } catch {
+      setApiKeyMsg({ text: "Network error connecting to Gemini validation service.", error: true });
+    } finally {
+      setSavingApiKey(false);
+    }
+  };
+
+  const handleRevertGeminiKey = async () => {
+    if (!window.confirm("Revert to default environment (.env) Gemini API key?")) return;
+    setSavingApiKey(true);
+    setApiKeyMsg(null);
+
+    try {
+      const res = await fetch("/api/settings/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "revert" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setApiKeyMsg({ text: data.message || "Reverted to .env key!" });
+        if (data.stats) setGeminiStats(data.stats);
+        else fetchGeminiStats();
+        setTimeout(() => setApiKeyMsg(null), 4000);
+      } else {
+        setApiKeyMsg({ text: data.error || "Failed to revert key.", error: true });
+      }
+    } catch {
+      setApiKeyMsg({ text: "Network error reverting key.", error: true });
+    } finally {
+      setSavingApiKey(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -225,6 +327,265 @@ export default function SettingsPage() {
           Sign Out / Exit
         </button>
       </header>
+
+      {/* ─── Gemini AI Token Quota & API Key Cockpit ─── */}
+      <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#dfc0b7] gap-2">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#a43716] animate-pulse" />
+              <span className="text-[10px] font-mono font-bold text-[#a43716] uppercase tracking-wider">
+                Google AI Studio • Token &amp; Quota Engine
+              </span>
+            </div>
+            <h2 className="text-lg font-serif font-bold text-[#1f1b14]">
+              Gemini AI Quota &amp; Key Cockpit
+            </h2>
+            <p className="text-xs text-[#58423c]">
+              Real-time token telemetry, daily free-tier request limits, and instant in-app key swapping.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {loadingGemini ? (
+              <span className="text-[10px] font-mono text-[#8b716a] animate-pulse">Syncing quota...</span>
+            ) : geminiStats ? (
+              <span
+                className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold border uppercase ${
+                  geminiStats.quotaStatus === "HEALTHY"
+                    ? "bg-[#f7faef] text-[#52652a] border-[#52652a]/20"
+                    : geminiStats.quotaStatus === "MODERATE"
+                    ? "bg-[#fff8e1] text-[#b78103] border-[#b78103]/20"
+                    : geminiStats.quotaStatus === "NEARING_LIMIT"
+                    ? "bg-[#ffedea] text-[#c0431a] border-[#c0431a]/20 animate-pulse"
+                    : "bg-[#ffdad6] text-[#93000a] border-[#ba1a1a]/30 animate-pulse"
+                }`}
+              >
+                ● {geminiStats.quotaStatus.replace("_", " ")} ({100 - geminiStats.quotaPercentageUsed}% Left)
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Quota Exhaustion / Warning Alert */}
+        {geminiStats?.needsChange && (
+          <div className="p-4 rounded-xl bg-[#ffdad6]/60 border border-[#ba1a1a]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <p className="font-bold text-[#93000a] flex items-center gap-1.5">
+                <span>⚠️</span>
+                <span>
+                  {geminiStats.quotaStatus === "EXHAUSTED"
+                    ? "Gemini Free Quota Exhausted! Time to Change API Key."
+                    : "Nearing Daily Free Tier Quota Limit."}
+                </span>
+              </p>
+              <p className="text-[#58423c] text-[11px]">
+                {geminiStats.lastError
+                  ? `Last Error: ${geminiStats.lastError}. `
+                  : `You have consumed ${geminiStats.requestsToday} of 1,500 requests today. `}
+                Paste another free API key from Google AI Studio below to keep AI running without interruption.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowKeyInput(true)}
+              className="px-4 py-2 rounded-xl bg-[#ba1a1a] hover:bg-[#93000a] text-white text-xs font-bold transition-all shrink-0 active:scale-95 shadow-xs"
+            >
+              Swap Key Now 🔑
+            </button>
+          </div>
+        )}
+
+        {/* 3 Metric Overview Tiles */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Card 1: Daily Requests */}
+          <div className="p-4 rounded-xl border border-[#dfc0b7] bg-linear-to-br from-[#fcf2e6]/50 to-white space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase text-[#8b716a]">
+                Daily Requests (RPD)
+              </span>
+              <span className="text-[10px] font-mono font-bold text-[#a43716]">
+                {geminiStats?.quotaPercentageUsed ?? 0}% Used
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-serif font-bold text-[#1f1b14]">
+                {geminiStats?.requestsToday.toLocaleString() ?? 0}
+              </span>
+              <span className="text-xs text-[#8b716a] font-mono">
+                / {geminiStats?.dailyRequestLimit.toLocaleString() ?? 1500} RPD
+              </span>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full h-2 rounded-full bg-[#dfc0b7]/40 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  (geminiStats?.quotaPercentageUsed ?? 0) > 85
+                    ? "bg-[#ba1a1a]"
+                    : (geminiStats?.quotaPercentageUsed ?? 0) > 60
+                    ? "bg-[#e59819]"
+                    : "bg-[#52652a]"
+                }`}
+                style={{ width: `${Math.min(100, Math.max(4, geminiStats?.quotaPercentageUsed ?? 0))}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-[#58423c] flex items-center justify-between">
+              <span>Remaining Today:</span>
+              <strong className="text-[#1f1b14] font-mono font-bold">
+                {geminiStats?.remainingRequests.toLocaleString() ?? 1500}
+              </strong>
+            </p>
+          </div>
+
+          {/* Card 2: Tokens Today */}
+          <div className="p-4 rounded-xl border border-[#dfc0b7] bg-linear-to-br from-[#fcf2e6]/50 to-white space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase text-[#8b716a]">
+                Tokens Used Today
+              </span>
+              <span className="text-[10px] font-mono text-[#52652a] font-bold bg-[#f7faef] px-2 py-0.5 rounded-full border border-[#52652a]/20">
+                1M TPM Cap
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-serif font-bold text-[#1f1b14]">
+                {geminiStats?.totalTokensToday.toLocaleString() ?? 0}
+              </span>
+              <span className="text-xs text-[#8b716a] font-mono">tokens</span>
+            </div>
+            <p className="text-[11px] text-[#58423c] space-x-1">
+              <span>Prompt:</span>
+              <strong className="font-mono text-[#1f1b14]">{geminiStats?.promptTokensToday.toLocaleString() ?? 0}</strong>
+              <span>• Output:</span>
+              <strong className="font-mono text-[#1f1b14]">{geminiStats?.candidateTokensToday.toLocaleString() ?? 0}</strong>
+            </p>
+            <p className="text-[10px] text-[#8b716a] font-mono">
+              Model: {geminiStats?.model ?? "gemini-2.5-flash"}
+            </p>
+          </div>
+
+          {/* Card 3: Key Status & Reset Timer */}
+          <div className="p-4 rounded-xl border border-[#dfc0b7] bg-linear-to-br from-[#fcf2e6]/50 to-white space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase text-[#8b716a]">
+                Active Key Source
+              </span>
+              <span className="text-[10px] font-mono font-bold text-[#a43716]">
+                {geminiStats?.source === "DATABASE" ? "Custom DB Key" : "Default (.env)"}
+              </span>
+            </div>
+            <div className="font-mono text-sm font-bold text-[#1f1b14] truncate py-1">
+              {geminiStats?.maskedKey ?? "None"}
+            </div>
+            <p className="text-[11px] text-[#58423c]">
+              Limit: <strong>15 Requests/Min (RPM)</strong>
+            </p>
+            <p className="text-[10px] font-mono text-[#8b716a]">
+              Resets: 00:00 UTC (Midnight Pacific)
+            </p>
+          </div>
+        </div>
+
+        {/* Messages */}
+        {apiKeyMsg && (
+          <div
+            className={`p-3 rounded-xl border text-xs font-semibold ${
+              apiKeyMsg.error
+                ? "bg-[#ffdad6] text-[#93000a] border-[#ba1a1a]/30"
+                : "bg-[#f7faef] text-[#52652a] border-[#52652a]/20"
+            }`}
+          >
+            {apiKeyMsg.text}
+          </div>
+        )}
+
+        {/* Key Actions and Form Toggle */}
+        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowKeyInput((prev) => !prev)}
+              className="px-4 py-2 rounded-xl bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+            >
+              <span>{showKeyInput ? "✕ Close Key Form" : "🔑 Change Gemini API Key"}</span>
+            </button>
+
+            {geminiStats?.source === "DATABASE" && (
+              <button
+                type="button"
+                onClick={handleRevertGeminiKey}
+                disabled={savingApiKey}
+                className="px-3.5 py-2 rounded-xl bg-[#fcf2e6] hover:bg-[#fae3cf] text-[#a43716] border border-[#dfc0b7] text-xs font-bold transition-all active:scale-95 disabled:opacity-40"
+              >
+                Revert to .env Key
+              </button>
+            )}
+          </div>
+
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-bold text-[#a43716] hover:underline flex items-center gap-1"
+          >
+            <span>Get a 100% Free Gemini Key from Google AI Studio</span>
+            <span>↗</span>
+          </a>
+        </div>
+
+        {/* Change Key Form (Collapsible) */}
+        {showKeyInput && (
+          <form onSubmit={handleSaveGeminiKey} className="p-4 rounded-xl border border-[#dfc0b7] bg-[#fcf2e6]/30 space-y-3">
+            <div className="space-y-1">
+              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a]">
+                New Gemini API Key (Verified live before activation) *
+              </label>
+              <p className="text-[11px] text-[#58423c]">
+                Paste your API key (starts with <code className="font-mono bg-white px-1 rounded">AIzaSy...</code>). The app will test it with a ping request to Google AI to verify it works before saving.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="password"
+                value={newApiKey}
+                onChange={(e) => setNewApiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                required
+                className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#dfc0b7] text-xs font-mono font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
+              />
+              <button
+                type="submit"
+                disabled={savingApiKey || !newApiKey.trim()}
+                className="px-5 py-2.5 rounded-xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-40 shadow-xs flex items-center justify-center gap-1.5 shrink-0"
+              >
+                {savingApiKey ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Verifying with Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Verify &amp; Activate Key</span>
+                    <span>✓</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-[11px] text-[#58423c] border-t border-[#dfc0b7]/50">
+              <div className="space-y-0.5">
+                <strong className="text-[#1f1b14] block">How much does Gemini give us?</strong>
+                <p>1,500 requests per day (RPD) &amp; 1,000,000 tokens per minute (TPM) on Flash models completely free with 0 billing required.</p>
+              </div>
+              <div className="space-y-0.5">
+                <strong className="text-[#1f1b14] block">When do you need to change?</strong>
+                <p>Only if you reach 1,500 daily requests or receive HTTP 429 quota exhaustion. Swapping key here takes effect instantly without server restart.</p>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
 
       {/* ─── Profile Display Names Customization (Admin & Mom) ─── */}
       <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-4">

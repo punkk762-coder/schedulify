@@ -1,4 +1,5 @@
 import { aiActionSchema, type AIAction } from "../validation/schemas";
+import { getActiveGeminiKey, recordGeminiUsage } from "./geminiQuota";
 
 export interface ChatContext {
   todayDate: string;
@@ -53,7 +54,7 @@ export async function processUserMessage(
   message: string,
   context: ChatContext
 ): Promise<AIResponse> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const { apiKey } = await getActiveGeminiKey();
   // Route multi-line plans or complex dietary instructions to reasoning model, everyday check-ins to fast model
   const isReasoningNeeded = message.includes("\n") || message.length > 120 || /plan|diet|routine|macro|substitut|analy/i.test(message);
   const model = isReasoningNeeded
@@ -93,6 +94,19 @@ ${context.todayOccurrences.map((o) => `- [${o.status}] ${o.time} - ${o.title} ($
 
       if (response.ok) {
         const data = (await response.json()) as any;
+
+        // Record token metrics from Gemini response usageMetadata
+        const usage = data.usageMetadata;
+        if (usage) {
+          await recordGeminiUsage({
+            prompt: usage.promptTokenCount,
+            candidate: usage.candidatesTokenCount,
+            total: usage.totalTokenCount,
+          });
+        } else {
+          await recordGeminiUsage();
+        }
+
         const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (candidate) {
           const parsed = JSON.parse(candidate);
@@ -116,8 +130,13 @@ ${context.todayOccurrences.map((o) => `- [${o.status}] ${o.time} - ${o.title} ($
 
           return { reply, action };
         }
+      } else {
+        const errJson = (await response.json().catch(() => ({}))) as any;
+        const errMsg = `HTTP ${response.status}: ${errJson?.error?.message || response.statusText}`;
+        await recordGeminiUsage(undefined, errMsg);
       }
-    } catch (err) {
+    } catch (err: any) {
+      await recordGeminiUsage(undefined, err.message || "Network error");
       console.warn("Gemini API call failed, falling back to local heuristic:", err);
     }
   }
