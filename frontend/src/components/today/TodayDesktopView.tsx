@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { TodayOccurrence, DailyStats } from "@/lib/domain/types";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { MacroLedger } from "./MacroLedger";
-import { HydrationWidget } from "./HydrationWidget";
 import { MomKitchenHub } from "./MomKitchenHub";
 import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
 
@@ -329,7 +328,7 @@ export function TodayDesktopView({
         </section>
 
         {/* Right Column: Clean Telemetry & Hearth (5 cols) */}
-        <aside className="col-span-5 space-y-5 sticky top-24">
+        <aside className="col-span-5 space-y-5">
           {/* Daily Nutrition Ledger */}
           <MacroLedger
             currentCalories={stats?.nutrition?.calories || 0}
@@ -342,7 +341,7 @@ export function TodayDesktopView({
             targetFat={45}
           />
 
-          {/* Fitness Beyond The Gym: Sleep, Recovery Readiness, Soreness & Supplement Stack */}
+          {/* Fitness Beyond The Gym: Sleep, Recovery Readiness, Movement/Water Sliders & Supplement Stack */}
           <FitnessRecoveryCockpit
             recovery={recovery}
             initialSteps={activity?.totalSteps || 0}
@@ -350,60 +349,6 @@ export function TodayDesktopView({
             winterArc={winterArc}
             onRefresh={onRefresh}
           />
-
-          {/* Hydration Widget */}
-          <HydrationWidget
-            waterIntakeMl={waterIntakeMl}
-            targetMl={3000}
-            onAddWater={onAddWater}
-            addingWater={addingWater}
-          />
-
-          {/* Daily Steps & Movement Telemetry */}
-          <div className="bg-white rounded-2xl p-5 border border-[#dfc0b7] shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#52652a] block">
-                  Movement Telemetry
-                </span>
-                <h4 className="text-sm font-serif font-bold text-[#1f1b14]">
-                  Daily Steps &amp; Activity
-                </h4>
-              </div>
-              <span className="text-[11px] font-mono font-bold text-[#a43716] bg-[#ffdbd1] px-2.5 py-0.5 rounded-full">
-                {activity?.totalSteps ? `${activity.totalSteps.toLocaleString()} steps` : "0 steps"}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-center text-xs">
-              <div className="bg-[#fcf2e6] p-2.5 rounded-xl border border-[#dfc0b7]">
-                <span className="text-[10px] text-[#58423c] block font-medium">Distance</span>
-                <span className="font-mono font-bold text-sm text-[#1f1b14]">
-                  {activity?.totalDistanceKm || 0} km
-                </span>
-              </div>
-              <div className="bg-[#fcf2e6] p-2.5 rounded-xl border border-[#dfc0b7]">
-                <span className="text-[10px] text-[#58423c] block font-medium">Est. Burn</span>
-                <span className="font-mono font-bold text-sm text-[#a43716]">
-                  {activity?.totalCaloriesBurned || 0} kcal
-                </span>
-              </div>
-            </div>
-
-            {activity?.logs && activity.logs.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-mono font-bold uppercase text-[#8b716a] block">
-                  Recorded Sessions ({activity.logs.length})
-                </span>
-                {activity.logs.map((log) => (
-                  <div key={log.id} className="p-2 rounded-lg bg-[#fcf2e6]/50 border border-[#dfc0b7] text-[11px] flex items-center justify-between">
-                    <span className="font-semibold text-[#1f1b14] truncate">{log.title}</span>
-                    <span className="font-mono text-[#52652a] shrink-0">{log.notes || `${log.steps} steps`}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Mom's Kitchen Hub Link */}
           <MomKitchenHub queuedCount={queuedMeals} />

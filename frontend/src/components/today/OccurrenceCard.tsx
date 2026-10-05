@@ -144,7 +144,7 @@ export const OccurrenceCard: React.FC<OccurrenceCardProps> = ({
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#ffdbd1] border border-[#a43716]/30 flex items-center justify-center text-[#a43716] font-serif text-base sm:text-lg font-bold shrink-0">
             {icon}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-28 sm:pr-32">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono text-xs font-bold text-[#a43716]">
                 {item.scheduledTime}

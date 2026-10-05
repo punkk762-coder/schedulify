@@ -106,7 +106,7 @@ export function TodayMobileView({
   const proteinPercent = Math.min(100, Math.round((protein / 150) * 100));
 
   return (
-    <div className="w-full space-y-4 pb-20 animate-in fade-in duration-300">
+    <div className="w-full space-y-4 pb-32 animate-in fade-in duration-300">
       {/* ─── Magnificent Mobile Hero Pill / Header ─── */}
       <div className="relative overflow-hidden bg-gradient-to-br from-[#a43716] via-[#c54f2c] to-[#7f260b] text-white rounded-3xl p-5 shadow-lg shadow-[#a43716]/20">
         <div className="absolute top-0 right-0 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
@@ -243,15 +243,6 @@ export function TodayMobileView({
           <span>⚡ AI Coach</span>
         </Link>
       </div>
-
-      {/* ─── Fitness Beyond The Gym (Recovery, NEAT & Supplement Stack) ─── */}
-      <FitnessRecoveryCockpit
-        recovery={recovery}
-        initialSteps={activity?.totalSteps || 0}
-        initialWater={waterIntakeMl || 0}
-        winterArc={winterArc}
-        onRefresh={onRefresh}
-      />
 
       {/* ─── Magnificent "Next Up" Focus Card ─── */}
       {nextUp ? (
@@ -422,6 +413,17 @@ export function TodayMobileView({
             ))}
           </div>
         )}
+      </div>
+
+      {/* ─── Fitness Beyond The Gym (Recovery, NEAT & Supplement Stack) ─── */}
+      <div className="pt-2">
+        <FitnessRecoveryCockpit
+          recovery={recovery}
+          initialSteps={activity?.totalSteps || 0}
+          initialWater={waterIntakeMl || 0}
+          winterArc={winterArc}
+          onRefresh={onRefresh}
+        />
       </div>
 
       {/* Quick Input Bar */}

@@ -167,23 +167,23 @@ export function FitnessRecoveryCockpit({
               {winterArc?.phaseTitle || "Winter Arc — Phase 1"}
             </span>
           </div>
-          <span className="text-[10px] font-mono font-bold bg-[#a43716] px-2.5 py-0.5 rounded-full text-white">
+          <span className="text-[10px] font-mono font-bold bg-[#a43716] px-2.5 py-0.5 rounded-full text-white shrink-0 whitespace-nowrap">
             {winterArc?.daysRemainingInPhase ?? 26} Days Remaining
           </span>
         </div>
 
-        <div className="mt-2 flex items-baseline justify-between">
-          <div>
-            <h3 className="text-base font-serif font-bold text-white">
+        <div className="mt-2 flex items-baseline justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="text-base font-serif font-bold text-white truncate">
               {winterArc?.phaseSubtitle || "October Foundation & Consistency"}
             </h3>
             <p className="text-[11px] text-white/70 mt-0.5">
               Goal: {winterArc?.targetWeightKg || 72}kg Target • 8,000 daily steps • 1,800 kcal
             </p>
           </div>
-          <div className="text-right">
-            <span className="text-[9px] font-mono uppercase text-white/60 block">Transition</span>
-            <span className="text-xs font-mono font-bold text-[#d4eca2]">Phase 2 on Nov 1</span>
+          <div className="text-right shrink-0">
+            <span className="text-[9px] font-mono uppercase text-white/60 block whitespace-nowrap">Transition</span>
+            <span className="text-xs font-mono font-bold text-[#d4eca2] whitespace-nowrap">Phase 2 on Nov 1</span>
           </div>
         </div>
 
@@ -480,7 +480,7 @@ export function FitnessRecoveryCockpit({
       </div>
 
       {/* ─── SLEEP REST & SORENESS ─── */}
-      <div className="grid grid-cols-2 gap-3 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
         {/* Sleep Slider */}
         <div className="p-3 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-1.5">
           <div className="flex items-center justify-between">
