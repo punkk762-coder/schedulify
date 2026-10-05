@@ -34,17 +34,19 @@ export function ChatMobileView({
 
   return (
     <div className="w-full flex flex-col h-[calc(100vh-170px)] pb-2 animate-in fade-in duration-300">
-      {/* ─── Mobile Header ─── */}
-      <div className="bg-white rounded-2xl p-3.5 border border-[#dfc0b7] shadow-xs flex items-center justify-between shrink-0 mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-[#ffdbd1] text-[#a43716] flex items-center justify-center text-lg shrink-0">
-            🤖
+      {/* ─── Mobile iPhone Dynamic Island Header ─── */}
+      <div className="bg-[#14120e] text-white rounded-full px-4 py-2.5 border border-white/20 shadow-xl flex items-center justify-between shrink-0 mb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 rounded-full bg-linear-to-tr from-[#a43716] via-[#d4eca2] to-[#a43716] p-0.5 flex items-center justify-center shrink-0 animate-pulse">
+            <div className="w-full h-full bg-[#14120e] rounded-full flex items-center justify-center text-xs">
+              ⚡
+            </div>
           </div>
-          <div>
-            <h2 className="text-xs font-serif font-bold text-[#1f1b14]">AI Coach Studio</h2>
+          <div className="truncate">
+            <h2 className="text-xs font-bold text-white truncate">AI Coach Studio</h2>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#52652a] animate-pulse" />
-              <span className="text-[10px] font-mono text-[#52652a] font-bold">Online • Flash 3.5</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#d4eca2] animate-pulse" />
+              <span className="text-[10px] font-mono text-[#d4eca2]">Dynamic Island Active</span>
             </div>
           </div>
         </div>
@@ -52,10 +54,10 @@ export function ChatMobileView({
         <button
           type="button"
           onClick={onOpenImport}
-          className="px-3 py-1.5 rounded-xl bg-[#a43716] text-white text-[11px] font-bold active:scale-95 transition-all shadow-xs flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-mono font-bold active:scale-95 transition-all border border-white/15 flex items-center gap-1 shrink-0"
         >
           <span>⚡</span>
-          <span>AI Intake</span>
+          <span>Intake</span>
         </button>
       </div>
 
@@ -120,31 +122,34 @@ export function ChatMobileView({
         ))}
       </div>
 
-      {/* ─── Mobile Input Form ─── */}
+      {/* ─── Mobile iPhone Floating Input Pill ─── */}
       <form
         onSubmit={onSendMessage}
-        className="bg-white rounded-2xl p-2 border border-[#dfc0b7] shadow-xs flex items-center gap-2 shrink-0"
+        className="bg-[#14120e]/95 backdrop-blur-2xl text-white rounded-full p-2 border border-white/20 shadow-2xl flex items-center gap-2 shrink-0"
       >
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Message AI Coach..."
-          className="flex-1 bg-transparent px-2 text-xs text-[#1f1b14] placeholder-[#8b716a] outline-none font-medium"
+          placeholder="Message AI Coach (e.g. 'I walked 2k steps')..."
+          className="flex-1 bg-transparent px-3 text-xs text-white placeholder-white/50 outline-none font-medium"
           disabled={loading}
         />
         <button
           type="submit"
           disabled={!inputText.trim() || loading}
-          className="px-3.5 py-1.5 bg-[#a43716] active:scale-95 text-white text-xs font-bold rounded-xl disabled:opacity-40 transition-all shrink-0 shadow-2xs flex items-center gap-1.5"
+          className="px-4 py-2 bg-[#a43716] active:scale-95 text-white text-xs font-bold rounded-full disabled:opacity-40 transition-all shrink-0 shadow-xs flex items-center gap-1.5"
         >
           {loading ? (
             <>
-              <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               <span>...</span>
             </>
           ) : (
-            <span>Send</span>
+            <>
+              <span>Send</span>
+              <span>↑</span>
+            </>
           )}
         </button>
       </form>

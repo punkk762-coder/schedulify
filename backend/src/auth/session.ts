@@ -3,6 +3,8 @@ import type { Request, Response, NextFunction } from "express";
 export interface SessionData {
   userId: string;
   role: "USER" | "MOM";
+  name?: string;
+  calorieTarget?: number;
 }
 
 export function getSession(req: Request): SessionData | null {

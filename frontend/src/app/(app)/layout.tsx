@@ -3,6 +3,7 @@ import BottomNav from "./BottomNav";
 import DesktopHeader from "./DesktopHeader";
 import MobileHeader from "./MobileHeader";
 import { ToastProvider } from "@/components/ui/Toast";
+import { FloatingMobileAiIsland } from "@/components/chat/FloatingMobileAiIsland";
 
 export default async function AppLayout({
   children,
@@ -25,6 +26,9 @@ export default async function AppLayout({
         <main className="max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-8 flex-1 transition-all duration-300">
           {children}
         </main>
+
+        {/* Mobile Floating iPhone Dynamic Island AI Chat (< lg) */}
+        <FloatingMobileAiIsland />
 
         {/* Mobile Bottom Navigation (Hidden on lg+) */}
         <div className="lg:hidden">

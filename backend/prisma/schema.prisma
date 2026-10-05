@@ -353,3 +353,28 @@ model MonthlyGoal {
   @@index([month])
 }
 
+// ─── Multi-User Profiles & System Settings ───
+
+model UserProfile {
+  id            String   @id @default(cuid())
+  name          String
+  pin           String   @unique
+  role          Role     @default(USER)
+  calorieTarget Int      @default(1600)
+  proteinTarget Int      @default(130)
+  stepsTarget   Int      @default(8000)
+  waterTargetMl Int      @default(3000)
+  isAdmin       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([pin])
+}
+
+model SystemSetting {
+  key       String   @id // e.g. "admin_name", "mom_name"
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
