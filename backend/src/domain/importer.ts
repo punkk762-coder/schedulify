@@ -153,7 +153,7 @@ export function parsePlanText(rawText: string): PlanImportProposal {
  * Commit proposed plan into database transactionally.
  */
 export async function commitPlanProposal(proposal: PlanImportProposal) {
-  return prisma.$transaction(async (tx) => {
+  const plan = await prisma.$transaction(async (tx) => {
     // 1. Create Plan
     const plan = await tx.plan.create({
       data: {

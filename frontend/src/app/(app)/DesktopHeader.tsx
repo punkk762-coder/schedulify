@@ -10,6 +10,7 @@ export default function DesktopHeader() {
     { label: "☀️ Today", href: "/today" },
     { label: "📊 Analytics", href: "/analytics" },
     { label: "💬 AI Coach", href: "/chat" },
+    { label: "🍲 Mom's Deck", href: "/mom" },
     { label: "📜 History", href: "/history" },
     { label: "⚙️ Settings", href: "/settings" },
   ];

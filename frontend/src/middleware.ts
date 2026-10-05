@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
 
   // Mom routes
   if (pathname.startsWith("/mom")) {
-    if (!isAuthenticated || !isMom) {
+    if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     return response;

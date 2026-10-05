@@ -46,8 +46,8 @@ export function requireUserMiddleware(req: Request, res: Response, next: NextFun
 
 export function requireMomMiddleware(req: Request, res: Response, next: NextFunction) {
   const session = getSession(req);
-  if (!session || session.role !== "MOM") {
-    res.status(401).json({ error: "Unauthorized — MOM role required" });
+  if (!session || (session.role !== "MOM" && session.role !== "USER")) {
+    res.status(401).json({ error: "Unauthorized — MOM or USER role required" });
     return;
   }
   (req as Request & { user: SessionData }).user = session;

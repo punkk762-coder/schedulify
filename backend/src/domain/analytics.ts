@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { todayUtc } from "../dates";
-import type { KitchenMeal, DailyStats, NutritionValues } from "./types";
+import type { KitchenMeal, DailyStats, NutritionValues, MealComponentInfo } from "./types";
 
 /**
  * Analytics service — all metrics computed on-the-fly from occurrences/completions.
@@ -70,6 +70,81 @@ export const analyticsService = {
   },
 };
 
+function parseKitchenComponents(
+  rawComponents: { name: string; quantity: string | null; unit: string | null }[],
+  mealTitle: string
+): MealComponentInfo[] {
+  const hasSpecifics = rawComponents.some((c) => c.quantity || c.unit);
+  if (hasSpecifics && rawComponents.length > 1) {
+    return rawComponents.map((c) => ({
+      name: c.name,
+      quantity: c.quantity || undefined,
+      unit: c.unit || undefined,
+    }));
+  }
+
+  const lowerTitle = mealTitle.toLowerCase();
+  if (lowerTitle.includes("proat") || lowerTitle.includes("chocolate proats")) {
+    return [
+      { name: "Rolled Oats", quantity: "50", unit: "g" },
+      { name: "Whey Protein (Chocolate)", quantity: "1", unit: "scoop" },
+      { name: "Almond Milk", quantity: "200", unit: "ml" },
+      { name: "Chia Seeds / Dry Fruit", quantity: "10", unit: "g" },
+    ];
+  }
+  if (lowerTitle.includes("lunch") || (lowerTitle.includes("phulka") && !lowerTitle.includes("dinner") && !lowerTitle.includes("bhurji"))) {
+    return [
+      { name: "Fresh Phulkas / Rotis", quantity: "2", unit: "pcs" },
+      { name: "Green Vegetable Sabzi (Low oil)", quantity: "150", unit: "g" },
+      { name: "Fresh Cucumber & Tomato Salad", quantity: "1", unit: "bowl" },
+      { name: "Fresh Curd / Dahi", quantity: "100", unit: "g" },
+    ];
+  }
+  if (lowerTitle.includes("kala chana") || lowerTitle.includes("chana")) {
+    return [
+      { name: "Boiled Kala Chana", quantity: "150", unit: "g" },
+      { name: "Finely Chopped Onion & Tomato", quantity: "1", unit: "small" },
+      { name: "Fresh Lemon Wedge & Chaat Masala", quantity: "1", unit: "dash" },
+    ];
+  }
+  if (lowerTitle.includes("paneer bhurji") || lowerTitle.includes("dinner")) {
+    return [
+      { name: "Fresh Paneer (Low-fat Bhurji)", quantity: "120", unit: "g" },
+      { name: "Fresh Phulkas", quantity: "2", unit: "pcs" },
+      { name: "Sliced Cucumber Salad", quantity: "1", unit: "plate" },
+    ];
+  }
+
+  if (rawComponents.length > 0) {
+    const list: MealComponentInfo[] = [];
+    for (const comp of rawComponents) {
+      const clean = comp.name.replace(/\s*-\s*\d+\s*kcal.*$/i, "").replace(/^(Breakfast|Lunch|Dinner|Snack):\s*/i, "");
+      const parenMatch = clean.match(/\(([^)]+)\)/);
+      if (parenMatch) {
+        const parts = parenMatch[1].split(",").map(p => p.trim());
+        parts.forEach(p => list.push({ name: p }));
+      } else {
+        const parts = clean.split(",").map(p => p.trim());
+        parts.forEach(p => {
+          const numMatch = p.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s*(.*)$/);
+          if (numMatch && numMatch[1]) {
+            list.push({
+              name: numMatch[3] ? `${numMatch[2] || ""} ${numMatch[3]}`.trim() : numMatch[2] || p,
+              quantity: numMatch[1],
+              unit: numMatch[2] && ["g", "ml", "pcs", "scoop", "tbsp"].includes(numMatch[2].toLowerCase()) ? numMatch[2] : "pcs",
+            });
+          } else {
+            list.push({ name: p });
+          }
+        });
+      }
+    }
+    return list.length > 0 ? list : rawComponents.map((c) => ({ name: c.name }));
+  }
+
+  return [];
+}
+
 /**
  * Kitchen service — Mom's view. Simplest possible query.
  */
@@ -96,12 +171,7 @@ export const kitchenService = {
       time: occ.scheduledTime,
       mealType: occ.routineItem.meal?.mealType || "OTHER",
       title: occ.routineItem.title,
-      components:
-        occ.routineItem.meal?.components.map((c) => ({
-          name: c.name,
-          quantity: c.quantity || undefined,
-          unit: c.unit || undefined,
-        })) || [],
+      components: parseKitchenComponents(occ.routineItem.meal?.components || [], occ.routineItem.title),
       nutrition: occ.routineItem.nutritionSnapshots[0]
         ? {
             calories: occ.routineItem.nutritionSnapshots[0].calories || undefined,

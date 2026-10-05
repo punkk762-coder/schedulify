@@ -111,6 +111,7 @@ export const aiActionTypes = [
   "IMPORT",
   "ASK_CLARIFICATION",
   "LOG_ACTIVITY",
+  "LOG_RECOVERY",
   "SET_ROUTINE",
   "SET_GOAL",
 ] as const;
