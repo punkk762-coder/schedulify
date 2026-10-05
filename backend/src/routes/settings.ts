@@ -6,6 +6,11 @@ import {
   testGeminiApiKey,
   updateGeminiApiKey,
 } from "../ai/geminiQuota";
+import {
+  getUptimeRobotStatus,
+  testUptimeRobotApiKey,
+  updateUptimeRobotApiKey,
+} from "../uptime/uptimerobot";
 
 const router = Router();
 
@@ -452,6 +457,56 @@ router.post("/settings/alarms", requireUserMiddleware, async (req: Request, res:
   } catch (err) {
     console.error("POST /api/settings/alarms error:", err);
     res.status(500).json({ error: "Failed to update alarm settings" });
+  }
+});
+
+// GET /api/settings/uptimerobot — Fetch live UptimeRobot monitors & telemetry
+router.get("/settings/uptimerobot", requireUserMiddleware, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const status = await getUptimeRobotStatus();
+    res.json(status);
+  } catch (err) {
+    console.error("GET /api/settings/uptimerobot error:", err);
+    res.status(500).json({ error: "Failed to fetch UptimeRobot metrics" });
+  }
+});
+
+// POST /api/settings/uptimerobot — Test and update/revert UptimeRobot API key
+router.post("/settings/uptimerobot", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { apiKey, action } = req.body || {};
+
+    if (action === "revert" || !apiKey || apiKey.trim() === "") {
+      await updateUptimeRobotApiKey(null);
+      const updated = await getUptimeRobotStatus();
+      res.json({
+        success: true,
+        message: "Reverted to default .env UptimeRobot API key.",
+        status: updated,
+      });
+      return;
+    }
+
+    const cleanKey = apiKey.trim();
+    const testResult = await testUptimeRobotApiKey(cleanKey);
+    if (!testResult.valid) {
+      res.status(400).json({
+        error: `UptimeRobot verification failed: ${testResult.error || "Invalid API key"}. Key was not saved.`,
+      });
+      return;
+    }
+
+    await updateUptimeRobotApiKey(cleanKey);
+    const updated = await getUptimeRobotStatus();
+
+    res.json({
+      success: true,
+      message: `UptimeRobot API Key verified! Found ${testResult.monitorCount ?? 0} monitor(s).`,
+      status: updated,
+    });
+  } catch (err) {
+    console.error("POST /api/settings/uptimerobot error:", err);
+    res.status(500).json({ error: "Failed to update UptimeRobot key" });
   }
 });
 

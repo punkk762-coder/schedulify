@@ -31,9 +31,38 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-// Health check
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "schedulfy-backend", timestamp: new Date().toISOString() });
+// Enable strong HTTP ETag caching for conditional GET (304 Not Modified)
+app.set("etag", "strong");
+
+// HTTP Cache-Control: dynamic GET endpoints revalidate via ETag; mutations never cached
+app.use((req, res, next) => {
+  if (req.method === "GET") {
+    res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
+  } else {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  }
+  next();
+});
+
+import { prisma } from "./db";
+
+// Health check (Supports UptimeRobot GET/HEAD pings with DB connectivity probe)
+app.all(["/health", "/api/health"], async (_req, res) => {
+  let dbStatus = "healthy";
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch {
+    dbStatus = "unavailable";
+  }
+
+  const isHealthy = dbStatus === "healthy";
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? "ok" : "degraded",
+    service: "schedulfy-backend",
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+  });
 });
 
 // API Routes

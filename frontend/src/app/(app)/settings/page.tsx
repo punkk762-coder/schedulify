@@ -11,6 +11,7 @@ import {
 import type { AlarmSettings, RoutineAlarmItem } from "@/components/alarm/AlarmManager";
 import { PhaseModal } from "@/components/today/PhaseModal";
 import type { WinterArcData } from "@/components/today/FitnessRecoveryCockpit";
+import { UptimeRobotCockpit } from "@/components/settings/UptimeRobotCockpit";
 
 interface ManagedUser {
   id: string;
@@ -977,6 +978,9 @@ export default function SettingsPage() {
           </form>
         )}
       </div>
+
+      {/* ─── UptimeRobot System Keep-Alive & Heartbeat Cockpit ─── */}
+      <UptimeRobotCockpit />
 
       {/* ─── Routine Alarms & Notification Sounds Engine ─── */}
       <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-6">
