@@ -4,6 +4,7 @@ import { todayUtc, formatInTz } from "../dates";
 import { requireUserMiddleware } from "../auth";
 import { cache } from "../cache";
 import { prisma } from "../db";
+import { WINTER_ARC_PHASES, getWinterArcPhase, getNextWinterArcPhase } from "../winterArc";
 
 const router = Router();
 
@@ -123,19 +124,46 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
     }
 
     const currentDayOfMonth = today.getUTCDate();
-    const daysRemainingInOct = Math.max(0, 31 - currentDayOfMonth);
+    const lastDayOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0)).getUTCDate();
+    const daysRemainingInMonth = Math.max(0, lastDayOfMonth - currentDayOfMonth);
+
+    const phaseConfig = getWinterArcPhase(monthKey);
+    const nextPhaseConfig = getNextWinterArcPhase(monthKey);
 
     const winterArc = {
-      phase: monthKey === "2026-10" ? 1 : 2,
-      phaseTitle: monthKey === "2026-10" ? "Winter Arc — Phase 1" : "Winter Arc — Phase 2",
-      phaseSubtitle: monthKey === "2026-10" ? "October Foundation & Metabolic Baseline" : "November Progressive Overload",
-      targetWeightKg: currentMonthGoal?.targetWeightKg || 72,
+      phase: phaseConfig.phaseNumber,
+      totalPhases: 5,
+      phaseTitle: phaseConfig.title,
+      phaseSubtitle: phaseConfig.subtitle,
+      theme: phaseConfig.theme,
+      physiqueMilestone: phaseConfig.physiqueMilestone,
+      targetWeightKg: currentMonthGoal?.targetWeightKg || phaseConfig.targetWeightKg,
       currentWeightKg: currentMonthGoal?.currentWeightKg || 74,
-      daysRemainingInPhase: daysRemainingInOct,
-      dailyStepsTarget: currentMonthGoal?.dailyStepsTarget || 8000,
-      dailyWaterTargetMl: 3000,
-      isPhaseTransitionDue: daysRemainingInOct <= 1,
-      phase2PreviewNotes: "October retrospective locked in. Phase 2 (Nov) will recalibrate strength milestones and higher step intensity.",
+      daysRemainingInPhase: daysRemainingInMonth,
+      dailyStepsTarget: currentMonthGoal?.dailyStepsTarget || phaseConfig.dailyStepsTarget,
+      dailyWaterTargetMl: currentMonthGoal?.dailyWaterTargetMl || phaseConfig.dailyWaterTargetMl,
+      weeklyWorkoutsTarget: currentMonthGoal?.weeklyWorkoutsTarget || phaseConfig.weeklyWorkoutsTarget,
+      isPhaseTransitionDue: daysRemainingInMonth <= 1 || (currentMonthGoal?.status === "ACHIEVED"),
+      nextPhasePreview: nextPhaseConfig
+        ? {
+            phaseNumber: nextPhaseConfig.phaseNumber,
+            monthKey: nextPhaseConfig.monthKey,
+            title: nextPhaseConfig.title,
+            theme: nextPhaseConfig.theme,
+            targetWeightKg: nextPhaseConfig.targetWeightKg,
+            dailyStepsTarget: nextPhaseConfig.dailyStepsTarget,
+          }
+        : null,
+      allPhases: WINTER_ARC_PHASES.map((p) => ({
+        phaseNumber: p.phaseNumber,
+        monthKey: p.monthKey,
+        title: p.title,
+        theme: p.theme,
+        targetWeightKg: p.targetWeightKg,
+        dailyStepsTarget: p.dailyStepsTarget,
+        isCurrent: p.monthKey === monthKey,
+        isCompleted: p.phaseNumber < phaseConfig.phaseNumber,
+      })),
     };
 
     const payload = {

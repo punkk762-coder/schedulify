@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 export interface FitnessRecoveryData {
   sleepHours: number;
@@ -19,8 +20,11 @@ export interface FitnessRecoveryData {
 
 export interface WinterArcData {
   phase: number;
+  totalPhases?: number;
   phaseTitle: string;
   phaseSubtitle: string;
+  theme?: string;
+  physiqueMilestone?: string;
   daysRemainingInPhase: number;
   targetWeightKg?: number;
   currentWeightKg?: number;
@@ -28,6 +32,15 @@ export interface WinterArcData {
   dailyWaterTargetMl?: number;
   isPhaseTransitionDue?: boolean;
   phase2PreviewNotes?: string;
+  nextPhasePreview?: any;
+  allPhases?: Array<{
+    phaseNumber: number;
+    monthKey: string;
+    title: string;
+    theme: string;
+    isCurrent: boolean;
+    isCompleted: boolean;
+  }>;
 }
 
 interface FitnessRecoveryCockpitProps {
@@ -178,18 +191,56 @@ export function FitnessRecoveryCockpit({
               {winterArc?.phaseSubtitle || "October Foundation & Consistency"}
             </h3>
             <p className="text-[11px] text-white/70 mt-0.5">
-              Goal: {winterArc?.targetWeightKg || 72}kg Target • 8,000 daily steps • 1,800 kcal
+              Goal: {winterArc?.targetWeightKg || 72}kg Target • {winterArc?.dailyStepsTarget?.toLocaleString() || "8,000"} daily steps • 1,800 kcal
             </p>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-[9px] font-mono uppercase text-white/60 block whitespace-nowrap">Transition</span>
-            <span className="text-xs font-mono font-bold text-[#d4eca2] whitespace-nowrap">Phase 2 on Nov 1</span>
+            <span className="text-[9px] font-mono uppercase text-white/60 block whitespace-nowrap">Transformation</span>
+            <span className="text-xs font-mono font-bold text-[#d4eca2] whitespace-nowrap">
+              {winterArc?.theme || "Metabolic Baseline"}
+            </span>
           </div>
         </div>
 
+        {/* 5-Phase Winter Arc Roadmap Track */}
+        <div className="mt-3 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar py-1">
+          {[
+            { label: "P1: Oct", name: "Foundation" },
+            { label: "P2: Nov", name: "Hypertrophy" },
+            { label: "P3: Dec", name: "Defense" },
+            { label: "P4: Jan", name: "Shred" },
+            { label: "P5: Feb", name: "Dream Physique" },
+          ].map((item, pIdx) => {
+            const pNum = pIdx + 1;
+            const isCur = (winterArc?.phase || 1) === pNum;
+            const isPast = (winterArc?.phase || 1) > pNum;
+            return (
+              <div
+                key={item.label}
+                className={`px-2 py-1 rounded-lg text-[9px] font-mono font-bold whitespace-nowrap flex items-center gap-1 border ${
+                  isCur
+                    ? "bg-[#a43716] text-white border-white/30 shadow-xs ring-1 ring-white/40"
+                    : isPast
+                    ? "bg-[#52652a]/60 text-white/90 border-[#52652a]"
+                    : "bg-white/10 text-white/50 border-white/10"
+                }`}
+              >
+                <span>{isPast ? "✓" : isCur ? "⚡" : "○"}</span>
+                <span>{item.label}</span>
+              </div>
+            );
+          })}
+        </div>
+
         <div className="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-white/75 flex items-center justify-between">
-          <span>📊 Full October Analytics Retrospective will unlock at Phase 1 end</span>
-          <span className="text-[#ffdbd1] font-bold">Auto-Logged</span>
+          <Link
+            href="/analytics"
+            className="text-[#ffdbd1] hover:underline flex items-center gap-1 font-bold"
+          >
+            <span>Open AI Retrospective &amp; Phase Dashboard</span>
+            <span>❯</span>
+          </Link>
+          <span className="text-[#d4eca2] font-mono text-[9px] font-bold">Dream Physique OS</span>
         </div>
       </div>
 

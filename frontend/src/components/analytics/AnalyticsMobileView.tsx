@@ -7,6 +7,7 @@ import { NutritionMatrixCard } from "./NutritionMatrixCard";
 import { CategoryAdherenceList } from "./CategoryAdherenceList";
 import { DailyGoalsAndBodyStatus } from "./DailyGoalsAndBodyStatus";
 import { MonthlyEvolutionCard } from "./MonthlyEvolutionCard";
+import { WinterArcCockpit } from "./WinterArcCockpit";
 
 interface AnalyticsResponse {
   summary: {
@@ -102,18 +103,21 @@ interface AnalyticsResponse {
       velocityNotes?: string;
     } | null;
   };
+  winterArc?: any;
 }
 
 interface AnalyticsMobileViewProps {
   data: AnalyticsResponse;
   daysCount: number;
   onSelectDays: (days: number) => void;
+  onRefresh?: () => void;
 }
 
 export function AnalyticsMobileView({
   data,
   daysCount,
   onSelectDays,
+  onRefresh,
 }: AnalyticsMobileViewProps) {
   const { summary, averageNutrition, dailyTrend, categoryBreakdown, insights, bodyStatus, dailyGoals, routineEvolution, monthlyMilestone, activityTelemetry } = data;
 
@@ -198,6 +202,9 @@ export function AnalyticsMobileView({
           </div>
         </div>
       </div>
+
+      {/* ─── Winter Arc 5-Phase Physique Command Center & AI Transition ─── */}
+      <WinterArcCockpit winterArc={data.winterArc} onRefresh={onRefresh} />
 
       {/* ─── Magnificent Monthly Goal & Milestone Card ─── */}
       {monthlyMilestone && (

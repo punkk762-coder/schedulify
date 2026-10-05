@@ -392,6 +392,64 @@ Show two states side-by-side or stacked:
 
 ---
 
+### Screen 10: Winter Arc AI Phase Transition & Retrospective Cockpit
+- **Route**: `/analytics` (also accessible directly from `/today` Winter Arc HUD)
+- **Concept**: The ultimate 5-month transformation engine from **October to February** targeting a dream-like aesthetic physique. At the end of each month/phase, the AI generates a brand-new dashboard comparing **What We Had Done** (actuals) vs. **What Was Expected** (baseline targets), gives actionable tactical recommendations, and transitions to the new phase while keeping the historical database ledger 100% immutable.
+- **5-Month Arc Roadmap**:
+  1. **Phase 1: October** — *Metabolic Baseline & Habit Anchoring* (74kg → 72kg, 8k steps, 3L water, 1,800 kcal, 150g protein).
+  2. **Phase 2: November** — *Hypertrophy Velocity & Step Escalation* (72kg → 71kg, 10k steps, progressive overload, creatine saturation).
+  3. **Phase 3: December** — *Metabolic Defense & Holiday Resilience* (71kg → 70kg, 10k steps, holiday anti-sabotage protocol).
+  4. **Phase 4: January** — *Peak Recomposition & Body Fat Stripping* (70kg → 69kg, 12k steps, core vascularity cut).
+  5. **Phase 5: February** — *The Final Reveal & Dream Physique Peak* (69kg → 68kg, 12k steps, sub-12% body fat, 6-pack definition).
+
+#### 🪡 Stitch Prompt for Screen 10
+```text
+Screen: Winter Arc AI Retrospective & Phase Transition Cockpit
+Platform: Web & Mobile Responsive
+Theme: [Insert Your Finalized Theme]
+Layout:
+1. Header Banner:
+   - Eyebrow: "WINTER ARC BLUEPRINT • OCTOBER TO FEBRUARY" with glowing orange status indicator.
+   - Title: "Phase 1: Metabolic Baseline & Habit Anchoring".
+   - Subtitle: "October Retrospective & Dream Physique Horizon".
+   - Badges: "26 Days Remaining", "Dream Physique Transformation Target".
+   - Primary CTA Button: "Review & Transition Phase ⚡" (terracotta solid button).
+
+2. 5-Phase Horizontal Milestone Timeline:
+   - 5 cards side-by-side (scrollable on mobile):
+     * P1 Oct: Foundation (Active pill, glowing ring, 72kg target, 8k steps)
+     * P2 Nov: Hypertrophy (Upcoming, 71kg, 10k steps, creatine saturation)
+     * P3 Dec: Defense (Upcoming, 70kg, 10k steps, holiday anti-cheat)
+     * P4 Jan: Shred (Upcoming, 69kg, 12k steps, core vascularity)
+     * P5 Feb: Dream Physique Peak (Upcoming, 68kg, 12k steps, final reveal)
+
+3. Side-by-Side Comparison Scorecard (Done vs Expected):
+   - Left Card (Warm Sand): "What Was Expected (Baseline Target)"
+     * 72.0 kg Target Weight
+     * 8,000 steps/day standard
+     * 3,000 ml daily hydration
+     * 85% habit consistency threshold
+   - Right Card (Soft Terracotta): "What We Had Done (Actual Execution)"
+     * 72.4 kg Recorded Weight (+0.4kg variance)
+     * 8,500 avg daily steps (+500 steps variance)
+     * 3,000 ml avg hydration (+0ml variance)
+     * 88% habit adherence (+3% variance)
+
+4. AI Recommendations & Next Phase Strategy ("What Can Be Done Next"):
+   - 4 AI Insight Bullets with orange arrows:
+     * "Step standard exceeded by +500 steps! Elevate baseline to 10,000 steps in Phase 2."
+     * "Protein synthesis dialed in at ~148g/day; maintain 150g+ to protect lean muscle mass."
+     * "Hydration locked at 3,000ml; scale to 3,200ml with 5g daily creatine."
+     * "Next Phase Target: Hypertrophy Velocity (Nov). Intensify mechanical tension."
+
+5. Modal / Slide-out: "Deploy Phase 2 Dashboard":
+   - Form inputs with presets: Next Target Weight (71kg), Next Daily Steps (10,000), Next Water (3,200ml).
+   - Info callout: "0% Data Loss — All October habit occurrences and telemetry archived in PostgreSQL ledger."
+   - Button: "Deploy Next Phase Dashboard 🚀" (with spinner loading state).
+```
+
+---
+
 ## 🛠️ Summary Matrix of All Screens
 
 | # | Screen Name | Route | Desktop | Mobile | Primary Purpose |
@@ -400,8 +458,10 @@ Show two states side-by-side or stacked:
 | 2 | AI Routine Studio | `/chat` | Yes (2-pane) | Yes (Chat) | Conversational voice logging & queries |
 | 3 | AI Plan Intake Wizard | `/chat?intake=1` | Modal | Full-screen | 3-step external plan importer & calorie calibrator |
 | 4 | Mom's Kitchen Deck | `/mom` | Yes (Grid) | Yes (Hearth) | Kitchen recipes, portions & prep toggles |
-| 5 | Analytics & Winter Arc | `/analytics` | Yes | Yes | Milestone retrospective, weight & step charts |
-| 6 | Routine History Archive | `/history` | Yes | Yes | Past day compliance & audit log |
-| 7 | PIN Keypad Access | `/login` | Centered | Centered | USER (1234) & MOM (5678) dual login |
-| 8 | Meal Swap Modal | Overlay | Modal | Sheet | Substitute meals with healthy alternatives |
-| 9 | Confirmation & Success Modal | Overlay | Modal | Sheet | Verification, loader & checkmark animation |
+| 5 | Analytics & Biometrics | `/analytics` | Yes | Yes | Longitudinal biometrics, macro fulfillment & trend charts |
+| 6 | Winter Arc 5-Phase Cockpit | `/analytics` & `/today` | Yes | Yes | Oct-Feb dream physique arc, Done vs Expected, AI transition |
+| 7 | Routine History Archive | `/history` | Yes | Yes | Past day compliance & audit log |
+| 8 | PIN Keypad Access | `/login` | Centered | Centered | USER (1234) & MOM (5678) dual login |
+| 9 | Meal Swap Modal | Overlay | Modal | Sheet | Substitute meals with healthy alternatives |
+| 10 | Confirmation & Success Modal | Overlay | Modal | Sheet | Verification, loader & checkmark animation |
+

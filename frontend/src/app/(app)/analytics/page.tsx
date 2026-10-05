@@ -81,6 +81,7 @@ interface AnalyticsResponse {
       notes: string;
     }>;
   };
+  winterArc?: any;
 }
 
 export default function AnalyticsPage() {
@@ -127,6 +128,7 @@ export default function AnalyticsPage() {
               data={data}
               daysCount={daysCount}
               onSelectDays={(val) => setDaysCount(val)}
+              onRefresh={() => fetchAnalytics(daysCount)}
             />
           </div>
 
@@ -136,6 +138,7 @@ export default function AnalyticsPage() {
               data={data}
               daysCount={daysCount}
               onSelectDays={(val) => setDaysCount(val)}
+              onRefresh={() => fetchAnalytics(daysCount)}
             />
           </div>
         </>
