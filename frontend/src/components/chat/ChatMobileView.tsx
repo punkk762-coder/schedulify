@@ -25,9 +25,10 @@ export function ChatMobileView({
   onSendPreset,
 }: ChatMobileViewProps) {
   const quickPrompts = [
+    "I walked 2k steps right now",
+    "Set 72kgs for this october month",
+    "Add 30 min morning run at 6:30 AM",
     "What is next?",
-    "Drank 500ml water",
-    "Completed my walk",
     "Show my macros",
   ];
 

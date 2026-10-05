@@ -20,6 +20,20 @@ export default function TodayPage() {
   const [swapModalItem, setSwapModalItem] = useState<TodayOccurrence | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [waterIntakeMl, setWaterIntakeMl] = useState(0);
+  const [activity, setActivity] = useState<{
+    totalSteps: number;
+    totalDistanceKm: number;
+    totalCaloriesBurned: number;
+    logs: Array<{ id: string; title: string; steps?: number; distanceKm?: number; caloriesBurned?: number; notes?: string; time?: string }>;
+  } | null>(null);
+  const [monthlyGoal, setMonthlyGoal] = useState<{
+    month: string;
+    targetWeightKg?: number;
+    currentWeightKg?: number;
+    dailyStepsTarget?: number;
+    status: string;
+    velocityNotes?: string;
+  } | null>(null);
   const quickInputRef = useRef<HTMLInputElement>(null);
 
   const refreshData = useCallback(async () => {
@@ -37,6 +51,8 @@ export default function TodayPage() {
         if (data.waterIntakeMl !== undefined) {
           setWaterIntakeMl(data.waterIntakeMl);
         }
+        if (data.activity) setActivity(data.activity);
+        if (data.monthlyGoal) setMonthlyGoal(data.monthlyGoal);
       }
     } catch (err) {
       console.error("Error refreshing today routine:", err);
@@ -60,6 +76,8 @@ export default function TodayPage() {
           if (data.waterIntakeMl !== undefined) {
             setWaterIntakeMl(data.waterIntakeMl);
           }
+          if (data.activity) setActivity(data.activity);
+          if (data.monthlyGoal) setMonthlyGoal(data.monthlyGoal);
         }
       } catch (err) {
         console.error("Error loading today routine:", err);
@@ -262,6 +280,8 @@ export default function TodayPage() {
           stats={stats}
           dateStr={dateStr}
           waterIntakeMl={waterIntakeMl}
+          activity={activity}
+          monthlyGoal={monthlyGoal}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
           onComplete={handleComplete}
@@ -283,6 +303,8 @@ export default function TodayPage() {
           stats={stats}
           dateStr={dateStr}
           waterIntakeMl={waterIntakeMl}
+          activity={activity}
+          monthlyGoal={monthlyGoal}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
           onComplete={handleComplete}

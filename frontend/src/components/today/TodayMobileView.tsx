@@ -9,6 +9,20 @@ interface TodayMobileViewProps {
   stats: DailyStats | null;
   dateStr: string;
   waterIntakeMl: number;
+  activity?: {
+    totalSteps: number;
+    totalDistanceKm: number;
+    totalCaloriesBurned: number;
+    logs: Array<{ id: string; title: string; steps?: number; distanceKm?: number; caloriesBurned?: number; notes?: string; time?: string }>;
+  } | null;
+  monthlyGoal?: {
+    month: string;
+    targetWeightKg?: number;
+    currentWeightKg?: number;
+    dailyStepsTarget?: number;
+    status: string;
+    velocityNotes?: string;
+  } | null;
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
   onComplete: (id: string) => void;
@@ -36,6 +50,8 @@ export function TodayMobileView({
   stats,
   dateStr,
   waterIntakeMl,
+  activity,
+  monthlyGoal,
   activeCategory,
   setActiveCategory,
   onComplete,
@@ -95,6 +111,14 @@ export function TodayMobileView({
             <p className="text-[11px] text-[#fcf2e6]/80 font-medium">
               {completedCount} of {totalCount} completed • {adherence}% Adherence
             </p>
+            {monthlyGoal && (
+              <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-mono">
+                <span className="text-[#ffdbd1]">🎯 Oct Target: {monthlyGoal.targetWeightKg}kg</span>
+                <span className={`px-1 rounded-full text-[9px] font-bold ${monthlyGoal.status === "ACHIEVED" ? "bg-[#d4eca2] text-[#3b4d14]" : "text-[#d4eca2]"}`}>
+                  {monthlyGoal.status === "ACHIEVED" ? "Achieved ✓" : "Active"}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Glowing Circular Meter */}
@@ -119,24 +143,40 @@ export function TodayMobileView({
         </div>
 
         {/* Quick Micro-Macro Strip */}
-        <div className="mt-4 pt-3 border-t border-white/15 grid grid-cols-3 gap-2 text-center">
-          <div className="bg-white/10 rounded-xl py-1.5 px-1 backdrop-blur-xs">
-            <span className="text-[9px] uppercase tracking-wider text-white/70 block">Calories</span>
-            <span className="text-xs font-mono font-bold text-white">{calories} kcal</span>
+        <div className="mt-3.5 pt-3 border-t border-white/15 grid grid-cols-4 gap-1.5 text-center">
+          <div className="bg-white/10 rounded-xl py-1 px-0.5 backdrop-blur-xs">
+            <span className="text-[8px] uppercase tracking-wider text-white/70 block">Calories</span>
+            <span className="text-[11px] font-mono font-bold text-white">{calories}</span>
           </div>
-          <div className="bg-white/10 rounded-xl py-1.5 px-1 backdrop-blur-xs">
-            <span className="text-[9px] uppercase tracking-wider text-[#d4eca2] block font-bold">Protein</span>
-            <span className="text-xs font-mono font-bold text-[#d4eca2]">{protein}g</span>
+          <div className="bg-white/10 rounded-xl py-1 px-0.5 backdrop-blur-xs">
+            <span className="text-[8px] uppercase tracking-wider text-[#d4eca2] block font-bold">Protein</span>
+            <span className="text-[11px] font-mono font-bold text-[#d4eca2]">{protein}g</span>
           </div>
-          <div className="bg-white/10 rounded-xl py-1.5 px-1 backdrop-blur-xs">
-            <span className="text-[9px] uppercase tracking-wider text-white/70 block">Hydration</span>
-            <span className="text-xs font-mono font-bold text-white">{(waterIntakeMl / 1000).toFixed(1)}L</span>
+          <div className="bg-white/10 rounded-xl py-1 px-0.5 backdrop-blur-xs">
+            <span className="text-[8px] uppercase tracking-wider text-white/70 block">Hydration</span>
+            <span className="text-[11px] font-mono font-bold text-white">{(waterIntakeMl / 1000).toFixed(1)}L</span>
+          </div>
+          <div className="bg-white/10 rounded-xl py-1 px-0.5 backdrop-blur-xs">
+            <span className="text-[8px] uppercase tracking-wider text-[#ffdbd1] block font-bold">Steps</span>
+            <span className="text-[11px] font-mono font-bold text-[#ffdbd1]">
+              {activity?.totalSteps ? `${(activity.totalSteps / 1000).toFixed(1)}k` : "0"}
+            </span>
           </div>
         </div>
       </div>
 
       {/* ─── Tactile Quick Action Bubbles Carousel ─── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-1">
+        <button
+          type="button"
+          onClick={() => {
+            setQuickText("walked 2k steps right now");
+            onQuickLog("walked 2k steps right now");
+          }}
+          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#a43716]/30 text-[#a43716] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0"
+        >
+          <span>🚶 {activity?.totalSteps ? `${activity.totalSteps.toLocaleString()} steps (~${activity.totalDistanceKm}km)` : "+2k Steps Walk"}</span>
+        </button>
         <button
           type="button"
           onClick={() => onAddWater(250)}

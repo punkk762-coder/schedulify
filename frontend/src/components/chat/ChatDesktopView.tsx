@@ -34,11 +34,11 @@ export function ChatDesktopView({
   onSendPreset,
 }: ChatDesktopViewProps) {
   const quickPrompts = [
+    "I walked 2k steps right now",
+    "Set 72kgs for this october month",
+    "Add 30 min morning run at 6:30 AM",
     "What is my next pending meal today?",
-    "I drank 500ml water",
-    "Completed my 1-hour walk",
     "Show my current macro balance",
-    "Suggest a high-protein dinner alternative",
   ];
 
   return (

@@ -315,3 +315,41 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+// ─── Activity & Biometric Tracking ───
+
+model ActivityLog {
+  id              String   @id @default(cuid())
+  date            DateTime // scheduled / activity date (UTC start of day)
+  activityType    String   // "WALK", "RUN", "WORKOUT", "STEPS", "OTHER"
+  title           String   // "Evening Walk", "2k Steps", "Chest & Triceps"
+  steps           Int?     // e.g. 2000
+  distanceKm      Float?   // e.g. 1.52
+  durationMinutes Int?     // e.g. 25
+  caloriesBurned  Float?   // e.g. 85
+  notes           String?
+  occurrenceId    String?  // optional linked occurrence
+  createdAt       DateTime @default(now())
+
+  @@index([date])
+}
+
+// ─── Monthly Goals & Longitudinal Milestones ───
+
+model MonthlyGoal {
+  id                   String   @id @default(cuid())
+  month                String   @unique // "2026-10", "2026-11"
+  targetWeightKg       Float?   // e.g. 72.0
+  currentWeightKg      Float?   // e.g. 72.4
+  dailyStepsTarget     Int?     @default(8000)
+  dailyWaterTargetMl   Int?     @default(3000)
+  weeklyWorkoutsTarget Int?     @default(5)
+  status               String   @default("IN_PROGRESS") // "IN_PROGRESS", "ACHIEVED", "ADAPTED"
+  velocityNotes        String?
+  routineChanges       Json?    // e.g. changes introduced vs previous month
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([month])
+}
+

@@ -84,6 +84,24 @@ interface AnalyticsResponse {
       notes: string;
     }>;
   };
+  activityTelemetry?: {
+    totalSteps: number;
+    totalDistanceKm: number;
+    averageStepsPerDay: number;
+  };
+  monthlyMilestone?: {
+    currentMonth: string;
+    targetWeightKg: number;
+    currentWeightKg: number;
+    status: string;
+    velocityNotes: string;
+    previousMonth?: {
+      month: string;
+      targetWeightKg?: number;
+      status?: string;
+      velocityNotes?: string;
+    } | null;
+  };
 }
 
 interface AnalyticsDesktopViewProps {
@@ -97,7 +115,7 @@ export function AnalyticsDesktopView({
   daysCount,
   onSelectDays,
 }: AnalyticsDesktopViewProps) {
-  const { summary, averageNutrition, dailyTrend, categoryBreakdown, insights, bodyStatus, dailyGoals, routineEvolution } = data;
+  const { summary, averageNutrition, dailyTrend, categoryBreakdown, insights, bodyStatus, dailyGoals, routineEvolution, monthlyMilestone, activityTelemetry } = data;
 
   return (
     <div className="w-full space-y-6">
@@ -214,6 +232,44 @@ export function AnalyticsDesktopView({
           <AiCoachingInsights insights={insights} adherence={summary.adherence} />
         </div>
       </div>
+
+      {/* ─── Monthly Milestone Progression & Longitudinal Velocity ─── */}
+      {monthlyMilestone && (
+        <div className="bg-gradient-to-r from-[#fcf2e6] via-white to-[#fcf2e6] rounded-2xl p-6 border border-[#dfc0b7] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🎯</span>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a43716]">
+                Monthly Goal Progression • {monthlyMilestone.currentMonth}
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${monthlyMilestone.status === "ACHIEVED" ? "bg-[#d4eca2] text-[#3b4d14]" : "bg-[#ffdbd1] text-[#a43716]"}`}>
+                {monthlyMilestone.status === "ACHIEVED" ? "Goal Achieved ✓" : "In Progress"}
+              </span>
+              {activityTelemetry?.totalSteps ? (
+                <span className="text-[10px] font-mono text-[#52652a] font-bold bg-[#d4eca2]/60 px-2 py-0.5 rounded-full">
+                  🚶 {activityTelemetry.totalSteps.toLocaleString()} steps tracked
+                </span>
+              ) : null}
+            </div>
+            <h3 className="text-xl font-serif font-bold text-[#1f1b14]">
+              Target: {monthlyMilestone.targetWeightKg} kg • Current Metric: {monthlyMilestone.currentWeightKg} kg
+            </h3>
+            <p className="text-xs text-[#58423c] leading-relaxed">
+              {monthlyMilestone.velocityNotes}
+            </p>
+          </div>
+          {monthlyMilestone.previousMonth && (
+            <div className="bg-white/80 p-3.5 rounded-xl border border-[#dfc0b7] text-xs space-y-1 sm:max-w-xs shrink-0 shadow-2xs">
+              <span className="text-[10px] font-mono font-bold text-[#8b716a] block uppercase">
+                Prior Month Baseline ({monthlyMilestone.previousMonth.month})
+              </span>
+              <p className="text-[#1f1b14] font-medium text-[11px]">
+                {monthlyMilestone.previousMonth.velocityNotes || `Target: ${monthlyMilestone.previousMonth.targetWeightKg}kg`}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ─── Bottom Section: Goals, Body Status & Monthly Evolution ─── */}
       <DailyGoalsAndBodyStatus dailyGoals={dailyGoals} bodyStatus={bodyStatus} />

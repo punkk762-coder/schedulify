@@ -110,6 +110,9 @@ export const aiActionTypes = [
   "QUERY",
   "IMPORT",
   "ASK_CLARIFICATION",
+  "LOG_ACTIVITY",
+  "SET_ROUTINE",
+  "SET_GOAL",
 ] as const;
 
 export const aiActionSchema = z.object({

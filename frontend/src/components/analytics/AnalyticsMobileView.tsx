@@ -84,6 +84,24 @@ interface AnalyticsResponse {
       notes: string;
     }>;
   };
+  activityTelemetry?: {
+    totalSteps: number;
+    totalDistanceKm: number;
+    averageStepsPerDay: number;
+  };
+  monthlyMilestone?: {
+    currentMonth: string;
+    targetWeightKg: number;
+    currentWeightKg: number;
+    status: string;
+    velocityNotes: string;
+    previousMonth?: {
+      month: string;
+      targetWeightKg?: number;
+      status?: string;
+      velocityNotes?: string;
+    } | null;
+  };
 }
 
 interface AnalyticsMobileViewProps {
@@ -97,7 +115,7 @@ export function AnalyticsMobileView({
   daysCount,
   onSelectDays,
 }: AnalyticsMobileViewProps) {
-  const { summary, averageNutrition, dailyTrend, categoryBreakdown, insights, bodyStatus, dailyGoals, routineEvolution } = data;
+  const { summary, averageNutrition, dailyTrend, categoryBreakdown, insights, bodyStatus, dailyGoals, routineEvolution, monthlyMilestone, activityTelemetry } = data;
 
   return (
     <div className="w-full space-y-4 pb-20 animate-in fade-in duration-300">
@@ -180,6 +198,35 @@ export function AnalyticsMobileView({
           </div>
         </div>
       </div>
+
+      {/* ─── Magnificent Monthly Goal & Milestone Card ─── */}
+      {monthlyMilestone && (
+        <div className="bg-white rounded-3xl p-5 border border-[#dfc0b7] shadow-xs space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a43716] flex items-center gap-1.5">
+              <span>🎯</span> Monthly Goal • {monthlyMilestone.currentMonth}
+            </span>
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${monthlyMilestone.status === "ACHIEVED" ? "bg-[#d4eca2] text-[#3b4d14]" : "bg-[#ffdbd1] text-[#a43716]"}`}>
+              {monthlyMilestone.status === "ACHIEVED" ? "Achieved ✓" : "In Progress"}
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-base font-serif font-bold text-[#1f1b14]">
+              Target: {monthlyMilestone.targetWeightKg} kg
+            </h3>
+            <span className="text-xs font-mono text-[#58423c]">Current: {monthlyMilestone.currentWeightKg} kg</span>
+          </div>
+          <p className="text-[11px] text-[#58423c] leading-relaxed">
+            {monthlyMilestone.velocityNotes}
+          </p>
+          {activityTelemetry?.totalSteps ? (
+            <div className="pt-2 border-t border-[#dfc0b7]/60 flex items-center justify-between text-[11px] font-mono">
+              <span className="text-[#52652a] font-bold">🚶 Steps Tracked:</span>
+              <span className="text-[#1f1b14] font-bold">{activityTelemetry.totalSteps.toLocaleString()} steps ({activityTelemetry.totalDistanceKm}km)</span>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* ─── Touch Interactive Trend Velocity ─── */}
       <InteractiveTrendChart dailyTrend={dailyTrend} daysCount={daysCount} />

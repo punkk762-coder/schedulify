@@ -84,12 +84,58 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
       waterIntakeMl = 3000;
     }
 
+    const monthKey = formatInTz(today, "yyyy-MM");
+    const [todayActivityLogs, currentMonthGoal] = await Promise.all([
+      prisma.activityLog.findMany({
+        where: { date: today },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.monthlyGoal.findUnique({
+        where: { month: monthKey },
+      }),
+    ]);
+
+    const totalSteps = todayActivityLogs.reduce((acc, log) => acc + (log.steps || 0), 0);
+    const totalDistanceKm = parseFloat(todayActivityLogs.reduce((acc, log) => acc + (log.distanceKm || 0), 0).toFixed(2));
+    const totalCaloriesBurned = todayActivityLogs.reduce((acc, log) => acc + (log.caloriesBurned || 0), 0);
+
     const payload = {
       date: formatInTz(today, "EEEE, MMMM d, yyyy"),
       isoDate: today.toISOString(),
       occurrences,
       stats,
       waterIntakeMl,
+      activity: {
+        totalSteps,
+        totalDistanceKm,
+        totalCaloriesBurned,
+        logs: todayActivityLogs.map((l) => ({
+          id: l.id,
+          title: l.title,
+          steps: l.steps,
+          distanceKm: l.distanceKm,
+          caloriesBurned: l.caloriesBurned,
+          notes: l.notes,
+          time: formatInTz(l.createdAt, "HH:mm"),
+        })),
+      },
+      monthlyGoal: currentMonthGoal
+        ? {
+            month: currentMonthGoal.month,
+            targetWeightKg: currentMonthGoal.targetWeightKg,
+            currentWeightKg: currentMonthGoal.currentWeightKg,
+            dailyStepsTarget: currentMonthGoal.dailyStepsTarget,
+            status: currentMonthGoal.status,
+            velocityNotes: currentMonthGoal.velocityNotes,
+          }
+        : {
+            month: monthKey,
+            targetWeightKg: 72,
+            currentWeightKg: 74,
+            dailyStepsTarget: 8000,
+            status: "IN_PROGRESS",
+            velocityNotes: "October Goal: 72kg Target Weight. Tracked against daily adherence.",
+          },
     };
 
     // Cache payload for 30s (invalidated automatically on complete/skip/replace/plan import)
