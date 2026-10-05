@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import {
+  type AlarmSoundId,
+  ALARM_SOUND_OPTIONS,
+  playSoundOnce,
+} from "@/lib/sound/alarmSynthesizer";
+import type { AlarmSettings, RoutineAlarmItem } from "@/components/alarm/AlarmManager";
 
 interface ManagedUser {
   id: string;
@@ -102,10 +108,87 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Routine Alarms state
+  const [alarmSettings, setAlarmSettings] = useState<AlarmSettings>({
+    sound: "zen_bell",
+    volume: 0.8,
+    leadTimeMin: 0,
+    browserPushEnabled: true,
+    routines: [
+      { id: "breakfast", name: "Breakfast Protocol", time: "10:15", category: "MEAL", enabled: true },
+      { id: "lunch", name: "Lunch Protocol", time: "12:30", category: "MEAL", enabled: true },
+      { id: "hydration", name: "Hydration Check-in", time: "14:30", category: "HYDRATION", enabled: true, intervalHours: 2 },
+      { id: "evening_walk", name: "Evening Walk & Workout", time: "18:00", category: "ACTIVITY", enabled: true },
+      { id: "dinner", name: "Dinner Protocol", time: "20:00", category: "MEAL", enabled: true },
+      { id: "bedtime", name: "Bedtime Wind-Down", time: "23:00", category: "OTHER", enabled: true },
+    ],
+  });
+  const [loadingAlarms, setLoadingAlarms] = useState(true);
+  const [savingAlarms, setSavingAlarms] = useState(false);
+  const [alarmMessage, setAlarmMessage] = useState<string | null>(null);
+  const [notifPermission, setNotifPermission] = useState<string>("default");
+
+  const fetchAlarmSettings = useCallback(async () => {
+    try {
+      setLoadingAlarms(true);
+      const res = await fetch("/api/settings/alarms");
+      if (res.ok) {
+        const data = await res.json();
+        setAlarmSettings(data);
+      }
+    } catch (err) {
+      console.error("Failed to load alarm settings:", err);
+    } finally {
+      setLoadingAlarms(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSettings();
     fetchGeminiStats();
-  }, [fetchSettings, fetchGeminiStats]);
+    fetchAlarmSettings();
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPermission(Notification.permission);
+    }
+  }, [fetchSettings, fetchGeminiStats, fetchAlarmSettings]);
+
+  const handleRequestNotifPermission = async () => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const perm = await Notification.requestPermission();
+      setNotifPermission(perm);
+    }
+  };
+
+  const handleSaveAlarmSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (savingAlarms) return;
+    setSavingAlarms(true);
+    setAlarmMessage(null);
+
+    try {
+      const res = await fetch("/api/settings/alarms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(alarmSettings),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAlarmMessage("Alarm sounds & routine notification schedule saved!");
+        setTimeout(() => setAlarmMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error("Failed to save alarms:", err);
+      setAlarmMessage("Network error saving alarm settings.");
+    } finally {
+      setSavingAlarms(false);
+    }
+  };
+
+  const handleTestFullAlarm = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("schedulfy-test-alarm"));
+    }
+  };
 
   const handleSaveGeminiKey = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -585,6 +668,248 @@ export default function SettingsPage() {
             </div>
           </form>
         )}
+      </div>
+
+      {/* ─── Routine Alarms & Notification Sounds Engine ─── */}
+      <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#dfc0b7] gap-3">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#a43716] animate-pulse" />
+              <span className="text-[10px] font-mono font-bold text-[#a43716] uppercase tracking-wider">
+                Web Audio Engine • Browser Routine Alarms
+              </span>
+            </div>
+            <h2 className="text-lg font-serif font-bold text-[#1f1b14]">
+              Routine Alarms &amp; Notification Sounds
+            </h2>
+            <p className="text-xs text-[#58423c]">
+              Browser-based audible alarms, procedural audio melodies, and customizable daily routine reminders.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {notifPermission === "granted" ? (
+              <span className="px-3 py-1 rounded-full bg-[#f7faef] text-[#52652a] text-[10px] font-mono font-bold border border-[#52652a]/20">
+                🔔 Browser Push Active
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleRequestNotifPermission}
+                className="px-3.5 py-1.5 rounded-full bg-[#a43716] hover:bg-[#862201] text-white text-[10px] font-mono font-bold transition-all shadow-xs"
+              >
+                Enable Browser Notifications 🔔
+              </button>
+            )}
+          </div>
+        </div>
+
+        {alarmMessage && (
+          <p className="text-xs font-semibold text-[#52652a] bg-[#f7faef] p-3 rounded-xl border border-[#52652a]/20">
+            {alarmMessage}
+          </p>
+        )}
+
+        {/* 1. Alarm Sound Selection Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-mono font-bold uppercase text-[#8b716a]">
+              Alarm Melody &amp; Tone (Synthesized Native Web Audio)
+            </label>
+            <span className="text-[10px] font-mono text-[#58423c]">
+              Zero Latency • 100% Offline
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {ALARM_SOUND_OPTIONS.map((opt) => {
+              const isSelected = alarmSettings.sound === opt.id;
+
+              return (
+                <div
+                  key={opt.id}
+                  onClick={() => setAlarmSettings((prev) => ({ ...prev, sound: opt.id }))}
+                  className={`p-3.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between space-y-2 ${
+                    isSelected
+                      ? "bg-[#ffdbd1]/50 border-[#a43716] ring-1 ring-[#a43716] shadow-xs"
+                      : "bg-[#fcf2e6]/30 border-[#dfc0b7] hover:border-[#a43716]/60"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{opt.icon}</span>
+                      <div>
+                        <h4 className="text-xs font-bold text-[#1f1b14]">{opt.name}</h4>
+                        <p className="text-[10px] text-[#58423c] leading-tight">{opt.description}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-[#dfc0b7]/40 text-[10px]">
+                    <span className="font-mono font-bold text-[#a43716]">
+                      {isSelected ? "● SELECTED" : "SELECT"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playSoundOnce(opt.id, alarmSettings.volume);
+                      }}
+                      className="px-2 py-0.5 rounded-md bg-white hover:bg-[#fcf2e6] border border-[#dfc0b7] font-bold text-[#1f1b14] active:scale-95"
+                    >
+                      ▶ Preview Tone
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. Controls: Volume, Lead Time & Test Ringing HUD */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl border border-[#dfc0b7] bg-[#fcf2e6]/20">
+          <div>
+            <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
+              Alarm Volume ({Math.round(alarmSettings.volume * 100)}%)
+            </label>
+            <input
+              type="range"
+              min="0.1"
+              max="1.0"
+              step="0.05"
+              value={alarmSettings.volume}
+              onChange={(e) =>
+                setAlarmSettings((prev) => ({
+                  ...prev,
+                  volume: parseFloat(e.target.value),
+                }))
+              }
+              className="w-full accent-[#a43716] cursor-pointer"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
+              Notification Lead Time
+            </label>
+            <select
+              value={alarmSettings.leadTimeMin}
+              onChange={(e) =>
+                setAlarmSettings((prev) => ({
+                  ...prev,
+                  leadTimeMin: parseInt(e.target.value, 10),
+                }))
+              }
+              className="w-full px-3 py-1.5 rounded-xl border border-[#dfc0b7] text-xs font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
+            >
+              <option value="0">Exact Scheduled Time</option>
+              <option value="5">5 Minutes Before</option>
+              <option value="10">10 Minutes Before</option>
+              <option value="15">15 Minutes Before</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col justify-end">
+            <button
+              type="button"
+              onClick={handleTestFullAlarm}
+              className="w-full py-2 rounded-xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center justify-center gap-1.5"
+            >
+              <span>🚨</span>
+              <span>Test Alarm Ringing HUD</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Routine Alarms Schedule Checklist */}
+        <form onSubmit={handleSaveAlarmSettings} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-mono font-bold uppercase text-[#8b716a]">
+              Scheduled Routine Alarms (Meals, Walks, Hydration)
+            </label>
+            <span className="text-[10px] text-[#58423c]">
+              Editable here or ask Schedulfy AI in chat!
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {alarmSettings.routines.map((routine, idx) => (
+              <div
+                key={routine.id}
+                className={`p-3.5 rounded-xl border transition-all space-y-2 ${
+                  routine.enabled ? "bg-white border-[#dfc0b7]" : "bg-gray-50 border-gray-200 opacity-60"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`alarm-toggle-${routine.id}`}
+                      checked={routine.enabled}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setAlarmSettings((prev) => {
+                          const updated = [...prev.routines];
+                          updated[idx] = { ...updated[idx], enabled: checked };
+                          return { ...prev, routines: updated };
+                        });
+                      }}
+                      className="rounded accent-[#a43716] w-4 h-4 cursor-pointer"
+                    />
+                    <label
+                      htmlFor={`alarm-toggle-${routine.id}`}
+                      className="text-xs font-bold text-[#1f1b14] cursor-pointer"
+                    >
+                      {routine.name}
+                    </label>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#fcf2e6] text-[#a43716]">
+                    {routine.category}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <span className="text-[11px] text-[#58423c]">Alarm Time:</span>
+                  <input
+                    type="time"
+                    value={routine.time}
+                    disabled={!routine.enabled}
+                    onChange={(e) => {
+                      const newTime = e.target.value;
+                      setAlarmSettings((prev) => {
+                        const updated = [...prev.routines];
+                        updated[idx] = { ...updated[idx], time: newTime };
+                        return { ...prev, routines: updated };
+                      });
+                    }}
+                    className="px-2 py-1 rounded-lg border border-[#dfc0b7] font-mono text-xs font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={savingAlarms}
+              className="px-6 py-2.5 rounded-xl bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-40 shadow-xs flex items-center gap-2"
+            >
+              {savingAlarms ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Saving Alarms...</span>
+                </>
+              ) : (
+                <>
+                  <span>Save Alarm Settings</span>
+                  <span>✓</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* ─── Profile Display Names Customization (Admin & Mom) ─── */}

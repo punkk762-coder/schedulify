@@ -5,6 +5,7 @@ import { todayUtc, formatInTz, addDays } from "../dates";
 import { processUserMessage } from "../ai/gemini";
 import { requireUserMiddleware, type SessionData } from "../auth";
 import { cacheService } from "../cache";
+import { getAlarmSettings, type AlarmSettings } from "./settings";
 import type { Prisma } from "@prisma/client";
 
 const router = Router();
@@ -275,6 +276,56 @@ router.post("/chat", requireUserMiddleware, async (req: Request, res: Response):
           actionStatus = "EXECUTED";
         } catch (err) {
           console.error("LOG_RECOVERY execution error:", err);
+          actionStatus = "FAILED";
+        }
+      } else if (act.intent === "CONFIGURE_ALARMS") {
+        try {
+          const data = (act.data || {}) as Record<string, unknown>;
+          const current = await getAlarmSettings();
+
+          const routineId = (data.routineId as string | undefined)?.toLowerCase();
+          const time = data.time as string | undefined;
+          const sound = (data.sound as any) || current.sound;
+          const volume = typeof data.volume === "number" ? data.volume : current.volume;
+          const enabled = typeof data.enabled === "boolean" ? data.enabled : true;
+
+          let updatedRoutines = current.routines.map((r) => {
+            if (routineId && (r.id.toLowerCase() === routineId || r.category.toLowerCase() === routineId)) {
+              return {
+                ...r,
+                time: time || r.time,
+                enabled,
+              };
+            }
+            return r;
+          });
+
+          if (routineId && time && !updatedRoutines.some((r) => r.id.toLowerCase() === routineId)) {
+            updatedRoutines.push({
+              id: routineId,
+              name: `${routineId.charAt(0).toUpperCase() + routineId.slice(1)} Protocol`,
+              time,
+              category: "OTHER",
+              enabled: true,
+            });
+          }
+
+          const merged: AlarmSettings = {
+            ...current,
+            sound,
+            volume,
+            routines: updatedRoutines,
+          };
+
+          await prisma.systemSetting.upsert({
+            where: { key: "alarm_settings" },
+            create: { key: "alarm_settings", value: JSON.stringify(merged) },
+            update: { value: JSON.stringify(merged) },
+          });
+
+          actionStatus = "EXECUTED";
+        } catch (err) {
+          console.error("CONFIGURE_ALARMS execution error:", err);
           actionStatus = "FAILED";
         }
       }

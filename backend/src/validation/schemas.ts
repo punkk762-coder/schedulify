@@ -114,6 +114,7 @@ export const aiActionTypes = [
   "LOG_RECOVERY",
   "SET_ROUTINE",
   "SET_GOAL",
+  "CONFIGURE_ALARMS",
 ] as const;
 
 export const aiActionSchema = z.object({

@@ -19,31 +19,44 @@ export interface AIResponse {
   action?: AIAction;
 }
 
-const SYSTEM_PROMPT = `You are Schedulfy AI, an intelligent personal routine, nutrition, and fitness execution assistant.
-Your job is to understand the user's natural language statements about their daily routine, meals, workouts, steps, distance, goals, and habits, and convert them into structured actions.
+const SYSTEM_PROMPT = `You are Schedulfy AI, an intelligent personal routine, nutrition, fitness, and alarm concierge assistant.
+Your job is to understand the user's natural language statements about their daily routine, meals, workouts, steps, distance, goals, habits, and routine alarms, and convert them into structured actions.
 
 Current context:
 - You must always be encouraging, concise, and direct.
-- You can:
+- You have FULL PRODUCT ACCESS to Schedulfy. You can inspect schedules, manage routines, log telemetries, and set alarms:
   1. Log activity & steps: "LOG_ACTIVITY" (e.g. "i walked 2k steps right now", "ran 5km", "worked out 30 mins").
      - Compute steps, distance in km (1 step ≈ 0.000762 km), duration in minutes, and calories burned (~0.04 kcal/step for walking; ~65 kcal/km for running).
      - Attach target occurrence if a walk/workout was scheduled for today.
-  2. Set recurring routines starting from tomorrow/today: "SET_ROUTINE" (e.g. "set 8k steps daily", "add morning run at 6:30 AM", "set workout 45 mins at 5 PM").
+  2. Set recurring routines: "SET_ROUTINE" (e.g. "set 8k steps daily", "add morning run at 6:30 AM", "set workout 45 mins at 5 PM").
      - Effective from tomorrow (or specified date), leaving past schedule occurrences 100% intact in DB.
   3. Set monthly milestones & goals: "SET_GOAL" (e.g. "set 72kgs for this october month", "set 8000 daily steps target", "achieved 72kg goal").
      - Extracts targetWeightKg, month (e.g. "2026-10"), dailyStepsTarget, and status ("IN_PROGRESS" | "ACHIEVED").
-  4. Everyday routine completion: "COMPLETE", "SKIP", "REPLACE", "RESCHEDULE", "QUERY", "IMPORT", "ASK_CLARIFICATION", "ANSWER".
+  4. Configure routine alarms & notification sounds: "CONFIGURE_ALARMS"
+     - You have direct execution access to all alarms (breakfast, lunch, hydration, evening_walk, dinner, bedtime).
+     - Can set sound ("zen_bell" | "energetic_pulse" | "digital_alarm" | "synth_ambient" | "vitality_gong"), volume (0.1 to 1.0), and routine alarm time (HH:mm 24-hr format).
+     - e.g. "set my dinner alarm to 8:30 PM with zen bell" -> { intent: "CONFIGURE_ALARMS", data: { routineId: "dinner", time: "20:30", sound: "zen_bell", enabled: true } }
+     - e.g. "change alarm sound to digital beep" -> { intent: "CONFIGURE_ALARMS", data: { sound: "digital_alarm" } }
+  5. Interactive Clarification: "ASK_CLARIFICATION"
+     - When the user asks to set an alarm, add a routine, or adjust habits but key parameters are missing (e.g. time, meal type, sound), ask a focused clarifying question and provide 2-4 quick clickable options in data.options!
+     - e.g. User says "set an alarm for lunch":
+       reply: "What time should I set your Lunch alarm? (Default is 12:30 PM)",
+       action: { intent: "ASK_CLARIFICATION", data: { field: "time", question: "Choose Lunch alarm time:", options: ["12:30 PM", "1:00 PM", "1:30 PM", "Zen Bell Chime"] } }
+     - STRICT RELEVANCE: You MUST ONLY ask clarification questions strictly about Schedulfy routines, alarms, nutrition, workouts, and Winter Arc milestones. Decline unrelated topics.
+  6. Everyday routine completion: "COMPLETE", "SKIP", "REPLACE", "RESCHEDULE", "QUERY", "IMPORT", "ANSWER".
 
 You MUST return a JSON object with:
 {
   "reply": "Concise natural language answer to the user",
   "action": {
-    "intent": "LOG_ACTIVITY" | "SET_ROUTINE" | "SET_GOAL" | "COMPLETE" | "SKIP" | "REPLACE" | "RESCHEDULE" | "QUERY" | "IMPORT" | "ASK_CLARIFICATION" | "ANSWER",
+    "intent": "LOG_ACTIVITY" | "SET_ROUTINE" | "SET_GOAL" | "CONFIGURE_ALARMS" | "COMPLETE" | "SKIP" | "REPLACE" | "RESCHEDULE" | "QUERY" | "IMPORT" | "ASK_CLARIFICATION" | "ANSWER",
     "effectiveDate": "YYYY-MM-DD",
-    "target": { "type": "routine_item" | "occurrence", "name": "...", "id": "..." },
+    "target": { "type": "routine_item" | "occurrence" | "alarm", "name": "...", "id": "..." },
     "replacement": { "type": "routine_item", "name": "...", "id": "..." },
     "scope": "TODAY_ONLY" | "FUTURE_OCCURRENCES",
-    "data": {}
+    "data": {
+      "options": ["Option 1", "Option 2"] // only for ASK_CLARIFICATION
+    }
   }
 }`;
 
@@ -150,6 +163,69 @@ ${context.todayOccurrences.map((o) => `- [${o.status}] ${o.time} - ${o.title} ($
  */
 function parseHeuristic(message: string, context: ChatContext): AIResponse {
   const lower = message.toLowerCase().trim();
+
+  // Check for routine alarm / notification sound intent
+  if (lower.includes("alarm") || lower.includes("sound") || lower.includes("ring") || lower.includes("chime")) {
+    let sound: string | undefined;
+    if (lower.includes("zen") || lower.includes("bell")) sound = "zen_bell";
+    else if (lower.includes("pulse") || lower.includes("energetic")) sound = "energetic_pulse";
+    else if (lower.includes("digital") || lower.includes("beep")) sound = "digital_alarm";
+    else if (lower.includes("synth") || lower.includes("ambient")) sound = "synth_ambient";
+    else if (lower.includes("gong") || lower.includes("vitality")) sound = "vitality_gong";
+
+    let routineId: string | undefined;
+    let time: string | undefined;
+
+    if (lower.includes("breakfast")) routineId = "breakfast";
+    else if (lower.includes("lunch")) routineId = "lunch";
+    else if (lower.includes("dinner")) routineId = "dinner";
+    else if (lower.includes("walk") || lower.includes("workout")) routineId = "evening_walk";
+    else if (lower.includes("water") || lower.includes("hydration")) routineId = "hydration";
+    else if (lower.includes("bed") || lower.includes("sleep")) routineId = "bedtime";
+
+    const timeMatch = lower.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1], 10);
+      const mins = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+      const meridiem = timeMatch[3]?.toLowerCase();
+      if (meridiem === "pm" && hours < 12) hours += 12;
+      if (meridiem === "am" && hours === 12) hours = 0;
+      time = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+    }
+
+    if (sound && !routineId && !time) {
+      return {
+        reply: `Alarm melody updated to ${sound.replace("_", " ").toUpperCase()}! It will ring for your scheduled protocols.`,
+        action: {
+          intent: "CONFIGURE_ALARMS",
+          data: { sound },
+        },
+      };
+    }
+
+    if (routineId && time) {
+      return {
+        reply: `Set your ${routineId.toUpperCase()} alarm for ${time}${sound ? ` with ${sound.replace("_", " ")} sound` : ""}!`,
+        action: {
+          intent: "CONFIGURE_ALARMS",
+          data: { routineId, time, sound, enabled: true },
+        },
+      };
+    }
+
+    // Underspecified alarm request -> Interactive Clarification with quick reply options
+    return {
+      reply: "Which routine alarm would you like to configure, and what sound do you prefer?",
+      action: {
+        intent: "ASK_CLARIFICATION",
+        data: {
+          field: "routine_alarm",
+          question: "Select routine to set alarm for:",
+          options: ["Lunch at 12:30 PM", "Dinner at 8:00 PM", "Evening Walk at 6:00 PM", "Zen Bell Sound"],
+        },
+      },
+    };
+  }
 
   // Check for plan import intent (multiline or contains days / meal plan keywords)
   if (

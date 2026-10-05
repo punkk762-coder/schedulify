@@ -98,6 +98,30 @@ export function ChatDesktopView({
 
                     <p className="whitespace-pre-wrap">{m.content}</p>
 
+                    {/* Interactive Clarification Option Buttons */}
+                    {Array.isArray((m.actionPayload as any)?.data?.options) && (
+                      <div className="pt-2 border-t border-[#dfc0b7]/50 space-y-1.5">
+                        <span className="text-[10px] font-mono font-bold text-[#a43716] uppercase tracking-wider block">
+                          {typeof (m.actionPayload as any)?.data?.question === "string"
+                            ? (m.actionPayload as any).data.question
+                            : "Quick Responses:"}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {((m.actionPayload as any).data.options as string[]).map((option: string, optIdx: number) => (
+                            <button
+                              key={optIdx}
+                              type="button"
+                              onClick={() => onSendPreset(option)}
+                              className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#a43716] hover:text-white border border-[#dfc0b7] hover:border-[#a43716] text-xs font-bold text-[#1f1b14] transition-all active:scale-95 shadow-2xs flex items-center gap-1.5"
+                            >
+                              <span>💬</span>
+                              <span>{option}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Action Execution Pill */}
                     {m.actionType && (
                       <div className="pt-2 border-t border-[#dfc0b7]/50 flex items-center justify-between text-[11px] font-mono">

@@ -4,6 +4,7 @@ import DesktopHeader from "./DesktopHeader";
 import MobileHeader from "./MobileHeader";
 import { ToastProvider } from "@/components/ui/Toast";
 import { FloatingMobileAiIsland } from "@/components/chat/FloatingMobileAiIsland";
+import { AlarmManager } from "@/components/alarm/AlarmManager";
 
 export default async function AppLayout({
   children,
@@ -15,6 +16,7 @@ export default async function AppLayout({
 
   return (
     <ToastProvider>
+      <AlarmManager />
       <div className="min-h-screen text-[#1f1b14] flex flex-col justify-between pb-24 lg:pb-8">
         {/* Desktop Command Navigation Bar (lg+) */}
         <DesktopHeader />

@@ -95,11 +95,10 @@ export default function ChatPage() {
     initChat();
   }, []);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim() || loading) return;
+  const sendMessageWithText = async (text: string) => {
+    if (!text.trim() || loading) return;
 
-    const userText = inputText.trim();
+    const userText = text.trim();
     setInputText("");
 
     const tempUserMsg: MessageItem = {
@@ -156,6 +155,11 @@ export default function ChatPage() {
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendMessageWithText(inputText);
+  };
+
   const handleIntakeSuccess = (summary: string) => {
     setMessages((prev) => [
       ...prev,
@@ -199,7 +203,7 @@ export default function ChatPage() {
           onSendMessage={handleSendMessage}
           onOpenImport={() => setShowIntakeWizard(true)}
           messagesEndRef={messagesEndRef}
-          onSendPreset={(p) => setInputText(p)}
+          onSendPreset={(p) => sendMessageWithText(p)}
         />
       </div>
 
@@ -213,7 +217,7 @@ export default function ChatPage() {
           onSendMessage={handleSendMessage}
           onOpenImport={() => setShowIntakeWizard(true)}
           messagesEndRef={messagesEndRef}
-          onSendPreset={(p) => setInputText(p)}
+          onSendPreset={(p) => sendMessageWithText(p)}
         />
       </div>
 

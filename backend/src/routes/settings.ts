@@ -251,5 +251,100 @@ router.post("/settings/gemini", requireUserMiddleware, async (req: Request, res:
   }
 });
 
+// ─── Routine Alarms & Notification Sounds Engine ───
+
+export interface RoutineAlarmItem {
+  id: string;
+  name: string;
+  time: string;
+  category: "MEAL" | "ACTIVITY" | "HYDRATION" | "OTHER";
+  enabled: boolean;
+  intervalHours?: number;
+}
+
+export interface AlarmSettings {
+  sound: "zen_bell" | "energetic_pulse" | "digital_alarm" | "synth_ambient" | "vitality_gong";
+  volume: number;
+  leadTimeMin: number;
+  browserPushEnabled: boolean;
+  routines: RoutineAlarmItem[];
+}
+
+export const DEFAULT_ALARM_SETTINGS: AlarmSettings = {
+  sound: "zen_bell",
+  volume: 0.8,
+  leadTimeMin: 0,
+  browserPushEnabled: true,
+  routines: [
+    { id: "breakfast", name: "Breakfast Protocol", time: "10:15", category: "MEAL", enabled: true },
+    { id: "lunch", name: "Lunch Protocol", time: "12:30", category: "MEAL", enabled: true },
+    { id: "hydration", name: "Hydration Check-in", time: "14:30", category: "HYDRATION", enabled: true, intervalHours: 2 },
+    { id: "evening_walk", name: "Evening Walk & Workout", time: "18:00", category: "ACTIVITY", enabled: true },
+    { id: "dinner", name: "Dinner Protocol", time: "20:00", category: "MEAL", enabled: true },
+    { id: "bedtime", name: "Bedtime Wind-Down", time: "23:00", category: "OTHER", enabled: true },
+  ],
+};
+
+export async function getAlarmSettings(): Promise<AlarmSettings> {
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: "alarm_settings" },
+    });
+    if (setting?.value) {
+      const parsed = JSON.parse(setting.value);
+      return {
+        ...DEFAULT_ALARM_SETTINGS,
+        ...parsed,
+        routines: Array.isArray(parsed.routines) && parsed.routines.length > 0 ? parsed.routines : DEFAULT_ALARM_SETTINGS.routines,
+      };
+    }
+  } catch (err) {
+    console.warn("Could not read alarm_settings from DB:", err);
+  }
+  return DEFAULT_ALARM_SETTINGS;
+}
+
+// GET /api/settings/alarms — Read user's alarm sounds & routine schedules
+router.get("/settings/alarms", requireUserMiddleware, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const settings = await getAlarmSettings();
+    res.json(settings);
+  } catch (err) {
+    console.error("GET /api/settings/alarms error:", err);
+    res.status(500).json({ error: "Failed to fetch alarm settings" });
+  }
+});
+
+// POST /api/settings/alarms — Update alarm sounds, volume, and routine alarm triggers
+router.post("/settings/alarms", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const current = await getAlarmSettings();
+    const updateData = req.body || {};
+
+    const merged: AlarmSettings = {
+      sound: updateData.sound || current.sound,
+      volume: typeof updateData.volume === "number" ? Math.max(0, Math.min(1, updateData.volume)) : current.volume,
+      leadTimeMin: typeof updateData.leadTimeMin === "number" ? updateData.leadTimeMin : current.leadTimeMin,
+      browserPushEnabled: typeof updateData.browserPushEnabled === "boolean" ? updateData.browserPushEnabled : current.browserPushEnabled,
+      routines: Array.isArray(updateData.routines) ? updateData.routines : current.routines,
+    };
+
+    await prisma.systemSetting.upsert({
+      where: { key: "alarm_settings" },
+      create: { key: "alarm_settings", value: JSON.stringify(merged) },
+      update: { value: JSON.stringify(merged) },
+    });
+
+    res.json({
+      success: true,
+      message: "Alarm sound & routine notification schedule saved!",
+      settings: merged,
+    });
+  } catch (err) {
+    console.error("POST /api/settings/alarms error:", err);
+    res.status(500).json({ error: "Failed to update alarm settings" });
+  }
+});
+
 export default router;
 

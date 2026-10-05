@@ -82,6 +82,29 @@ export function ChatMobileView({
                 )}
                 <p className="whitespace-pre-wrap">{m.content}</p>
 
+                {/* Interactive Clarification Option Buttons */}
+                {Array.isArray((m.actionPayload as any)?.data?.options) && (
+                  <div className="pt-2 border-t border-[#dfc0b7]/50 space-y-1">
+                    <span className="text-[9px] font-mono font-bold text-[#a43716] uppercase tracking-wider block">
+                      {typeof (m.actionPayload as any)?.data?.question === "string"
+                        ? (m.actionPayload as any).data.question
+                        : "Quick Options:"}
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {((m.actionPayload as any).data.options as string[]).map((option: string, optIdx: number) => (
+                        <button
+                          key={optIdx}
+                          type="button"
+                          onClick={() => onSendPreset(option)}
+                          className="px-2.5 py-1 rounded-full bg-[#fcf2e6] hover:bg-[#a43716] hover:text-white border border-[#dfc0b7] text-[11px] font-bold text-[#1f1b14] transition-all active:scale-95"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {m.actionType && (
                   <div className="pt-2 border-t border-[#dfc0b7]/50 flex items-center justify-between text-[10px] font-mono">
                     <span className="font-bold text-[#52652a]">{m.actionType}</span>
