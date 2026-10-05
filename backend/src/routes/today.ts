@@ -99,12 +99,36 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
     const totalDistanceKm = parseFloat(todayActivityLogs.reduce((acc, log) => acc + (log.distanceKm || 0), 0).toFixed(2));
     const totalCaloriesBurned = todayActivityLogs.reduce((acc, log) => acc + (log.caloriesBurned || 0), 0);
 
+    // Non-gym fitness & recovery metrics (Sleep, Soreness, Hydration/Electrolytes, Creatine, Mobility)
+    const recoveryLog = todayActivityLogs.find((l) => l.activityType === "RECOVERY");
+    let recoveryData = {
+      sleepHours: 7.5,
+      sleepQuality: "OPTIMAL" as "POOR" | "FAIR" | "GOOD" | "OPTIMAL",
+      sorenessLevel: "LOW" as "NONE" | "LOW" | "MILD" | "HIGH",
+      electrolytesTaken: false,
+      creatineTaken: false,
+      magnesiumTaken: false,
+      morningMobilityDone: false,
+      postMealWalksCount: todayActivityLogs.filter((l) => l.title?.toLowerCase().includes("walk") || l.title?.toLowerCase().includes("stroll")).length,
+      recoveryScore: 85,
+    };
+
+    if (recoveryLog?.notes) {
+      try {
+        const parsed = JSON.parse(recoveryLog.notes);
+        recoveryData = { ...recoveryData, ...parsed };
+      } catch {
+        // default
+      }
+    }
+
     const payload = {
       date: formatInTz(today, "EEEE, MMMM d, yyyy"),
       isoDate: today.toISOString(),
       occurrences,
       stats,
       waterIntakeMl,
+      recovery: recoveryData,
       activity: {
         totalSteps,
         totalDistanceKm,
@@ -260,6 +284,85 @@ router.post("/today/hydration", requireUserMiddleware, async (req: Request, res:
   } catch (err) {
     console.error("POST /api/today/hydration error:", err);
     res.status(500).json({ error: "Failed to log hydration" });
+  }
+});
+
+// Non-Gym Fitness & Recovery updates (Sleep, Readiness, Soreness, Daily Supplements, Mobility)
+router.post("/today/fitness-recovery", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const today = todayUtc();
+    const dateKey = today.toISOString().split("T")[0];
+    const updates = req.body || {};
+
+    let recoveryLog = await prisma.activityLog.findFirst({
+      where: { date: today, activityType: "RECOVERY" },
+    });
+
+    let currentData = {
+      sleepHours: 7.5,
+      sleepQuality: "OPTIMAL",
+      sorenessLevel: "LOW",
+      electrolytesTaken: false,
+      creatineTaken: false,
+      magnesiumTaken: false,
+      morningMobilityDone: false,
+      postMealWalksCount: 0,
+      recoveryScore: 85,
+    };
+
+    if (recoveryLog?.notes) {
+      try {
+        currentData = { ...currentData, ...JSON.parse(recoveryLog.notes) };
+      } catch {}
+    }
+
+    const merged = { ...currentData, ...updates };
+
+    // Compute dynamic recovery readiness score
+    let score = 0;
+    if (merged.sleepHours >= 7.5) score += 35;
+    else if (merged.sleepHours >= 6.5) score += 25;
+    else score += 15;
+
+    if (merged.sorenessLevel === "NONE") score += 20;
+    else if (merged.sorenessLevel === "LOW") score += 18;
+    else if (merged.sorenessLevel === "MILD") score += 12;
+    else score += 5;
+
+    if (merged.electrolytesTaken) score += 10;
+    if (merged.creatineTaken) score += 10;
+    if (merged.magnesiumTaken) score += 10;
+    if (merged.morningMobilityDone) score += 15;
+
+    merged.recoveryScore = Math.min(100, score);
+
+    if (recoveryLog) {
+      await prisma.activityLog.update({
+        where: { id: recoveryLog.id },
+        data: {
+          notes: JSON.stringify(merged),
+          title: `Recovery Readiness (${merged.recoveryScore}%)`,
+        },
+      });
+    } else {
+      await prisma.activityLog.create({
+        data: {
+          date: today,
+          activityType: "RECOVERY",
+          title: `Recovery Readiness (${merged.recoveryScore}%)`,
+          notes: JSON.stringify(merged),
+        },
+      });
+    }
+
+    await cache.del(`today_payload:${dateKey}`);
+    await cache.invalidatePattern("today_payload:");
+    await cache.invalidatePattern("analytics:");
+
+    res.json({ success: true, recovery: merged });
+  } catch (err) {
+    console.error("POST /api/today/fitness-recovery error:", err);
+    res.status(500).json({ error: "Failed to update fitness recovery" });
   }
 });
 

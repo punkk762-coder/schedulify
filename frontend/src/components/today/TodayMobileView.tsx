@@ -3,12 +3,15 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import type { TodayOccurrence, DailyStats } from "@/lib/domain/types";
+import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
 
 interface TodayMobileViewProps {
   occurrences: TodayOccurrence[];
   stats: DailyStats | null;
   dateStr: string;
   waterIntakeMl: number;
+  recovery?: FitnessRecoveryData | null;
+  onUpdateRecovery?: (data: Partial<FitnessRecoveryData>) => void;
   activity?: {
     totalSteps: number;
     totalDistanceKm: number;
@@ -50,6 +53,8 @@ export function TodayMobileView({
   stats,
   dateStr,
   waterIntakeMl,
+  recovery,
+  onUpdateRecovery,
   activity,
   monthlyGoal,
   activeCategory,
@@ -204,6 +209,12 @@ export function TodayMobileView({
           <span>⚡ AI Coach</span>
         </Link>
       </div>
+
+      {/* ─── Fitness Beyond The Gym (Recovery, NEAT & Supplement Stack) ─── */}
+      <FitnessRecoveryCockpit
+        recovery={recovery}
+        onUpdateRecovery={onUpdateRecovery}
+      />
 
       {/* ─── Magnificent "Next Up" Focus Card ─── */}
       {nextUp ? (

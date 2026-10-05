@@ -34,9 +34,16 @@ router.post("/chat", requireUserMiddleware, async (req: Request, res: Response):
       : null;
 
     if (!conv) {
+      let validUserId = session.userId;
+      const userExists = await prisma.user.findUnique({ where: { id: session.userId } });
+      if (!userExists) {
+        const primaryUser = await prisma.user.findFirst({ where: { role: "USER" } });
+        if (primaryUser) validUserId = primaryUser.id;
+      }
+
       conv = await prisma.conversation.create({
         data: {
-          userId: session.userId,
+          userId: validUserId,
           title: message.slice(0, 40),
         },
       });
@@ -195,6 +202,79 @@ router.post("/chat", requireUserMiddleware, async (req: Request, res: Response):
           actionStatus = "EXECUTED";
         } catch (err) {
           console.error("SET_ROUTINE execution error:", err);
+          actionStatus = "FAILED";
+        }
+      } else if (act.intent === "LOG_RECOVERY") {
+        try {
+          const data = (act.data || {}) as Record<string, unknown>;
+          const dateKey = today.toISOString().split("T")[0];
+
+          let recoveryLog = await prisma.activityLog.findFirst({
+            where: { date: today, activityType: "RECOVERY" },
+          });
+
+          let currentData = {
+            sleepHours: 7.5,
+            sleepQuality: "OPTIMAL",
+            sorenessLevel: "LOW",
+            electrolytesTaken: false,
+            creatineTaken: false,
+            magnesiumTaken: false,
+            morningMobilityDone: false,
+            postMealWalksCount: 0,
+            recoveryScore: 85,
+          };
+
+          if (recoveryLog?.notes) {
+            try {
+              currentData = { ...currentData, ...JSON.parse(recoveryLog.notes) };
+            } catch {}
+          }
+
+          const merged = { ...currentData, ...data };
+
+          let score = 0;
+          if (merged.sleepHours >= 7.5) score += 35;
+          else if (merged.sleepHours >= 6.5) score += 25;
+          else score += 15;
+
+          if (merged.sorenessLevel === "NONE") score += 20;
+          else if (merged.sorenessLevel === "LOW") score += 18;
+          else if (merged.sorenessLevel === "MILD") score += 12;
+          else score += 5;
+
+          if (merged.electrolytesTaken) score += 10;
+          if (merged.creatineTaken) score += 10;
+          if (merged.magnesiumTaken) score += 10;
+          if (merged.morningMobilityDone) score += 15;
+
+          merged.recoveryScore = Math.min(100, score);
+
+          if (recoveryLog) {
+            await prisma.activityLog.update({
+              where: { id: recoveryLog.id },
+              data: {
+                notes: JSON.stringify(merged),
+                title: `Recovery Readiness (${merged.recoveryScore}%)`,
+              },
+            });
+          } else {
+            await prisma.activityLog.create({
+              data: {
+                date: today,
+                activityType: "RECOVERY",
+                title: `Recovery Readiness (${merged.recoveryScore}%)`,
+                notes: JSON.stringify(merged),
+              },
+            });
+          }
+
+          await cacheService.del(`today_payload:${dateKey}`);
+          await cacheService.invalidatePattern("today_payload:");
+          await cacheService.invalidatePattern("analytics:");
+          actionStatus = "EXECUTED";
+        } catch (err) {
+          console.error("LOG_RECOVERY execution error:", err);
           actionStatus = "FAILED";
         }
       }

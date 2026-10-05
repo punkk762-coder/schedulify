@@ -7,12 +7,15 @@ import { OccurrenceCard } from "./OccurrenceCard";
 import { MacroLedger } from "./MacroLedger";
 import { HydrationWidget } from "./HydrationWidget";
 import { MomKitchenHub } from "./MomKitchenHub";
+import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
 
 interface TodayDesktopViewProps {
   occurrences: TodayOccurrence[];
   stats: DailyStats | null;
   dateStr: string;
   waterIntakeMl: number;
+  recovery?: FitnessRecoveryData | null;
+  onUpdateRecovery?: (data: Partial<FitnessRecoveryData>) => void;
   activity?: {
     totalSteps: number;
     totalDistanceKm: number;
@@ -45,6 +48,8 @@ export function TodayDesktopView({
   stats,
   dateStr,
   waterIntakeMl,
+  recovery,
+  onUpdateRecovery,
   activity,
   monthlyGoal,
   activeCategory,
@@ -317,6 +322,12 @@ export function TodayDesktopView({
             targetCarbs={160}
             currentFat={stats?.nutrition?.fat || 0}
             targetFat={45}
+          />
+
+          {/* Fitness Beyond The Gym: Sleep, Recovery Readiness, Soreness & Supplement Stack */}
+          <FitnessRecoveryCockpit
+            recovery={recovery}
+            onUpdateRecovery={onUpdateRecovery}
           />
 
           {/* Hydration Widget */}

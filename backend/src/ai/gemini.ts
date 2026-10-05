@@ -213,6 +213,71 @@ function parseHeuristic(message: string, context: ChatContext): AIResponse {
     };
   }
 
+  // Check for recovery & non-gym bio-hygiene (sleep, creatine, electrolytes, magnesium, mobility, soreness)
+  const isSleep = lower.includes("sleep") || lower.includes("slept") || lower.includes("rested");
+  const isCreatine = lower.includes("creatine");
+  const isElectrolytes = lower.includes("electrolyte") || lower.includes("pink salt") || lower.includes("lemon water");
+  const isMagnesium = lower.includes("magnesium");
+  const isMobility = lower.includes("mobility") || lower.includes("stretch") || lower.includes("foam roll") || lower.includes("decompression");
+  const isSore = lower.includes("sore") || lower.includes("doms") || lower.includes("stiff") || lower.includes("fatigued");
+
+  if (isSleep || isCreatine || isElectrolytes || isMagnesium || isMobility || isSore) {
+    const recoveryPatch: Record<string, unknown> = {};
+    let feedback = "Logged recovery telemetry: ";
+
+    if (isSleep) {
+      const sleepMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)/i);
+      if (sleepMatch) {
+        recoveryPatch.sleepHours = parseFloat(sleepMatch[1]);
+        feedback += `${recoveryPatch.sleepHours}h sleep • `;
+      }
+      if (lower.includes("good") || lower.includes("great") || lower.includes("optimal") || lower.includes("deep")) {
+        recoveryPatch.sleepQuality = "OPTIMAL";
+      } else if (lower.includes("poor") || lower.includes("bad") || lower.includes("insomnia")) {
+        recoveryPatch.sleepQuality = "POOR";
+      }
+    }
+
+    if (isCreatine) {
+      recoveryPatch.creatineTaken = true;
+      feedback += "Creatine (5g) recorded • ";
+    }
+
+    if (isElectrolytes) {
+      recoveryPatch.electrolytesTaken = true;
+      feedback += "Electrolytes recorded • ";
+    }
+
+    if (isMagnesium) {
+      recoveryPatch.magnesiumTaken = true;
+      feedback += "Magnesium recorded • ";
+    }
+
+    if (isMobility) {
+      recoveryPatch.morningMobilityDone = true;
+      feedback += "Mobility/Stretching recorded • ";
+    }
+
+    if (isSore) {
+      if (lower.includes("high") || lower.includes("very") || lower.includes("pain")) {
+        recoveryPatch.sorenessLevel = "HIGH";
+      } else if (lower.includes("mild") || lower.includes("little")) {
+        recoveryPatch.sorenessLevel = "LOW";
+      } else {
+        recoveryPatch.sorenessLevel = "MILD";
+      }
+      feedback += `Soreness: ${recoveryPatch.sorenessLevel} • `;
+    }
+
+    return {
+      reply: `${feedback.trim().replace(/•$/, "")}. Recovery Cockpit updated.`,
+      action: {
+        intent: "LOG_RECOVERY",
+        data: recoveryPatch,
+      },
+    };
+  }
+
   // Check for goal setting or monthly target (e.g. "set 72kgs for this october month", "achieved 72kg")
   const goalWeightMatch = lower.match(/(?:set|goal|target|achieved).*?(\d+(?:\.\d+)?)\s*(?:kg|kgs|kilo|kilos)/i) ||
     lower.match(/(\d+(?:\.\d+)?)\s*(?:kg|kgs|kilo|kilos).*?(?:for|month|target|goal)/i);

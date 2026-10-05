@@ -34,6 +34,7 @@ export default function TodayPage() {
     status: string;
     velocityNotes?: string;
   } | null>(null);
+  const [recovery, setRecovery] = useState<any | null>(null);
   const quickInputRef = useRef<HTMLInputElement>(null);
 
   const refreshData = useCallback(async () => {
@@ -53,6 +54,7 @@ export default function TodayPage() {
         }
         if (data.activity) setActivity(data.activity);
         if (data.monthlyGoal) setMonthlyGoal(data.monthlyGoal);
+        if (data.recovery) setRecovery(data.recovery);
       }
     } catch (err) {
       console.error("Error refreshing today routine:", err);
@@ -78,6 +80,7 @@ export default function TodayPage() {
           }
           if (data.activity) setActivity(data.activity);
           if (data.monthlyGoal) setMonthlyGoal(data.monthlyGoal);
+          if (data.recovery) setRecovery(data.recovery);
         }
       } catch (err) {
         console.error("Error loading today routine:", err);
@@ -280,6 +283,8 @@ export default function TodayPage() {
           stats={stats}
           dateStr={dateStr}
           waterIntakeMl={waterIntakeMl}
+          recovery={recovery}
+          onUpdateRecovery={(patch) => setRecovery((prev: any) => ({ ...prev, ...patch }))}
           activity={activity}
           monthlyGoal={monthlyGoal}
           activeCategory={activeCategory}
@@ -303,6 +308,8 @@ export default function TodayPage() {
           stats={stats}
           dateStr={dateStr}
           waterIntakeMl={waterIntakeMl}
+          recovery={recovery}
+          onUpdateRecovery={(patch) => setRecovery((prev: any) => ({ ...prev, ...patch }))}
           activity={activity}
           monthlyGoal={monthlyGoal}
           activeCategory={activeCategory}
