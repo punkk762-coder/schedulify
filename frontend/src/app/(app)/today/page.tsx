@@ -3,12 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { TodayOccurrence, DailyStats } from "@/lib/domain/types";
-import { TodayHeroHeader } from "@/components/today/TodayHeroHeader";
-import { QuickLogBar } from "@/components/today/QuickLogBar";
-import { ExecutionTimeline } from "@/components/today/ExecutionTimeline";
-import { MacroLedger } from "@/components/today/MacroLedger";
-import { MomKitchenHub } from "@/components/today/MomKitchenHub";
-import { HydrationWidget } from "@/components/today/HydrationWidget";
+import { TodayDesktopView } from "@/components/today/TodayDesktopView";
+import { TodayMobileView } from "@/components/today/TodayMobileView";
 import { SwapModal } from "@/components/today/SwapModal";
 import { useToast } from "@/components/ui/Toast";
 
@@ -258,66 +254,47 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="w-full space-y-5 animate-in fade-in duration-300">
-      {/* Hero Summary Strip */}
-      <TodayHeroHeader
-        dateStr={dateStr}
-        completionPercentage={completionPercentage}
-        completedCount={completedCount}
-        totalCount={totalCount}
-        ringCircumference={ringCircumference}
-        ringOffset={ringOffset}
-        onQuickLog={handleQuickChatSubmit}
-      />
-
-      {/* Natural Entry Quick-Log Bar */}
-      <div className="max-w-2xl">
-        <QuickLogBar
+    <div>
+      {/* Desktop Clean Executive View (lg+) */}
+      <div className="hidden lg:block">
+        <TodayDesktopView
+          occurrences={occurrences}
+          stats={stats}
+          dateStr={dateStr}
+          waterIntakeMl={waterIntakeMl}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          onComplete={handleComplete}
+          onUndo={handleUndo}
+          onSkip={handleSkip}
+          onOpenSwapModal={setSwapModalItem}
+          onAddWater={handleAddWater}
+          onQuickLog={handleQuickChatSubmit}
           quickText={quickText}
+          setQuickText={setQuickText}
           submittingQuick={submittingQuick}
-          onTextChange={setQuickText}
-          onSubmit={handleQuickChatSubmit}
         />
       </div>
 
-      {/* Panoramic Triple/Double-Column Layout matching desktop-suite.html */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Column A (7 Cols): Chronological Timeline Ledger */}
-        <div className="lg:col-span-7">
-          <ExecutionTimeline
-            occurrences={occurrences}
-            activeCategory={activeCategory}
-            onSelectCategory={setActiveCategory}
-            onComplete={handleComplete}
-            onUndo={handleUndo}
-            onSkip={handleSkip}
-            onOpenSwapModal={setSwapModalItem}
-          />
-        </div>
-
-        {/* Column B (5 Cols): Intelligence, Metabolic & Hearth */}
-        <aside className="lg:col-span-5 flex flex-col gap-6">
-          <MacroLedger
-            currentCalories={stats?.nutrition?.calories || 0}
-            targetCalories={1800}
-            currentProtein={stats?.nutrition?.protein || 0}
-            targetProtein={150}
-            currentCarbs={stats?.nutrition?.carbs || 0}
-            targetCarbs={160}
-            currentFat={stats?.nutrition?.fat || 0}
-            targetFat={45}
-          />
-
-          <MomKitchenHub
-            queuedCount={occurrences.filter((o) => o.category === "MEAL" && o.status === "PENDING").length}
-          />
-
-          <HydrationWidget
-            waterIntakeMl={waterIntakeMl}
-            targetMl={3000}
-            onAddWater={handleAddWater}
-          />
-        </aside>
+      {/* Mobile Magnificent Tactile View (< lg) */}
+      <div className="block lg:hidden">
+        <TodayMobileView
+          occurrences={occurrences}
+          stats={stats}
+          dateStr={dateStr}
+          waterIntakeMl={waterIntakeMl}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          onComplete={handleComplete}
+          onUndo={handleUndo}
+          onSkip={handleSkip}
+          onOpenSwapModal={setSwapModalItem}
+          onAddWater={handleAddWater}
+          onQuickLog={handleQuickChatSubmit}
+          quickText={quickText}
+          setQuickText={setQuickText}
+          submittingQuick={submittingQuick}
+        />
       </div>
 
       {/* Meal Substitution Modal */}

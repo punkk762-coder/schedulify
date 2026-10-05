@@ -30,7 +30,6 @@ export default function SettingsPage() {
 11:30 PM - Bedtime: Warm Turmeric Milk / Chamomile - 120 kcal, 4g protein, 10g carbs, 5g fat`;
 
     try {
-      // 1. Parse
       const parseRes = await fetch("/api/plans/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,7 +38,6 @@ export default function SettingsPage() {
       const parseData = await parseRes.json();
 
       if (parseData.proposal) {
-        // 2. Commit
         const commitRes = await fetch("/api/plans/import", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -58,75 +56,77 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 pb-6 text-[#1f1b14]">
+    <div className="w-full space-y-6 text-[#1f1b14] pb-20">
       {/* Header */}
-      <div>
-        <span className="text-xs font-bold tracking-wider uppercase text-[#52652a]">
-          Preferences &amp; System
-        </span>
-        <h1 className="text-2xl font-serif font-bold text-[#1f1b14] mt-0.5">Settings</h1>
-        <p className="text-xs text-[#58423c]">Configure your Mediterranean Routine Protocol</p>
-      </div>
+      <header className="bg-white rounded-2xl p-6 border border-[#dfc0b7] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-[#52652a] animate-pulse" />
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#52652a]">
+              System Configuration
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1f1b14]">Preferences &amp; Account</h1>
+          <p className="text-xs text-[#58423c] mt-0.5">Manage your Mediterranean Routine Protocol and credentials</p>
+        </div>
 
-      <div className="space-y-4">
-        {/* Account info */}
-        <div className="p-5 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-3">
-          <h2 className="text-xs font-bold text-[#8b716a] uppercase tracking-wider">Account &amp; Role</h2>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="px-4 py-2 rounded-xl bg-[#ffdad6] hover:bg-[#ffb5a0] text-[#93000a] border border-[#ba1a1a]/20 text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0"
+        >
+          Sign Out / Exit
+        </button>
+      </header>
+
+      {/* Grid Settings */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Account Info */}
+        <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-4">
+          <span className="text-[10px] font-mono font-bold text-[#8b716a] uppercase tracking-wider block">
+            Role &amp; Security
+          </span>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#58423c]">Active Role</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] font-semibold">
+            <span className="text-[#58423c] font-medium">Session Role</span>
+            <span className="px-3 py-1 rounded-full bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] font-bold font-mono text-[11px]">
               PRIMARY USER
             </span>
           </div>
-          <div className="flex items-center justify-between text-xs pt-2 border-t border-[#dfc0b7]/50">
-            <span className="text-[#58423c]">Timezone</span>
-            <span className="text-[#1f1b14] font-mono font-medium">Asia/Kolkata</span>
+          <div className="flex items-center justify-between text-xs pt-3 border-t border-[#dfc0b7]/50">
+            <span className="text-[#58423c] font-medium">Active Timezone</span>
+            <span className="text-[#1f1b14] font-mono font-semibold">Asia/Kolkata</span>
+          </div>
+          <div className="flex items-center justify-between text-xs pt-3 border-t border-[#dfc0b7]/50">
+            <span className="text-[#58423c] font-medium">Database Persistence</span>
+            <span className="text-[#52652a] font-mono font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#52652a]" />
+              Supabase IPv4 Pooler
+            </span>
           </div>
         </div>
 
-        {/* Quick Routine Load */}
-        <div className="p-5 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-3">
-          <h2 className="text-xs font-bold text-[#8b716a] uppercase tracking-wider">Demo &amp; Routine Setup</h2>
+        {/* Demo & Routine Loader */}
+        <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-4">
+          <span className="text-[10px] font-mono font-bold text-[#8b716a] uppercase tracking-wider block">
+            Protocol Initialization
+          </span>
           <p className="text-xs text-[#58423c]">
-            One-click load the Monday–Sunday Nutrition &amp; Workout Routine into your active schedule.
+            One-click reloads the complete Mediterranean Routine (Proats, Lunch, Kala Chana, Dinner, Evening Walk, Bedtime Milk).
           </p>
 
           {seedMessage && (
-            <p className="text-xs font-semibold text-[#52652a] animate-pulse">{seedMessage}</p>
+            <p className="text-xs font-semibold text-[#52652a] animate-pulse bg-[#f7faef] p-2 rounded-xl border border-[#52652a]/20">
+              {seedMessage}
+            </p>
           )}
 
           <button
             type="button"
             onClick={handleSeedSampleRoutine}
             disabled={seeding}
-            className="w-full py-2.5 rounded-full bg-[#a43716] hover:bg-[#862201] text-white text-xs font-semibold transition-all active:scale-98 disabled:opacity-40 shadow-xs"
+            className="w-full py-2.5 rounded-xl bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-40 shadow-xs"
           >
-            {seeding ? "Loading Routine..." : "Load Default Routine (Proats, Lunch, Chana, Dinner, Walk)"}
-          </button>
-        </div>
-
-        {/* PWA & System */}
-        <div className="p-5 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-3">
-          <h2 className="text-xs font-bold text-[#8b716a] uppercase tracking-wider">PWA &amp; Device</h2>
-          <div className="flex items-center justify-between text-xs">
-            <div>
-              <span className="font-semibold text-[#1f1b14] block">Installable App</span>
-              <span className="text-[11px] text-[#58423c]">Add Schedulfy to your phone home screen</span>
-            </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#d4eca2] text-[#141f00] border border-[#52652a]/30 font-semibold">
-              Ready
-            </span>
-          </div>
-        </div>
-
-        {/* Logout */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full py-3 rounded-full bg-[#ffdad6] hover:bg-[#ffb5a0] text-[#93000a] border border-[#ba1a1a]/20 text-xs font-semibold transition-all active:scale-98 shadow-xs"
-          >
-            Sign Out / Exit Session
+            {seeding ? "Importing Routine..." : "Load Default 7-Day Routine"}
           </button>
         </div>
       </div>

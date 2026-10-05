@@ -2,13 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { AnalyticsHeroHeader } from "@/components/analytics/AnalyticsHeroHeader";
-import { InteractiveTrendChart } from "@/components/analytics/InteractiveTrendChart";
-import { NutritionMatrixCard } from "@/components/analytics/NutritionMatrixCard";
-import { CategoryAdherenceList } from "@/components/analytics/CategoryAdherenceList";
-import { AiCoachingInsights } from "@/components/analytics/AiCoachingInsights";
-import { DailyGoalsAndBodyStatus } from "@/components/analytics/DailyGoalsAndBodyStatus";
-import { MonthlyEvolutionCard } from "@/components/analytics/MonthlyEvolutionCard";
+import { AnalyticsDesktopView } from "@/components/analytics/AnalyticsDesktopView";
+import { AnalyticsMobileView } from "@/components/analytics/AnalyticsMobileView";
 
 interface AnalyticsResponse {
   summary: {
@@ -118,65 +113,32 @@ export default function AnalyticsPage() {
   }, [daysCount, fetchAnalytics]);
 
   return (
-    <div className="space-y-6 pb-20 max-w-6xl mx-auto px-1 sm:px-2 text-[#1f1b14]">
-      {/* Hero Header with Key Gauges & Time Range Toggles */}
-      <AnalyticsHeroHeader
-        daysCount={daysCount}
-        onSelectDays={(val) => setDaysCount(val)}
-        adherence={data?.summary.adherence || 0}
-        completed={data?.summary.completed || 0}
-        total={data?.summary.total || 0}
-        streak={data?.summary.streak || 0}
-        grade={data?.summary.grade || "A"}
-        bestDay={data?.summary.bestDay || "Tue (92%)"}
-      />
-
+    <div className="w-full text-[#1f1b14]">
       {loading && !data ? (
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-5xl mx-auto">
           <div className="h-44 rounded-2xl animate-pulse bg-white/70 border border-[#dfc0b7]" />
           <div className="h-40 rounded-2xl animate-pulse bg-white/70 border border-[#dfc0b7]" />
         </div>
       ) : data ? (
-        <div className="space-y-6">
-          {/* Daily Goals & Current Status of Body */}
-          <DailyGoalsAndBodyStatus
-            dailyGoals={data.dailyGoals}
-            bodyStatus={data.bodyStatus}
-          />
+        <>
+          {/* Desktop Clean Executive View (lg+) */}
+          <div className="hidden lg:block">
+            <AnalyticsDesktopView
+              data={data}
+              daysCount={daysCount}
+              onSelectDays={(val) => setDaysCount(val)}
+            />
+          </div>
 
-          {/* Interactive Adherence Trend Chart */}
-          <InteractiveTrendChart
-            dailyTrend={data.dailyTrend}
-            daysCount={daysCount}
-          />
-
-          {/* Monthly Schedule Evolution & Historical Immutability Ledger */}
-          <MonthlyEvolutionCard
-            unchanged={data.routineEvolution?.unchanged}
-            changed={data.routineEvolution?.changed}
-          />
-
-          {/* Nutrition & Energy Matrix */}
-          <NutritionMatrixCard
-            averageNutrition={data.averageNutrition}
-            macroDistribution={data.macroDistribution}
-            targetCalories={1800}
-            targetProtein={150}
-            targetCarbs={160}
-            targetFat={45}
-          />
-
-          {/* Category Adherence Breakdown */}
-          <CategoryAdherenceList
-            categoryBreakdown={data.categoryBreakdown}
-          />
-
-          {/* AI Solstice Behavioral Coaching Insights */}
-          <AiCoachingInsights
-            insights={data.insights}
-            adherence={data.summary.adherence}
-          />
-        </div>
+          {/* Mobile Magnificent Story View (< lg) */}
+          <div className="block lg:hidden">
+            <AnalyticsMobileView
+              data={data}
+              daysCount={daysCount}
+              onSelectDays={(val) => setDaysCount(val)}
+            />
+          </div>
+        </>
       ) : (
         <div className="p-8 rounded-2xl bg-white border border-[#dfc0b7] text-center space-y-3">
           <span className="text-3xl">📊</span>
