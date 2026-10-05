@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import type { TodayOccurrence, DailyStats } from "@/lib/domain/types";
 import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
+import { ThreeProgressHalo } from "@/components/3d/ThreeProgressHalo";
 
 interface TodayMobileViewProps {
   occurrences: TodayOccurrence[];
@@ -136,24 +137,12 @@ export function TodayMobileView({
             )}
           </div>
 
-          {/* Glowing Circular Meter */}
-          <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-            <svg className="w-14 h-14 -rotate-90" viewBox="0 0 44 44">
-              <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
-              <circle
-                cx="22"
-                cy="22"
-                r="18"
-                fill="none"
-                stroke="#d4eca2"
-                strokeWidth="3.5"
-                strokeDasharray={2 * Math.PI * 18}
-                strokeDashoffset={2 * Math.PI * 18 * (1 - adherence / 100)}
-                strokeLinecap="round"
-                className="transition-all duration-700 ease-out"
-              />
-            </svg>
-            <span className="absolute text-xs font-mono font-extrabold text-[#d4eca2]">{adherence}%</span>
+          {/* 3D Glowing Gyroscopic Progress Halo */}
+          <div className="relative flex flex-col items-center justify-center shrink-0">
+            <ThreeProgressHalo percentage={adherence} size={68} />
+            <span className="text-[10px] font-mono font-black text-[#d4eca2] drop-shadow-md -mt-1">
+              {adherence}%
+            </span>
           </div>
         </div>
 

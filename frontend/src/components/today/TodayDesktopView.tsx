@@ -7,6 +7,7 @@ import { OccurrenceCard } from "./OccurrenceCard";
 import { MacroLedger } from "./MacroLedger";
 import { MomKitchenHub } from "./MomKitchenHub";
 import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
+import { ThreeProgressHalo } from "@/components/3d/ThreeProgressHalo";
 
 interface TodayDesktopViewProps {
   occurrences: TodayOccurrence[];
@@ -123,32 +124,15 @@ export function TodayDesktopView({
 
         {/* Executive Telemetry Badges */}
         <div className="flex items-center gap-4">
-          {/* Adherence Dial */}
-          <div className="flex items-center gap-3 bg-[#fcf2e6] px-4 py-2.5 rounded-xl border border-[#dfc0b7]">
-            <div className="relative w-11 h-11 flex items-center justify-center">
-              <svg className="w-11 h-11 -rotate-90" viewBox="0 0 44 44">
-                <circle cx="22" cy="22" r="18" fill="none" stroke="#dfc0b7" strokeWidth="3" opacity="0.6" />
-                <circle
-                  cx="22"
-                  cy="22"
-                  r="18"
-                  fill="none"
-                  stroke="#a43716"
-                  strokeWidth="3.5"
-                  strokeDasharray={2 * Math.PI * 18}
-                  strokeDashoffset={2 * Math.PI * 18 * (1 - adherence / 100)}
-                  strokeLinecap="round"
-                  className="transition-all duration-700 ease-out"
-                />
-              </svg>
-              <span className="absolute text-xs font-mono font-bold text-[#1f1b14]">{adherence}%</span>
-            </div>
+          {/* 3D Adherence Celestial Halo */}
+          <div className="flex items-center gap-3 bg-[#fcf2e6] px-4 py-2 rounded-xl border border-[#dfc0b7] shadow-2xs">
+            <ThreeProgressHalo percentage={adherence} size={54} />
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8b716a] block">
-                Completion Rate
+                Daily Adherence
               </span>
               <span className="text-xs font-bold text-[#1f1b14]">
-                {completedCount} of {totalCount} Completed
+                {adherence}% ({completedCount}/{totalCount} Done)
               </span>
             </div>
           </div>

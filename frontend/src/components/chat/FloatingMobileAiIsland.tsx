@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { ThreeAiCore } from "@/components/3d/ThreeAiCore";
 
 interface MessageItem {
   id: string;
@@ -111,7 +112,7 @@ export function FloatingMobileAiIsland() {
           {/* Top Notch & Island Header */}
           <div className="flex items-center justify-between pb-2 border-b border-white/10 shrink-0">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-linear-to-r from-[#a43716] via-[#d4eca2] to-[#a43716] animate-pulse" />
+              <ThreeAiCore isThinking={loading} size={24} />
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-white">
                 AI Routine Assistant
               </span>
@@ -216,12 +217,9 @@ export function FloatingMobileAiIsland() {
           onClick={() => setIsOpen(true)}
           className="pointer-events-auto cursor-pointer bg-[#14120e]/92 backdrop-blur-2xl text-white rounded-full px-4 py-2.5 border border-white/20 shadow-2xl flex items-center justify-between gap-3 active:scale-98 transition-all hover:bg-[#14120e] ring-1 ring-white/10"
         >
-          {/* Left: Siri/Gemini Waveform Aura */}
+          {/* Left: 3D Holographic AI Neural Core */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="relative flex items-center justify-center shrink-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-linear-to-r from-[#a43716] via-[#d4eca2] to-[#a43716] animate-pulse" />
-              <span className="absolute -inset-1 rounded-full bg-[#a43716]/30 blur-xs animate-ping" />
-            </div>
+            <ThreeAiCore isThinking={loading} size={28} />
             <div className="truncate">
               <span className="text-[11px] font-bold text-white block truncate">
                 AI Routine Assistant

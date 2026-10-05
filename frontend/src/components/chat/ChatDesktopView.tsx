@@ -2,6 +2,7 @@
 
 import React, { RefObject } from "react";
 import type { PlanImportProposal } from "@/lib/domain/types";
+import { ThreeAiCore } from "@/components/3d/ThreeAiCore";
 
 export interface MessageItem {
   id: string;
@@ -43,20 +44,23 @@ export function ChatDesktopView({
 
   return (
     <div className="w-full space-y-6">
-      {/* ─── Clean Header ─── */}
+      {/* ─── Clean Header with 3D Neural AI Core ─── */}
       <header className="bg-white rounded-2xl p-6 border border-[#dfc0b7] shadow-xs flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#52652a] animate-pulse" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#52652a]">
-              AI Routine Concierge
-            </span>
-            <span className="text-xs font-mono text-[#8b716a]">• Gemini Flash 3.5 Intelligence</span>
+        <div className="flex items-center gap-4">
+          <ThreeAiCore isThinking={loading} size={50} />
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full bg-[#52652a] animate-pulse" />
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#52652a]">
+                AI Routine Concierge
+              </span>
+              <span className="text-xs font-mono text-[#8b716a]">• Gemini Flash Intelligence</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1f1b14]">AI Coach Studio</h1>
+            <p className="text-xs text-[#58423c] mt-0.5">
+              Real-time voice of your routine. Conversational logs, alarms, and schedule imports.
+            </p>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-[#1f1b14]">AI Coach Studio</h1>
-          <p className="text-xs text-[#58423c] mt-0.5">
-            Real-time voice of your routine. Conversational logs, meal substitutions, and raw schedule imports.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

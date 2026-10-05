@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { ThreeWinterArcMonolith } from "@/components/3d/ThreeWinterArcMonolith";
 
 export interface WinterArcPhaseSummary {
   phaseNumber: number;
@@ -151,24 +152,27 @@ export const WinterArcCockpit: React.FC<WinterArcCockpitProps> = ({
 
   return (
     <section className="bg-white rounded-3xl p-6 border border-[#dfc0b7] shadow-xs space-y-6">
-      {/* ─── Header: Winter Arc Physique Mission ─── */}
+      {/* ─── Header: Winter Arc Physique Mission with 3D Monolith ─── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#dfc0b7]">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#a43716] animate-pulse" />
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#a43716]">
-              Winter Arc Blueprint • October to February
-            </span>
-            <span className="text-[10px] font-mono bg-[#fcf2e6] border border-[#dfc0b7] text-[#58423c] px-2 py-0.5 rounded-full font-semibold">
-              Dream Physique Transformation
-            </span>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <ThreeWinterArcMonolith phaseNumber={currentPhase.phaseNumber} size={96} />
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#a43716] animate-pulse" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#a43716]">
+                Winter Arc Blueprint • October to February
+              </span>
+              <span className="text-[10px] font-mono bg-[#fcf2e6] border border-[#dfc0b7] text-[#58423c] px-2 py-0.5 rounded-full font-semibold">
+                Phase {currentPhase.phaseNumber} of 5
+              </span>
+            </div>
+            <h2 className="text-2xl font-serif font-bold text-[#1f1b14] mt-1">
+              {currentPhase.title}
+            </h2>
+            <p className="text-xs text-[#58423c] mt-0.5 max-w-xl">
+              {currentPhase.subtitle} • Milestone: <strong className="text-[#1f1b14]">{currentPhase.physiqueMilestone}</strong>
+            </p>
           </div>
-          <h2 className="text-2xl font-serif font-bold text-[#1f1b14] mt-1">
-            {currentPhase.title}
-          </h2>
-          <p className="text-xs text-[#58423c] mt-0.5 max-w-2xl">
-            {currentPhase.subtitle} • Milestone: <strong className="text-[#1f1b14]">{currentPhase.physiqueMilestone}</strong>
-          </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
