@@ -250,11 +250,13 @@ export async function commitPlanProposal(proposal: PlanImportProposal) {
       });
     }
 
-    // Generate occurrences for next 14 days
-    const today = todayUtc();
-    const future = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
-    await occurrenceService.generateForRange(today, future);
-
     return plan;
   });
+
+  // Generate occurrences for next 14 days after transaction commits
+  const today = todayUtc();
+  const future = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
+  await occurrenceService.generateForRange(today, future);
+
+  return plan;
 }

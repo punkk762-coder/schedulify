@@ -52,9 +52,10 @@ export function ChatMobileView({
         <button
           type="button"
           onClick={onOpenImport}
-          className="px-3 py-1.5 rounded-xl bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] text-[11px] font-bold active:scale-95 transition-all"
+          className="px-3 py-1.5 rounded-xl bg-[#a43716] text-white text-[11px] font-bold active:scale-95 transition-all shadow-xs flex items-center gap-1.5"
         >
-          📋 Import
+          <span>⚡</span>
+          <span>AI Intake</span>
         </button>
       </div>
 

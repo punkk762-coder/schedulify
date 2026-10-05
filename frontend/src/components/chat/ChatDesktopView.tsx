@@ -59,14 +59,16 @@ export function ChatDesktopView({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenImport}
-          className="px-4 py-2.5 rounded-xl bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-2"
-        >
-          <span>📋</span>
-          <span>Import Routine Protocol</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenImport}
+            className="px-4 py-2.5 rounded-xl bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-2 active:scale-95"
+          >
+            <span>⚡</span>
+            <span>AI Protocol Intake</span>
+          </button>
+        </div>
       </header>
 
       {/* ─── 12-Column Layout: Chat Stream (8 cols) + Context Sidebar (4 cols) ─── */}

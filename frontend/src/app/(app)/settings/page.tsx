@@ -129,6 +129,43 @@ export default function SettingsPage() {
             {seeding ? "Importing Routine..." : "Load Default 7-Day Routine"}
           </button>
         </div>
+
+        {/* Clean Data & AI Protocol Calibration */}
+        <div className="p-6 rounded-2xl border border-[#ffdad6] bg-linear-to-br from-white to-[#fff8f6] shadow-xs space-y-4 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold text-[#ba1a1a] uppercase tracking-wider block">
+              Protocol Reset &amp; AI Calibration Flow
+            </span>
+            <span className="text-[10px] font-mono text-[#8b716a]">Clean &amp; Re-import</span>
+          </div>
+
+          <p className="text-xs text-[#58423c]">
+            Cleans active routine data and directly initiates the <strong>AI Coach Studio</strong>. You can set your daily calorie limit (e.g. 1800 kcal), paste raw plans from ChatGPT or Claude, review AI-selected foundations, and answer questions or write custom instructions.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                if (window.confirm("Clean active protocol data and launch AI Chat Intake?")) {
+                  try {
+                    await fetch("/api/plans/reset", { method: "POST" });
+                  } catch (e) {
+                    console.error("Reset error:", e);
+                  }
+                  router.push("/chat?intake=1");
+                }
+              }}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#ba1a1a] hover:bg-[#93000a] text-white text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center justify-center gap-2"
+            >
+              <span>🧹</span>
+              <span>Clean Data &amp; Start AI Intake</span>
+            </button>
+            <span className="text-[11px] text-[#8b716a]">
+              Directs to AI Chat with Calorie Target selection first
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
