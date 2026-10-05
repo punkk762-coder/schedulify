@@ -22,6 +22,8 @@ export default function TodayPage() {
   const [swapModalItem, setSwapModalItem] = useState<TodayOccurrence | null>(null);
   const [confirmingOccurrence, setConfirmingOccurrence] = useState<TodayOccurrence | null>(null);
   const [recentlyCompletedId, setRecentlyCompletedId] = useState<string | null>(null);
+  const [pendingActionIds, setPendingActionIds] = useState<Set<string>>(new Set());
+  const [addingWater, setAddingWater] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [waterIntakeMl, setWaterIntakeMl] = useState(0);
   const [activity, setActivity] = useState<{
@@ -135,6 +137,9 @@ export default function TodayPage() {
 
   // Called when user clicks "Confirm Done ✓" in the modal
   const handleConfirmComplete = async (id: string) => {
+    if (pendingActionIds.has(id)) return;
+    setPendingActionIds((prev) => new Set(prev).add(id));
+
     const targetItem = occurrences.find((o) => o.id === id);
     const prevItems = occurrences;
 
@@ -159,10 +164,19 @@ export default function TodayPage() {
       setOccurrences(prevItems);
       setRecentlyCompletedId(null);
       toast.error("Network issue. Rolled back completion.", "Connection Error");
+    } finally {
+      setPendingActionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
   const handleUndo = async (id: string) => {
+    if (pendingActionIds.has(id)) return;
+    setPendingActionIds((prev) => new Set(prev).add(id));
+
     const targetItem = occurrences.find((o) => o.id === id);
     const prevItems = occurrences;
 
@@ -177,14 +191,23 @@ export default function TodayPage() {
       if (!res.ok) {
         setOccurrences(prevItems);
       } else {
-        refreshData();
+        await refreshData();
       }
     } catch {
       setOccurrences(prevItems);
+    } finally {
+      setPendingActionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
   const handleSkip = async (id: string) => {
+    if (pendingActionIds.has(id)) return;
+    setPendingActionIds((prev) => new Set(prev).add(id));
+
     const targetItem = occurrences.find((o) => o.id === id);
     const prevItems = occurrences;
 
@@ -199,10 +222,16 @@ export default function TodayPage() {
       if (!res.ok) {
         setOccurrences(prevItems);
       } else {
-        refreshData();
+        await refreshData();
       }
     } catch {
       setOccurrences(prevItems);
+    } finally {
+      setPendingActionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -221,10 +250,10 @@ export default function TodayPage() {
         body: JSON.stringify({ alternativeItemId }),
       });
       if (res.ok) {
-        refreshData();
+        await refreshData();
       }
     } catch {
-      refreshData();
+      await refreshData();
     }
   };
 
@@ -254,6 +283,9 @@ export default function TodayPage() {
   };
 
   const handleAddWater = async (delta: number) => {
+    if (addingWater) return;
+    setAddingWater(true);
+
     const nextOptimistic = Math.min(6000, waterIntakeMl + delta);
     setWaterIntakeMl(nextOptimistic);
     toast.info(`Hydration logged: +${delta}ml (${nextOptimistic.toLocaleString()} / 3,000 ml) 💧`);
@@ -265,13 +297,12 @@ export default function TodayPage() {
         body: JSON.stringify({ deltaMl: delta }),
       });
       if (res.ok) {
-        const json = await res.json();
-        if (json.waterIntakeMl !== undefined) {
-          setWaterIntakeMl(json.waterIntakeMl);
-        }
+        await refreshData();
       }
-    } catch (err) {
-      console.error("Hydration sync error:", err);
+    } catch {
+      // rollback or keep optimistic
+    } finally {
+      setAddingWater(false);
     }
   };
 
@@ -314,6 +345,8 @@ export default function TodayPage() {
           quickText={quickText}
           setQuickText={setQuickText}
           submittingQuick={submittingQuick}
+          pendingActionIds={pendingActionIds}
+          addingWater={addingWater}
         />
       </div>
 
@@ -342,6 +375,8 @@ export default function TodayPage() {
           quickText={quickText}
           setQuickText={setQuickText}
           submittingQuick={submittingQuick}
+          pendingActionIds={pendingActionIds}
+          addingWater={addingWater}
         />
       </div>
 

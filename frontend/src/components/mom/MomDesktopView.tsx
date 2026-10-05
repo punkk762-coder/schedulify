@@ -8,6 +8,7 @@ interface MomDesktopViewProps {
   meals: KitchenMeal[];
   dateStr: string;
   preparedMap: Record<number, boolean>;
+  pendingPreparedIndex?: number | null;
   onTogglePrepared: (index: number) => void;
   onLogout: () => void;
 }
@@ -16,6 +17,7 @@ export function MomDesktopView({
   meals,
   dateStr,
   preparedMap,
+  pendingPreparedIndex,
   onTogglePrepared,
   onLogout,
 }: MomDesktopViewProps) {
@@ -111,13 +113,23 @@ export function MomDesktopView({
                   <button
                     type="button"
                     onClick={() => onTogglePrepared(index)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs ${
+                    disabled={pendingPreparedIndex === index}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed ${
                       isPrepared
                         ? "bg-[#52652a] text-white"
                         : "bg-[#fcf2e6] hover:bg-[#52652a] text-[#58423c] hover:text-white border border-[#dfc0b7]"
                     }`}
                   >
-                    {isPrepared ? "✓ Prepared" : "Mark Prepared"}
+                    {pendingPreparedIndex === index ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : isPrepared ? (
+                      "✓ Prepared"
+                    ) : (
+                      "Mark Prepared"
+                    )}
                   </button>
                 </div>
 

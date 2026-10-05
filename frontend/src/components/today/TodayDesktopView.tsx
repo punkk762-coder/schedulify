@@ -44,6 +44,8 @@ interface TodayDesktopViewProps {
   quickText: string;
   setQuickText: (text: string) => void;
   submittingQuick: boolean;
+  pendingActionIds?: Set<string>;
+  addingWater?: boolean;
 }
 
 export function TodayDesktopView({
@@ -69,6 +71,8 @@ export function TodayDesktopView({
   quickText,
   setQuickText,
   submittingQuick,
+  pendingActionIds,
+  addingWater = false,
 }: TodayDesktopViewProps) {
   const [orderMode, setOrderMode] = useState<"smart" | "chrono">("smart");
 
@@ -255,6 +259,7 @@ export function TodayDesktopView({
                     item={nextUp}
                     isNextUp={true}
                     isRecentlyCompleted={recentlyCompletedId === nextUp.id}
+                    isActionPending={pendingActionIds?.has(nextUp.id)}
                     onComplete={onComplete}
                     onUndo={onUndo}
                     onSkip={onSkip}
@@ -274,6 +279,7 @@ export function TodayDesktopView({
                       key={item.id}
                       item={item}
                       isRecentlyCompleted={recentlyCompletedId === item.id}
+                      isActionPending={pendingActionIds?.has(item.id)}
                       onComplete={onComplete}
                       onUndo={onUndo}
                       onSkip={onSkip}
@@ -294,6 +300,7 @@ export function TodayDesktopView({
                       key={item.id}
                       item={item}
                       isRecentlyCompleted={recentlyCompletedId === item.id}
+                      isActionPending={pendingActionIds?.has(item.id)}
                       onComplete={onComplete}
                       onUndo={onUndo}
                       onSkip={onSkip}
@@ -310,6 +317,7 @@ export function TodayDesktopView({
                   key={item.id}
                   item={item}
                   isRecentlyCompleted={recentlyCompletedId === item.id}
+                  isActionPending={pendingActionIds?.has(item.id)}
                   onComplete={onComplete}
                   onUndo={onUndo}
                   onSkip={onSkip}
@@ -348,6 +356,7 @@ export function TodayDesktopView({
             waterIntakeMl={waterIntakeMl}
             targetMl={3000}
             onAddWater={onAddWater}
+            addingWater={addingWater}
           />
 
           {/* Daily Steps & Movement Telemetry */}

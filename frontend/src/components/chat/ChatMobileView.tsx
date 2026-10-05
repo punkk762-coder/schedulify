@@ -112,7 +112,8 @@ export function ChatMobileView({
             key={idx}
             type="button"
             onClick={() => onSendPreset(p)}
-            className="px-3 py-1 rounded-full bg-white border border-[#dfc0b7] text-[11px] font-medium text-[#58423c] whitespace-nowrap active:scale-95 shadow-2xs shrink-0"
+            disabled={loading}
+            className="px-3 py-1 rounded-full bg-white border border-[#dfc0b7] text-[11px] font-medium text-[#58423c] whitespace-nowrap active:scale-95 shadow-2xs shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {p}
           </button>
@@ -135,9 +136,16 @@ export function ChatMobileView({
         <button
           type="submit"
           disabled={!inputText.trim() || loading}
-          className="px-3.5 py-1.5 bg-[#a43716] active:scale-95 text-white text-xs font-bold rounded-xl disabled:opacity-40 transition-all shrink-0 shadow-2xs"
+          className="px-3.5 py-1.5 bg-[#a43716] active:scale-95 text-white text-xs font-bold rounded-xl disabled:opacity-40 transition-all shrink-0 shadow-2xs flex items-center gap-1.5"
         >
-          Send
+          {loading ? (
+            <>
+              <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>...</span>
+            </>
+          ) : (
+            <span>Send</span>
+          )}
         </button>
       </form>
     </div>

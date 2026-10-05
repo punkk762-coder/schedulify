@@ -40,6 +40,8 @@ interface TodayMobileViewProps {
   quickText: string;
   setQuickText: (text: string) => void;
   submittingQuick: boolean;
+  pendingActionIds?: Set<string>;
+  addingWater?: boolean;
 }
 
 const categoryIcons: Record<string, string> = {
@@ -74,6 +76,8 @@ export function TodayMobileView({
   quickText,
   setQuickText,
   submittingQuick,
+  pendingActionIds,
+  addingWater = false,
 }: TodayMobileViewProps) {
   const [showMacrosSheet, setShowMacrosSheet] = useState(false);
 
@@ -180,27 +184,51 @@ export function TodayMobileView({
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-1">
         <button
           type="button"
+          disabled={submittingQuick}
           onClick={() => {
             setQuickText("walked 2k steps right now");
             onQuickLog("walked 2k steps right now");
           }}
-          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#a43716]/30 text-[#a43716] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0"
+          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#a43716]/30 text-[#a43716] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>🚶 {activity?.totalSteps ? `${activity.totalSteps.toLocaleString()} steps (~${activity.totalDistanceKm}km)` : "+2k Steps Walk"}</span>
+          {submittingQuick ? (
+            <>
+              <span className="w-3 h-3 border-2 border-[#a43716] border-t-transparent rounded-full animate-spin" />
+              <span>Logging steps...</span>
+            </>
+          ) : (
+            <span>🚶 {activity?.totalSteps ? `${activity.totalSteps.toLocaleString()} steps (~${activity.totalDistanceKm}km)` : "+2k Steps Walk"}</span>
+          )}
         </button>
         <button
           type="button"
+          disabled={addingWater}
           onClick={() => onAddWater(250)}
-          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#0284c7]/30 text-[#0284c7] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0"
+          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#0284c7]/30 text-[#0284c7] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>💧 +250ml</span>
+          {addingWater ? (
+            <>
+              <span className="w-3 h-3 border-2 border-[#0284c7] border-t-transparent rounded-full animate-spin" />
+              <span>+250ml...</span>
+            </>
+          ) : (
+            <span>💧 +250ml</span>
+          )}
         </button>
         <button
           type="button"
+          disabled={addingWater}
           onClick={() => onAddWater(500)}
-          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#0284c7]/30 text-[#0284c7] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0"
+          className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#0284c7]/30 text-[#0284c7] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>💧 +500ml</span>
+          {addingWater ? (
+            <>
+              <span className="w-3 h-3 border-2 border-[#0284c7] border-t-transparent rounded-full animate-spin" />
+              <span>+500ml...</span>
+            </>
+          ) : (
+            <span>💧 +500ml</span>
+          )}
         </button>
         <Link
           href="/mom"
@@ -272,17 +300,28 @@ export function TodayMobileView({
             <button
               type="button"
               onClick={() => onComplete(nextUp.id)}
-              className="col-span-8 py-3 rounded-2xl bg-[#52652a] hover:bg-[#3f4f20] active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+              disabled={pendingActionIds?.has(nextUp.id)}
+              className="col-span-8 py-3 rounded-2xl bg-[#52652a] hover:bg-[#3f4f20] active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span>✓</span>
-              <span>Mark Completed</span>
+              {pendingActionIds?.has(nextUp.id) ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <span>✓</span>
+                  <span>Mark Completed</span>
+                </>
+              )}
             </button>
 
             {nextUp.hasAlternatives ? (
               <button
                 type="button"
                 onClick={() => onOpenSwapModal(nextUp)}
-                className="col-span-4 py-3 rounded-2xl bg-[#fcf2e6] active:scale-95 text-[#a43716] border border-[#dfc0b7] font-bold text-xs flex items-center justify-center gap-1 transition-all"
+                disabled={pendingActionIds?.has(nextUp.id)}
+                className="col-span-4 py-3 rounded-2xl bg-[#fcf2e6] active:scale-95 text-[#a43716] border border-[#dfc0b7] font-bold text-xs flex items-center justify-center gap-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>⇄</span>
                 <span>Swap</span>
@@ -291,10 +330,20 @@ export function TodayMobileView({
               <button
                 type="button"
                 onClick={() => onSkip(nextUp.id)}
-                className="col-span-4 py-3 rounded-2xl bg-[#fcf2e6] active:scale-95 text-[#8b716a] border border-[#dfc0b7] font-bold text-xs flex items-center justify-center gap-1 transition-all"
+                disabled={pendingActionIds?.has(nextUp.id)}
+                className="col-span-4 py-3 rounded-2xl bg-[#fcf2e6] active:scale-95 text-[#8b716a] border border-[#dfc0b7] font-bold text-xs flex items-center justify-center gap-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>↷</span>
-                <span>Skip</span>
+                {pendingActionIds?.has(nextUp.id) ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-[#8b716a] border-t-transparent rounded-full animate-spin" />
+                    <span>Skip...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>↷</span>
+                    <span>Skip</span>
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -344,6 +393,7 @@ export function TodayMobileView({
                 key={item.id}
                 item={item}
                 isRecentlyCompleted={recentlyCompletedId === item.id}
+                isActionPending={pendingActionIds?.has(item.id)}
                 onComplete={onComplete}
                 onUndo={onUndo}
                 onSkip={onSkip}
@@ -363,6 +413,7 @@ export function TodayMobileView({
                 key={item.id}
                 item={item}
                 isRecentlyCompleted={recentlyCompletedId === item.id}
+                isActionPending={pendingActionIds?.has(item.id)}
                 onComplete={onComplete}
                 onUndo={onUndo}
                 onSkip={onSkip}
@@ -405,6 +456,7 @@ export function TodayMobileView({
 function MobileTimelineCard({
   item,
   isRecentlyCompleted,
+  isActionPending = false,
   onComplete,
   onUndo,
   onSkip,
@@ -412,6 +464,7 @@ function MobileTimelineCard({
 }: {
   item: TodayOccurrence;
   isRecentlyCompleted?: boolean;
+  isActionPending?: boolean;
   onComplete: (id: string) => void;
   onUndo: (id: string) => void;
   onSkip: (id: string) => void;
@@ -466,17 +519,33 @@ function MobileTimelineCard({
             <button
               type="button"
               onClick={() => onUndo(item.id)}
-              className="text-[11px] font-bold text-[#52652a] px-2.5 py-1 rounded-xl bg-white border border-[#52652a]/30 shadow-2xs active:scale-95 transition-all"
+              disabled={isActionPending}
+              className="text-[11px] font-bold text-[#52652a] px-2.5 py-1 rounded-xl bg-white border border-[#52652a]/30 shadow-2xs active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              ✓ Done ↩
+              {isActionPending ? (
+                <>
+                  <span className="w-2.5 h-2.5 border-2 border-[#52652a] border-t-transparent rounded-full animate-spin" />
+                  <span>Restoring...</span>
+                </>
+              ) : (
+                <span>✓ Done ↩</span>
+              )}
             </button>
           ) : isSkipped ? (
             <button
               type="button"
               onClick={() => onUndo(item.id)}
-              className="text-[11px] font-bold text-[#8b716a] px-2.5 py-1 rounded-xl bg-white border border-gray-300 active:scale-95 transition-all"
+              disabled={isActionPending}
+              className="text-[11px] font-bold text-[#8b716a] px-2.5 py-1 rounded-xl bg-white border border-gray-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              Skipped ↩
+              {isActionPending ? (
+                <>
+                  <span className="w-2.5 h-2.5 border-2 border-[#8b716a] border-t-transparent rounded-full animate-spin" />
+                  <span>Restoring...</span>
+                </>
+              ) : (
+                <span>Skipped ↩</span>
+              )}
             </button>
           ) : (
             <>
@@ -484,7 +553,8 @@ function MobileTimelineCard({
                 <button
                   type="button"
                   onClick={() => onOpenSwap(item)}
-                  className="w-7 h-7 rounded-xl bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] text-xs font-bold flex items-center justify-center active:scale-95"
+                  disabled={isActionPending}
+                  className="w-7 h-7 rounded-xl bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] text-xs font-bold flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Swap meal"
                 >
                   ⇄
@@ -493,10 +563,15 @@ function MobileTimelineCard({
               <button
                 type="button"
                 onClick={() => onComplete(item.id)}
-                className="w-8 h-8 rounded-xl bg-[#52652a] text-white text-xs font-bold flex items-center justify-center active:scale-95 shadow-2xs"
+                disabled={isActionPending}
+                className="w-8 h-8 rounded-xl bg-[#52652a] hover:bg-[#3f4f20] text-white text-xs font-bold flex items-center justify-center active:scale-95 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Mark complete"
               >
-                ✓
+                {isActionPending ? (
+                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "✓"
+                )}
               </button>
             </>
           )}

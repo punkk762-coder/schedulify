@@ -142,9 +142,16 @@ export function ChatDesktopView({
             <button
               type="submit"
               disabled={!inputText.trim() || loading}
-              className="px-5 py-2.5 bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 shadow-xs"
+              className="px-5 py-2.5 bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xs flex items-center gap-2"
             >
-              Send
+              {loading ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Sending...</span>
+                </>
+              ) : (
+                <span>Send</span>
+              )}
             </button>
           </form>
         </section>
@@ -162,7 +169,8 @@ export function ChatDesktopView({
                   key={idx}
                   type="button"
                   onClick={() => onSendPreset(prompt)}
-                  className="w-full text-left p-2.5 rounded-xl bg-[#fcf2e6]/70 hover:bg-[#fcf2e6] border border-[#dfc0b7] text-xs text-[#1f1b14] transition-all hover:border-[#a43716]/40 font-medium"
+                  disabled={loading}
+                  className="w-full text-left p-2.5 rounded-xl bg-[#fcf2e6]/70 hover:bg-[#fcf2e6] border border-[#dfc0b7] text-xs text-[#1f1b14] transition-all hover:border-[#a43716]/40 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   💬 {prompt}
                 </button>

@@ -13,6 +13,7 @@ export default function MomKitchenPage() {
   const [dateStr, setDateStr] = useState("");
   const [loading, setLoading] = useState(true);
   const [preparedMap, setPreparedMap] = useState<Record<number, boolean>>({});
+  const [pendingPreparedIndex, setPendingPreparedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchKitchen = async () => {
@@ -47,11 +48,18 @@ export default function MomKitchenPage() {
     }
   };
 
-  const togglePrepared = (index: number) => {
-    setPreparedMap((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
+  const togglePrepared = async (index: number) => {
+    if (pendingPreparedIndex === index) return;
+    setPendingPreparedIndex(index);
+    try {
+      setPreparedMap((prev) => ({
+        ...prev,
+        [index]: !prev[index],
+      }));
+      await new Promise((r) => setTimeout(r, 350));
+    } finally {
+      setPendingPreparedIndex(null);
+    }
   };
 
   if (loading) {
@@ -70,6 +78,7 @@ export default function MomKitchenPage() {
           meals={meals}
           dateStr={dateStr}
           preparedMap={preparedMap}
+          pendingPreparedIndex={pendingPreparedIndex}
           onTogglePrepared={togglePrepared}
           onLogout={handleLogout}
         />
@@ -81,6 +90,7 @@ export default function MomKitchenPage() {
           meals={meals}
           dateStr={dateStr}
           preparedMap={preparedMap}
+          pendingPreparedIndex={pendingPreparedIndex}
           onTogglePrepared={togglePrepared}
           onLogout={handleLogout}
         />

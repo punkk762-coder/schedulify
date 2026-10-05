@@ -1,15 +1,28 @@
 "use client";
 
+import React, { useState } from "react";
 import type { TodayOccurrence } from "@/lib/domain/types";
 
 interface SwapModalProps {
   item: TodayOccurrence | null;
   onClose: () => void;
-  onConfirm: (occurrenceId: string, alternativeItemId: string) => void;
+  onConfirm: (occurrenceId: string, alternativeItemId: string) => Promise<void> | void;
 }
 
 export function SwapModal({ item, onClose, onConfirm }: SwapModalProps) {
+  const [submittingAltId, setSubmittingAltId] = useState<string | null>(null);
+
   if (!item) return null;
+
+  const handleSelect = async (altItemId: string) => {
+    if (submittingAltId) return;
+    setSubmittingAltId(altItemId);
+    try {
+      await onConfirm(item.id, altItemId);
+    } finally {
+      setSubmittingAltId(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -23,8 +36,9 @@ export function SwapModal({ item, onClose, onConfirm }: SwapModalProps) {
           </div>
           <button
             type="button"
+            disabled={Boolean(submittingAltId)}
             onClick={onClose}
-            className="text-[#8b716a] hover:text-[#1f1b14] text-lg p-1"
+            className="text-[#8b716a] hover:text-[#1f1b14] text-lg p-1 disabled:opacity-40"
           >
             ✕
           </button>
@@ -36,24 +50,35 @@ export function SwapModal({ item, onClose, onConfirm }: SwapModalProps) {
 
         <div className="space-y-2.5 mt-4 max-h-72 overflow-y-auto pr-1">
           {item.alternatives && item.alternatives.length > 0 ? (
-            item.alternatives.map((alt) => (
-              <button
-                key={alt.id}
-                type="button"
-                onClick={() => onConfirm(item.id, alt.itemId)}
-                className="btn-spring w-full text-left p-3.5 rounded-xl bg-[#fcf2e6] hover:bg-[#f6ede0] border border-[#dfc0b7] hover:border-[#a43716]/40 text-[#1f1b14] transition-all group"
-              >
-                <div className="flex items-center justify-between font-semibold text-sm">
-                  <span className="group-hover:text-[#a43716]">{alt.title}</span>
-                  <span className="text-xs text-[#a43716] group-hover:translate-x-0.5 transition-transform font-bold">
-                    Select →
-                  </span>
-                </div>
-                <div className="text-[11px] text-[#58423c] font-mono mt-1">
-                  Nutritionally equivalent healthy choice
-                </div>
-              </button>
-            ))
+            item.alternatives.map((alt) => {
+              const isSelected = submittingAltId === alt.itemId;
+              return (
+                <button
+                  key={alt.id}
+                  type="button"
+                  disabled={Boolean(submittingAltId)}
+                  onClick={() => handleSelect(alt.itemId)}
+                  className="btn-spring w-full text-left p-3.5 rounded-xl bg-[#fcf2e6] hover:bg-[#f6ede0] border border-[#dfc0b7] hover:border-[#a43716]/40 text-[#1f1b14] transition-all group disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center justify-between font-semibold text-sm">
+                    <span className="group-hover:text-[#a43716]">{alt.title}</span>
+                    {isSelected ? (
+                      <span className="text-xs text-[#a43716] font-bold flex items-center gap-1.5">
+                        <div className="w-3.5 h-3.5 border-2 border-[#a43716]/40 border-t-[#a43716] rounded-full animate-spin" />
+                        <span>Substituting...</span>
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#a43716] group-hover:translate-x-0.5 transition-transform font-bold">
+                        Select →
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-[#58423c] font-mono mt-1">
+                    Nutritionally equivalent healthy choice
+                  </div>
+                </button>
+              );
+            })
           ) : (
             <div className="p-4 rounded-xl bg-[#fcf2e6] text-center text-xs text-[#8b716a]">
               No registered alternative items found.

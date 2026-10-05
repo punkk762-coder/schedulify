@@ -549,11 +549,21 @@ export function FitnessRecoveryCockpit({
 
         <button
           type="button"
+          disabled={syncStatus === "saving"}
           onClick={() => triggerPersist(true)}
-          className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <span>💾</span>
-          <span>Submit Day End Telemetry &amp; Lock in DB</span>
+          {syncStatus === "saving" ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <span>Locking in DB...</span>
+            </>
+          ) : (
+            <>
+              <span>💾</span>
+              <span>Submit Day End Telemetry &amp; Lock in DB</span>
+            </>
+          )}
         </button>
       </div>
     </div>

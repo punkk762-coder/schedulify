@@ -4,12 +4,14 @@ interface HydrationWidgetProps {
   waterIntakeMl: number;
   targetMl?: number;
   onAddWater: (deltaMl: number) => void;
+  addingWater?: boolean;
 }
 
 export function HydrationWidget({
   waterIntakeMl,
   targetMl = 3000,
   onAddWater,
+  addingWater = false,
 }: HydrationWidgetProps) {
   return (
     <div className="bg-white rounded-2xl p-5 border border-[#dfc0b7] shadow-xs flex items-center justify-between">
@@ -30,9 +32,17 @@ export function HydrationWidget({
       <button
         type="button"
         onClick={() => onAddWater(250)}
-        className="px-3.5 py-1.5 rounded-full bg-[#0284c7] hover:bg-blue-600 text-white text-xs font-semibold shadow-xs transition-all active:scale-95"
+        disabled={addingWater}
+        className="px-3.5 py-1.5 rounded-full bg-[#0284c7] hover:bg-blue-600 disabled:bg-[#0284c7]/60 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
       >
-        + 250ml
+        {addingWater ? (
+          <>
+            <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Adding...</span>
+          </>
+        ) : (
+          <span>+ 250ml</span>
+        )}
       </button>
     </div>
   );

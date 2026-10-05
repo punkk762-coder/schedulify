@@ -8,6 +8,7 @@ interface MomMobileViewProps {
   meals: KitchenMeal[];
   dateStr: string;
   preparedMap: Record<number, boolean>;
+  pendingPreparedIndex?: number | null;
   onTogglePrepared: (index: number) => void;
   onLogout: () => void;
 }
@@ -16,6 +17,7 @@ export function MomMobileView({
   meals,
   dateStr,
   preparedMap,
+  pendingPreparedIndex,
   onTogglePrepared,
   onLogout,
 }: MomMobileViewProps) {
@@ -152,13 +154,19 @@ export function MomMobileView({
                 <button
                   type="button"
                   onClick={() => onTogglePrepared(index)}
-                  className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all active:scale-95 ${
+                  disabled={pendingPreparedIndex === index}
+                  className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
                     isPrepared
                       ? "bg-[#52652a] text-white"
                       : "bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7] hover:bg-[#52652a] hover:text-white"
                   }`}
                 >
-                  {isPrepared ? (
+                  {pendingPreparedIndex === index ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : isPrepared ? (
                     <>
                       <span>✓</span>
                       <span>Prepared (Tap to Undo)</span>
