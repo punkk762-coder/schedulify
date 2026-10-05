@@ -6,10 +6,11 @@ import type { TodayOccurrence } from "@/lib/domain/types";
 interface OccurrenceCardProps {
   item: TodayOccurrence;
   isNextUp?: boolean;
+  isRecentlyCompleted?: boolean;
   onComplete: (id: string) => void;
   onUndo: (id: string) => void;
   onSkip: (id: string) => void;
-  onOpenSwap: (item: TodayOccurrence) => void;
+  onOpenSwap?: (item: TodayOccurrence) => void;
 }
 
 const categoryIcons: Record<string, string> = {
@@ -24,6 +25,7 @@ const categoryIcons: Record<string, string> = {
 export const OccurrenceCard: React.FC<OccurrenceCardProps> = ({
   item,
   isNextUp = false,
+  isRecentlyCompleted = false,
   onComplete,
   onUndo,
   onSkip,
@@ -51,7 +53,13 @@ export const OccurrenceCard: React.FC<OccurrenceCardProps> = ({
   // Case 1: COMPLETED
   if (isCompleted) {
     return (
-      <div className="bg-white rounded-2xl p-3.5 sm:p-5 border border-[#dfc0b7] shadow-xs flex items-center justify-between gap-3 sm:gap-4 transition-all">
+      <div
+        className={`rounded-2xl p-3.5 sm:p-5 shadow-xs flex items-center justify-between gap-3 sm:gap-4 transition-all duration-300 ${
+          isRecentlyCompleted
+            ? "bg-[#f7faef] border-2 border-[#52652a] shadow-md shadow-[#52652a]/15"
+            : "bg-white border border-[#dfc0b7]"
+        }`}
+      >
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#d4eca2] border border-[#52652a]/30 flex items-center justify-center text-[#52652a] font-serif text-base sm:text-lg font-bold shrink-0">
             ✓
@@ -64,6 +72,11 @@ export const OccurrenceCard: React.FC<OccurrenceCardProps> = ({
               <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7]">
                 {item.category}
               </span>
+              {isRecentlyCompleted && (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#52652a] text-white animate-pulse shadow-xs">
+                  ✓ Just Completed
+                </span>
+              )}
             </div>
             <h3 className="text-sm sm:text-base font-serif font-bold text-[#1f1b14] mt-0.5 truncate">
               {item.title}
@@ -173,7 +186,7 @@ export const OccurrenceCard: React.FC<OccurrenceCardProps> = ({
               {item.hasAlternatives && (
                 <button
                   type="button"
-                  onClick={() => onOpenSwap(item)}
+                  onClick={() => onOpenSwap?.(item)}
                   className="px-3.5 py-2 rounded-full bg-[#fcf2e6] text-[#1f1b14] hover:bg-white border border-[#dfc0b7] text-xs font-semibold transition-all active:scale-95 whitespace-nowrap"
                 >
                   Swap Meal ⇄
@@ -273,7 +286,7 @@ export const OccurrenceCard: React.FC<OccurrenceCardProps> = ({
             {item.hasAlternatives && (
               <button
                 type="button"
-                onClick={() => onOpenSwap(item)}
+                onClick={() => onOpenSwap?.(item)}
                 className="px-2 py-1.5 rounded-full text-[#0284c7] hover:bg-[#e0f2fe] text-xs font-semibold whitespace-nowrap"
                 title="Swap"
               >

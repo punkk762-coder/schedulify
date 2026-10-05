@@ -30,6 +30,7 @@ interface TodayMobileViewProps {
   } | null;
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
+  recentlyCompletedId?: string | null;
   onComplete: (id: string) => void;
   onUndo: (id: string) => void;
   onSkip: (id: string) => void;
@@ -63,6 +64,7 @@ export function TodayMobileView({
   monthlyGoal,
   activeCategory,
   setActiveCategory,
+  recentlyCompletedId,
   onComplete,
   onUndo,
   onSkip,
@@ -341,6 +343,7 @@ export function TodayMobileView({
               <MobileTimelineCard
                 key={item.id}
                 item={item}
+                isRecentlyCompleted={recentlyCompletedId === item.id}
                 onComplete={onComplete}
                 onUndo={onUndo}
                 onSkip={onSkip}
@@ -359,6 +362,7 @@ export function TodayMobileView({
               <MobileTimelineCard
                 key={item.id}
                 item={item}
+                isRecentlyCompleted={recentlyCompletedId === item.id}
                 onComplete={onComplete}
                 onUndo={onUndo}
                 onSkip={onSkip}
@@ -400,12 +404,14 @@ export function TodayMobileView({
 
 function MobileTimelineCard({
   item,
+  isRecentlyCompleted,
   onComplete,
   onUndo,
   onSkip,
   onOpenSwap,
 }: {
   item: TodayOccurrence;
+  isRecentlyCompleted?: boolean;
   onComplete: (id: string) => void;
   onUndo: (id: string) => void;
   onSkip: (id: string) => void;
@@ -417,9 +423,11 @@ function MobileTimelineCard({
 
   return (
     <div
-      className={`rounded-2xl p-3.5 border transition-all ${
+      className={`rounded-2xl p-3.5 border transition-all duration-300 ${
         isDone
-          ? "bg-[#f7faef] border-[#52652a]/30"
+          ? isRecentlyCompleted
+            ? "bg-[#f7faef] border-2 border-[#52652a] shadow-md shadow-[#52652a]/15"
+            : "bg-[#f7faef] border-[#52652a]/30"
           : isSkipped
           ? "bg-gray-50 border-gray-200 opacity-60"
           : isReplaced
@@ -431,11 +439,16 @@ function MobileTimelineCard({
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="text-lg shrink-0">{categoryIcons[item.category] || "✨"}</span>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-mono text-[11px] font-bold text-[#a43716]">{item.scheduledTime}</span>
               <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded-full bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7]">
                 {item.category}
               </span>
+              {isDone && isRecentlyCompleted && (
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#52652a] text-white animate-pulse shadow-2xs">
+                  ✓ Just Completed
+                </span>
+              )}
             </div>
             <h4
               className={`text-xs font-serif font-bold text-[#1f1b14] truncate mt-0.5 ${

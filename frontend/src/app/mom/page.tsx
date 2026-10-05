@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { KitchenMeal } from "@/lib/domain/types";
 import { MomDesktopView } from "@/components/mom/MomDesktopView";
 import { MomMobileView } from "@/components/mom/MomMobileView";
+import { MomDeckSkeleton } from "@/components/ui/BoneyardSkeleton";
 
 export default function MomKitchenPage() {
   const router = useRouter();
@@ -55,11 +56,8 @@ export default function MomKitchenPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen text-[#1f1b14] p-4 sm:p-8 max-w-6xl mx-auto flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#dfc0b7] border-t-[#52652a] rounded-full animate-spin" />
-          <p className="text-xs font-serif text-[#58423c]">Connecting to Household Hearth...</p>
-        </div>
+      <main className="min-h-screen text-[#1f1b14] p-3.5 sm:p-8 max-w-6xl mx-auto">
+        <MomDeckSkeleton />
       </main>
     );
   }

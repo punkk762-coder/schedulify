@@ -6,6 +6,8 @@ import type { TodayOccurrence, DailyStats } from "@/lib/domain/types";
 import { TodayDesktopView } from "@/components/today/TodayDesktopView";
 import { TodayMobileView } from "@/components/today/TodayMobileView";
 import { SwapModal } from "@/components/today/SwapModal";
+import { CompleteConfirmationModal } from "@/components/today/CompleteConfirmationModal";
+import { TodaySkeleton } from "@/components/ui/BoneyardSkeleton";
 import { useToast } from "@/components/ui/Toast";
 
 export default function TodayPage() {
@@ -18,6 +20,8 @@ export default function TodayPage() {
   const [quickText, setQuickText] = useState("");
   const [submittingQuick, setSubmittingQuick] = useState(false);
   const [swapModalItem, setSwapModalItem] = useState<TodayOccurrence | null>(null);
+  const [confirmingOccurrence, setConfirmingOccurrence] = useState<TodayOccurrence | null>(null);
+  const [recentlyCompletedId, setRecentlyCompletedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [waterIntakeMl, setWaterIntakeMl] = useState(0);
   const [activity, setActivity] = useState<{
@@ -121,14 +125,23 @@ export default function TodayPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [swapModalItem, toast]);
 
-  // Fast optimistic action handlers with micro-feedback
-  const handleComplete = async (id: string) => {
+  // Open confirmation pop-up first before executing
+  const handleRequestComplete = (id: string) => {
+    const targetItem = occurrences.find((o) => o.id === id);
+    if (targetItem) {
+      setConfirmingOccurrence(targetItem);
+    }
+  };
+
+  // Called when user clicks "Confirm Done ✓" in the modal
+  const handleConfirmComplete = async (id: string) => {
     const targetItem = occurrences.find((o) => o.id === id);
     const prevItems = occurrences;
 
     setOccurrences((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: "COMPLETED" } : item))
     );
+    setRecentlyCompletedId(id);
 
     const proteinBonus = targetItem?.nutrition?.protein ? ` (+${targetItem.nutrition.protein}g Protein)` : "";
     toast.success(`Completed "${targetItem?.title || "Routine item"}"${proteinBonus} ✓`, "Routine Executed");
@@ -137,12 +150,14 @@ export default function TodayPage() {
       const res = await fetch(`/api/occurrences/${id}/complete`, { method: "POST" });
       if (!res.ok) {
         setOccurrences(prevItems);
+        setRecentlyCompletedId(null);
         toast.error("Failed to sync completion with server. Rolled back.", "Network Error");
       } else {
-        refreshData();
+        await refreshData();
       }
     } catch {
       setOccurrences(prevItems);
+      setRecentlyCompletedId(null);
       toast.error("Network issue. Rolled back completion.", "Connection Error");
     }
   };
@@ -269,12 +284,7 @@ export default function TodayPage() {
   const ringOffset = ringCircumference - (completionPercentage / 100) * ringCircumference;
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-        <div className="w-12 h-12 border-4 border-[#dfc0b7] border-t-[#a43716] rounded-full animate-spin" />
-        <p className="text-sm font-serif italic text-[#58423c]">Harvesting routine telemetry...</p>
-      </div>
-    );
+    return <TodaySkeleton />;
   }
 
   return (
@@ -294,7 +304,8 @@ export default function TodayPage() {
           monthlyGoal={monthlyGoal}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
-          onComplete={handleComplete}
+          recentlyCompletedId={recentlyCompletedId}
+          onComplete={handleRequestComplete}
           onUndo={handleUndo}
           onSkip={handleSkip}
           onOpenSwapModal={setSwapModalItem}
@@ -321,7 +332,8 @@ export default function TodayPage() {
           monthlyGoal={monthlyGoal}
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
-          onComplete={handleComplete}
+          recentlyCompletedId={recentlyCompletedId}
+          onComplete={handleRequestComplete}
           onUndo={handleUndo}
           onSkip={handleSkip}
           onOpenSwapModal={setSwapModalItem}
@@ -338,6 +350,14 @@ export default function TodayPage() {
         item={swapModalItem}
         onClose={() => setSwapModalItem(null)}
         onConfirm={handleSwapConfirm}
+      />
+
+      {/* Protocol Execution Confirmation Modal */}
+      <CompleteConfirmationModal
+        item={confirmingOccurrence}
+        isOpen={Boolean(confirmingOccurrence)}
+        onClose={() => setConfirmingOccurrence(null)}
+        onConfirm={handleConfirmComplete}
       />
     </div>
   );

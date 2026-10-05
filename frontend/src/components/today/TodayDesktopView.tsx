@@ -34,6 +34,7 @@ interface TodayDesktopViewProps {
   } | null;
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
+  recentlyCompletedId?: string | null;
   onComplete: (id: string) => void;
   onUndo: (id: string) => void;
   onSkip: (id: string) => void;
@@ -58,6 +59,7 @@ export function TodayDesktopView({
   monthlyGoal,
   activeCategory,
   setActiveCategory,
+  recentlyCompletedId,
   onComplete,
   onUndo,
   onSkip,
@@ -252,6 +254,7 @@ export function TodayDesktopView({
                   <OccurrenceCard
                     item={nextUp}
                     isNextUp={true}
+                    isRecentlyCompleted={recentlyCompletedId === nextUp.id}
                     onComplete={onComplete}
                     onUndo={onUndo}
                     onSkip={onSkip}
@@ -270,6 +273,7 @@ export function TodayDesktopView({
                     <OccurrenceCard
                       key={item.id}
                       item={item}
+                      isRecentlyCompleted={recentlyCompletedId === item.id}
                       onComplete={onComplete}
                       onUndo={onUndo}
                       onSkip={onSkip}
@@ -289,6 +293,7 @@ export function TodayDesktopView({
                     <OccurrenceCard
                       key={item.id}
                       item={item}
+                      isRecentlyCompleted={recentlyCompletedId === item.id}
                       onComplete={onComplete}
                       onUndo={onUndo}
                       onSkip={onSkip}
@@ -304,6 +309,7 @@ export function TodayDesktopView({
                 <OccurrenceCard
                   key={item.id}
                   item={item}
+                  isRecentlyCompleted={recentlyCompletedId === item.id}
                   onComplete={onComplete}
                   onUndo={onUndo}
                   onSkip={onSkip}
