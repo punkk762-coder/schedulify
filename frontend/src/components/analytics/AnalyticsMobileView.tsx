@@ -7,7 +7,8 @@ import { NutritionMatrixCard } from "./NutritionMatrixCard";
 import { CategoryAdherenceList } from "./CategoryAdherenceList";
 import { DailyGoalsAndBodyStatus } from "./DailyGoalsAndBodyStatus";
 import { MonthlyEvolutionCard } from "./MonthlyEvolutionCard";
-import { WinterArcCockpit } from "./WinterArcCockpit";
+import { DifferentMealsAnalyticsCard, DeviationsData, CaloriesSummaryData } from "./DifferentMealsAnalyticsCard";
+
 
 interface AnalyticsResponse {
   summary: {
@@ -103,7 +104,8 @@ interface AnalyticsResponse {
       velocityNotes?: string;
     } | null;
   };
-  winterArc?: any;
+  deviations?: DeviationsData;
+  caloriesSummary?: CaloriesSummaryData;
 }
 
 interface AnalyticsMobileViewProps {
@@ -203,8 +205,7 @@ export function AnalyticsMobileView({
         </div>
       </div>
 
-      {/* ─── Winter Arc 5-Phase Physique Command Center & AI Transition ─── */}
-      <WinterArcCockpit winterArc={data.winterArc} onRefresh={onRefresh} />
+
 
       {/* ─── Magnificent Monthly Goal & Milestone Card ─── */}
       {monthlyMilestone && (
@@ -242,6 +243,13 @@ export function AnalyticsMobileView({
       <NutritionMatrixCard
         averageNutrition={averageNutrition}
         macroDistribution={data.macroDistribution}
+      />
+
+      {/* ─── Nutrition Deviations & What You Had Differently ─── */}
+      <DifferentMealsAnalyticsCard
+        deviations={data.deviations}
+        caloriesSummary={data.caloriesSummary}
+        daysCount={daysCount}
       />
 
       {/* ─── Category Adherence Breakdown ─── */}

@@ -9,9 +9,48 @@ import {
 
 const router = Router();
 
-// GET /api/settings/users — Returns admin/mom display names and all managed users
-router.get("/settings/users", requireUserMiddleware, async (_req: Request, res: Response): Promise<void> => {
+// Helper: Generate unique 4-digit PIN for new managed user
+async function generateUniquePin(): Promise<string> {
+  const envAdminPin = process.env.ADMIN_PIN || process.env.USER_PIN || "1234";
+  const envMomPin = process.env.MOM_PIN || "5678";
+  const reserved = new Set([
+    envAdminPin,
+    envMomPin,
+    "0000", "1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234", "4321", "2468", "1357"
+  ]);
+
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const candidate = Math.floor(1000 + Math.random() * 9000).toString();
+    if (reserved.has(candidate)) continue;
+    const existing = await prisma.userProfile.findUnique({ where: { pin: candidate } });
+    if (!existing) return candidate;
+  }
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+// GET /api/settings/users/generate-pin — Generate new unique 4-digit PIN for Admin
+router.get("/settings/users/generate-pin", requireUserMiddleware, async (_req: Request, res: Response): Promise<void> => {
   try {
+    const pin = await generateUniquePin();
+    res.json({ pin });
+  } catch (err) {
+    console.error("GET /api/settings/users/generate-pin error:", err);
+    res.status(500).json({ error: "Failed to generate PIN" });
+  }
+});
+
+// GET /api/settings/users — Returns admin/mom display names, admin check, and managed users with setup status
+router.get("/settings/users", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const session = (req as any).user;
+    let isCallerAdmin = Boolean(session?.isAdmin);
+    if (!isCallerAdmin && session?.role === "USER" && session?.userId) {
+      const managedProfile = await prisma.userProfile.findUnique({ where: { id: session.userId } });
+      if (!managedProfile || managedProfile.isAdmin) {
+        isCallerAdmin = true;
+      }
+    }
+
     const [settings, users] = await Promise.all([
       prisma.systemSetting.findMany(),
       prisma.userProfile.findMany({
@@ -30,15 +69,18 @@ router.get("/settings/users", requireUserMiddleware, async (_req: Request, res: 
     res.json({
       adminName,
       momName,
+      isAdmin: isCallerAdmin,
       users: users.map((u) => ({
         id: u.id,
         name: u.name,
-        pin: u.pin,
+        // Only Admin sees full PINs so they can issue/share them
+        pin: isCallerAdmin ? u.pin : "••••",
         role: u.role,
         calorieTarget: u.calorieTarget || 1600,
         proteinTarget: u.proteinTarget || 130,
         stepsTarget: u.stepsTarget || 8000,
         waterTargetMl: u.waterTargetMl || 3000,
+        isSetupComplete: settingsMap[`onboarding_${u.id}`] === "true",
         createdAt: u.createdAt,
       })),
     });
@@ -48,23 +90,34 @@ router.get("/settings/users", requireUserMiddleware, async (_req: Request, res: 
   }
 });
 
-// POST /api/settings/users — Create new user from admin panel (verifying admin PIN from env)
+// POST /api/settings/users — Strictly Admin only: Create new user with generated PIN
 router.post("/settings/users", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
+    const session = (req as any).user;
+    let isCallerAdmin = Boolean(session?.isAdmin);
+    if (!isCallerAdmin && session?.role === "USER" && session?.userId) {
+      const managedProfile = await prisma.userProfile.findUnique({ where: { id: session.userId } });
+      if (!managedProfile || managedProfile.isAdmin) {
+        isCallerAdmin = true;
+      }
+    }
+
     const {
       adminPin,
       name,
       pin,
-      calorieTarget = 1600,
-      proteinTarget = 130,
-      stepsTarget = 8000,
-      waterTargetMl = 3000,
     } = req.body || {};
 
     const envAdminPin = process.env.ADMIN_PIN || process.env.USER_PIN || "1234";
 
-    if (!adminPin || !verifyPin(String(adminPin), envAdminPin)) {
-      res.status(403).json({ error: "Invalid Admin PIN. Verification failed against env credentials." });
+    // Strictly enforce: Only admin can create users
+    if (!isCallerAdmin) {
+      if (!adminPin || !verifyPin(String(adminPin), envAdminPin)) {
+        res.status(403).json({ error: "Access denied: Only Admin can create user accounts." });
+        return;
+      }
+    } else if (adminPin && !verifyPin(String(adminPin), envAdminPin)) {
+      res.status(403).json({ error: "Invalid Admin PIN." });
       return;
     }
 
@@ -73,12 +126,11 @@ router.post("/settings/users", requireUserMiddleware, async (req: Request, res: 
       return;
     }
 
-    if (!pin || typeof pin !== "string" || pin.trim().length < 4) {
-      res.status(400).json({ error: "User PIN must be at least 4 digits." });
-      return;
+    // Auto-generate clean 4-digit PIN if none provided
+    let cleanPin = pin ? String(pin).trim() : "";
+    if (!cleanPin || cleanPin.length < 4) {
+      cleanPin = await generateUniquePin();
     }
-
-    const cleanPin = pin.trim();
 
     // Check PIN uniqueness
     if (cleanPin === envAdminPin || cleanPin === (process.env.MOM_PIN || "5678")) {
@@ -91,7 +143,7 @@ router.post("/settings/users", requireUserMiddleware, async (req: Request, res: 
     });
 
     if (existing) {
-      res.status(400).json({ error: `PIN is already assigned to ${existing.name}. Choose another PIN.` });
+      res.status(400).json({ error: `PIN ${cleanPin} is already assigned to ${existing.name}. Click 'Generate PIN' for a new code.` });
       return;
     }
 
@@ -100,26 +152,34 @@ router.post("/settings/users", requireUserMiddleware, async (req: Request, res: 
         name: name.trim(),
         pin: cleanPin,
         role: "USER",
-        calorieTarget: Number(calorieTarget) || 1600,
-        proteinTarget: Number(proteinTarget) || 130,
-        stepsTarget: Number(stepsTarget) || 8000,
-        waterTargetMl: Number(waterTargetMl) || 3000,
+        calorieTarget: 1600,
+        proteinTarget: 130,
+        stepsTarget: 8000,
+        waterTargetMl: 3000,
         isAdmin: false,
       },
     });
 
+    // Mark onboarding state as pending for new user
+    await prisma.systemSetting.upsert({
+      where: { key: `onboarding_${newUser.id}` },
+      create: { key: `onboarding_${newUser.id}`, value: "pending" },
+      update: { value: "pending" },
+    });
+
     res.json({
       success: true,
-      message: `User ${newUser.name} created successfully with ${newUser.calorieTarget} kcal daily default!`,
+      message: `User "${newUser.name}" created! Generated PIN: ${cleanPin}. Share this PIN with them to begin their setup.`,
       user: {
         id: newUser.id,
         name: newUser.name,
-        pin: newUser.pin,
+        pin: cleanPin,
         role: newUser.role,
         calorieTarget: newUser.calorieTarget,
         proteinTarget: newUser.proteinTarget,
         stepsTarget: newUser.stepsTarget,
         waterTargetMl: newUser.waterTargetMl,
+        isSetupComplete: false,
         createdAt: newUser.createdAt,
       },
     });
@@ -129,21 +189,70 @@ router.post("/settings/users", requireUserMiddleware, async (req: Request, res: 
   }
 });
 
-// DELETE /api/settings/users/:id — Remove managed user
-router.delete("/settings/users/:id", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+// POST /api/settings/users/:id/regenerate-pin — Admin only: Re-issue a fresh 4-digit PIN for a user
+router.post("/settings/users/:id/regenerate-pin", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const adminPin = (req.headers["x-admin-pin"] as string) || req.body?.adminPin;
-    const envAdminPin = process.env.ADMIN_PIN || process.env.USER_PIN || "1234";
+    const session = (req as any).user;
+    let isCallerAdmin = Boolean(session?.isAdmin);
+    if (!isCallerAdmin && session?.role === "USER" && session?.userId) {
+      const managedProfile = await prisma.userProfile.findUnique({ where: { id: session.userId } });
+      if (!managedProfile || managedProfile.isAdmin) {
+        isCallerAdmin = true;
+      }
+    }
 
-    if (!adminPin || !verifyPin(String(adminPin), envAdminPin)) {
-      res.status(403).json({ error: "Admin PIN verification required to remove users." });
+    if (!isCallerAdmin) {
+      res.status(403).json({ error: "Access denied: Only Admin can regenerate user PINs." });
       return;
     }
 
-    await prisma.userProfile.delete({
+    const newPin = await generateUniquePin();
+    const updated = await prisma.userProfile.update({
       where: { id },
+      data: { pin: newPin },
     });
+
+    res.json({
+      success: true,
+      message: `New PIN generated for ${updated.name}: ${newPin}`,
+      pin: newPin,
+    });
+  } catch (err) {
+    console.error("POST /api/settings/users/:id/regenerate-pin error:", err);
+    res.status(500).json({ error: "Failed to regenerate PIN" });
+  }
+});
+
+// DELETE /api/settings/users/:id — Strictly Admin only: Remove managed user
+router.delete("/settings/users/:id", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const session = (req as any).user;
+    let isCallerAdmin = Boolean(session?.isAdmin);
+    if (!isCallerAdmin && session?.role === "USER" && session?.userId) {
+      const managedProfile = await prisma.userProfile.findUnique({ where: { id: session.userId } });
+      if (!managedProfile || managedProfile.isAdmin) {
+        isCallerAdmin = true;
+      }
+    }
+
+    const adminPin = (req.headers["x-admin-pin"] as string) || req.body?.adminPin;
+    const envAdminPin = process.env.ADMIN_PIN || process.env.USER_PIN || "1234";
+
+    if (!isCallerAdmin) {
+      if (!adminPin || !verifyPin(String(adminPin), envAdminPin)) {
+        res.status(403).json({ error: "Access denied: Only Admin can remove user accounts." });
+        return;
+      }
+    }
+
+    await Promise.all([
+      prisma.userProfile.delete({ where: { id } }),
+      prisma.systemSetting.deleteMany({
+        where: { key: { in: [`onboarding_${id}`, `phase_${id}`] } },
+      }),
+    ]);
 
     res.json({ success: true, message: "User deleted from roster." });
   } catch (err) {

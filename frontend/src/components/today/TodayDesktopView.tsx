@@ -7,6 +7,8 @@ import { OccurrenceCard } from "./OccurrenceCard";
 import { MacroLedger } from "./MacroLedger";
 import { MomKitchenHub } from "./MomKitchenHub";
 import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
+import { DailyWeightCard } from "./DailyWeightCard";
+import { OffPlanMealsCard, type DifferentMealItem } from "./OffPlanMealsCard";
 import { ThreeProgressHalo } from "@/components/3d/ThreeProgressHalo";
 
 interface TodayDesktopViewProps {
@@ -18,6 +20,13 @@ interface TodayDesktopViewProps {
   onUpdateRecovery?: (data: Partial<FitnessRecoveryData>) => void;
   winterArc?: any;
   onRefresh?: () => void;
+  differentMeals?: DifferentMealItem[];
+  weightInfo?: {
+    todayWeight: number | null;
+    defaultWeight: number;
+    isLoggedToday: boolean;
+  };
+  onOpenDifferentMealModal?: () => void;
   activity?: {
     totalSteps: number;
     totalDistanceKm: number;
@@ -73,6 +82,9 @@ export function TodayDesktopView({
   submittingQuick,
   pendingActionIds,
   addingWater = false,
+  differentMeals = [],
+  weightInfo,
+  onOpenDifferentMealModal,
 }: TodayDesktopViewProps) {
   const [orderMode, setOrderMode] = useState<"smart" | "chrono">("smart");
 
@@ -92,8 +104,17 @@ export function TodayDesktopView({
 
   const pendingItems = filtered.filter((o) => o.status === "PENDING");
   const pastItems = filtered.filter((o) => o.status !== "PENDING");
-  const nextUp = pendingItems[0] || null;
-  const subsequent = pendingItems.slice(1);
+
+  // Dynamic Next Up: find next upcoming item closest to current time
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const upcomingItems = pendingItems.filter((o) => {
+    const [h, m] = (o.scheduledTime || "00:00").split(":").map(Number);
+    return h * 60 + m >= currentMinutes - 30;
+  });
+
+  const nextUp = upcomingItems[0] || pendingItems[0] || null;
+  const subsequent = nextUp ? pendingItems.filter((it) => it.id !== nextUp.id) : [];
 
   return (
     <div className="w-full space-y-6">
@@ -165,10 +186,40 @@ export function TodayDesktopView({
         </div>
       </header>
 
+      {/* ─── Setup Wizard Banner (if not configured or for new users) ─── */}
+      {winterArc && !winterArc.isConfigured && (
+        <div className="bg-gradient-to-r from-[#fcf2e6] via-[#ffede6] to-[#fcf2e6] rounded-2xl p-4 border border-[#a43716]/40 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚙️</span>
+            <div>
+              <h4 className="text-sm font-serif font-bold text-[#1f1b14]">
+                New User? Set Up Your Protocol Standards
+              </h4>
+              <p className="text-xs text-[#58423c]">
+                Configure Phase 1 timeline, starting weight, 1,600 kcal diet standards, and customize your meal schedule.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/setup"
+            className="px-4 py-2 rounded-xl bg-[#a43716] text-white font-bold text-xs shadow-xs hover:bg-[#8e2e12] transition-all shrink-0"
+          >
+            Launch Setup Wizard →
+          </Link>
+        </div>
+      )}
+
       {/* ─── 12-Column Desktop Grid ─── */}
       <div className="grid grid-cols-12 gap-6 items-start">
         {/* Left Column: Clean Day Ledger (7 cols) */}
         <section className="col-span-7 space-y-4">
+          {/* Off-Plan / Different Food Logger & Audit */}
+          <OffPlanMealsCard
+            differentMeals={differentMeals}
+            onOpenModal={onOpenDifferentMealModal || (() => {})}
+            onRefresh={onRefresh || (() => {})}
+          />
+
           {/* Controls Bar: Category Filter Pills + Order Mode Switch */}
           <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]">
             <div className="flex items-center gap-1.5 bg-[#fcf2e6] p-1 rounded-xl border border-[#dfc0b7] text-xs">
@@ -313,15 +364,24 @@ export function TodayDesktopView({
 
         {/* Right Column: Clean Telemetry & Hearth (5 cols) */}
         <aside className="col-span-5 space-y-5">
+          {/* Daily Body Weight Check-in */}
+          <DailyWeightCard
+            todayWeight={weightInfo?.todayWeight ?? null}
+            defaultWeight={weightInfo?.defaultWeight ?? 74}
+            isLoggedToday={weightInfo?.isLoggedToday ?? false}
+            onRefresh={onRefresh || (() => {})}
+          />
+
           {/* Daily Nutrition Ledger */}
           <MacroLedger
-            currentCalories={stats?.nutrition?.calories || 0}
-            targetCalories={1800}
-            currentProtein={stats?.nutrition?.protein || 0}
+            currentCalories={stats?.totalCalories || stats?.nutrition?.calories || 0}
+            targetCalories={winterArc?.targetCalories || 1600}
+            offPlanCalories={stats?.offPlanCalories || 0}
+            currentProtein={(stats?.nutrition?.protein || 0) + (stats?.offPlanProtein || 0)}
             targetProtein={150}
-            currentCarbs={stats?.nutrition?.carbs || 0}
+            currentCarbs={(stats?.nutrition?.carbs || 0) + (stats?.offPlanCarbs || 0)}
             targetCarbs={160}
-            currentFat={stats?.nutrition?.fat || 0}
+            currentFat={(stats?.nutrition?.fat || 0) + (stats?.offPlanFat || 0)}
             targetFat={45}
           />
 

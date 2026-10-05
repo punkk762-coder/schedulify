@@ -81,7 +81,28 @@ interface AnalyticsResponse {
       notes: string;
     }>;
   };
-  winterArc?: any;
+  deviations?: {
+    totalCount: number;
+    totalCalories: number;
+    items: Array<{
+      id: string;
+      date: string;
+      title: string;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      mealSlot: string;
+      notes: string;
+      time: string;
+    }>;
+  };
+  caloriesSummary?: {
+    totalPlanned: number;
+    totalOffPlan: number;
+    totalAll: number;
+    averageDaily: number;
+  };
 }
 
 export default function AnalyticsPage() {

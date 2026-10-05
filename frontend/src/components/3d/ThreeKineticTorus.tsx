@@ -73,11 +73,11 @@ export const ThreeKineticTorus: React.FC<ThreeKineticTorusProps> = ({
     window.addEventListener("mousemove", handleMouseMove);
 
     let animationId: number;
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
 
     const animate = () => {
       animationId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+      const elapsed = (performance.now() - startTime) * 0.001;
 
       group.rotation.x += (targetX - group.rotation.x) * 0.05 + 0.005;
       group.rotation.y += (targetY - group.rotation.y) * 0.05 + 0.008;

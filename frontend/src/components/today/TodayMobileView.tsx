@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import type { TodayOccurrence, DailyStats } from "@/lib/domain/types";
 import { FitnessRecoveryCockpit, type FitnessRecoveryData } from "./FitnessRecoveryCockpit";
+import { DailyWeightCard } from "./DailyWeightCard";
+import { OffPlanMealsCard, type DifferentMealItem } from "./OffPlanMealsCard";
+import { MacroLedger } from "./MacroLedger";
 import { ThreeProgressHalo } from "@/components/3d/ThreeProgressHalo";
 
 interface TodayMobileViewProps {
@@ -15,6 +18,13 @@ interface TodayMobileViewProps {
   onUpdateRecovery?: (data: Partial<FitnessRecoveryData>) => void;
   winterArc?: any;
   onRefresh?: () => void;
+  differentMeals?: DifferentMealItem[];
+  weightInfo?: {
+    todayWeight: number | null;
+    defaultWeight: number;
+    isLoggedToday: boolean;
+  };
+  onOpenDifferentMealModal?: () => void;
   activity?: {
     totalSteps: number;
     totalDistanceKm: number;
@@ -79,6 +89,9 @@ export function TodayMobileView({
   submittingQuick,
   pendingActionIds,
   addingWater = false,
+  differentMeals = [],
+  weightInfo,
+  onOpenDifferentMealModal,
 }: TodayMobileViewProps) {
   const [showMacrosSheet, setShowMacrosSheet] = useState(false);
 
@@ -98,8 +111,17 @@ export function TodayMobileView({
 
   const pendingItems = filtered.filter((o) => o.status === "PENDING");
   const pastItems = filtered.filter((o) => o.status !== "PENDING");
-  const nextUp = pendingItems[0] || null;
-  const otherPending = pendingItems.slice(1);
+
+  // Dynamic Next Up: find next upcoming item closest to current time
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const upcomingItems = pendingItems.filter((o) => {
+    const [h, m] = (o.scheduledTime || "00:00").split(":").map(Number);
+    return h * 60 + m >= currentMinutes - 30;
+  });
+
+  const nextUp = upcomingItems[0] || pendingItems[0] || null;
+  const otherPending = nextUp ? pendingItems.filter((it) => it.id !== nextUp.id) : [];
 
   const calories = stats?.nutrition?.calories || 0;
   const protein = stats?.nutrition?.protein || 0;
@@ -232,6 +254,29 @@ export function TodayMobileView({
           <span>⚡ AI Coach</span>
         </Link>
       </div>
+
+      {/* ─── Setup Wizard Banner (Mobile) ─── */}
+      {winterArc && !winterArc.isConfigured && (
+        <div className="bg-gradient-to-r from-[#fcf2e6] via-[#ffede6] to-[#fcf2e6] rounded-3xl p-4 border border-[#a43716]/40 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">⚙️</span>
+            <div>
+              <h4 className="text-xs font-serif font-bold text-[#1f1b14]">
+                Protocol Setup Required
+              </h4>
+              <p className="text-[10px] text-[#58423c]">
+                Set Phase 1 finish date, weight &amp; routine.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/setup"
+            className="px-3 py-1.5 rounded-xl bg-[#a43716] text-white font-bold text-[11px] shadow-xs hover:bg-[#8e2e12] shrink-0"
+          >
+            Setup →
+          </Link>
+        </div>
+      )}
 
       {/* ─── Magnificent "Next Up" Focus Card ─── */}
       {nextUp ? (
@@ -402,6 +447,40 @@ export function TodayMobileView({
             ))}
           </div>
         )}
+      </div>
+
+      {/* ─── Daily Weight Check-In ─── */}
+      <div className="pt-2">
+        <DailyWeightCard
+          todayWeight={weightInfo?.todayWeight ?? null}
+          defaultWeight={weightInfo?.defaultWeight ?? 74}
+          isLoggedToday={weightInfo?.isLoggedToday ?? false}
+          onRefresh={onRefresh || (() => {})}
+        />
+      </div>
+
+      {/* ─── Off-Plan / Different Food Logs ─── */}
+      <div className="pt-2">
+        <OffPlanMealsCard
+          differentMeals={differentMeals}
+          onOpenModal={onOpenDifferentMealModal || (() => {})}
+          onRefresh={onRefresh || (() => {})}
+        />
+      </div>
+
+      {/* ─── Daily Nutrition Ledger ─── */}
+      <div className="pt-2">
+        <MacroLedger
+          currentCalories={stats?.totalCalories || stats?.nutrition?.calories || 0}
+          targetCalories={winterArc?.targetCalories || 1600}
+          offPlanCalories={stats?.offPlanCalories || 0}
+          currentProtein={(stats?.nutrition?.protein || 0) + (stats?.offPlanProtein || 0)}
+          targetProtein={winterArc?.proteinTarget || 140}
+          currentCarbs={(stats?.nutrition?.carbs || 0) + (stats?.offPlanCarbs || 0)}
+          targetCarbs={160}
+          currentFat={(stats?.nutrition?.fat || 0) + (stats?.offPlanFat || 0)}
+          targetFat={45}
+        />
       </div>
 
       {/* ─── Fitness Beyond The Gym (Recovery, NEAT & Supplement Stack) ─── */}

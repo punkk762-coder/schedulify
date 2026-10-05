@@ -157,13 +157,13 @@ export function ThreeWinterArcMonolith({
     observer.observe(container);
 
     // 6. Animation loop
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       if (!isVisible) return;
 
-      const elapsed = clock.getElapsedTime();
+      const elapsed = (performance.now() - startTime) * 0.001;
 
       // Monolith floating & majestic rotation
       monolith.rotation.y += 0.008;

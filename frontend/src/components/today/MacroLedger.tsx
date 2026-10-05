@@ -5,6 +5,7 @@ import React from "react";
 interface MacroLedgerProps {
   currentCalories: number;
   targetCalories?: number;
+  offPlanCalories?: number;
   currentProtein: number;
   targetProtein?: number;
   currentCarbs: number;
@@ -16,6 +17,7 @@ interface MacroLedgerProps {
 export const MacroLedger: React.FC<MacroLedgerProps> = ({
   currentCalories,
   targetCalories = 1800,
+  offPlanCalories = 0,
   currentProtein,
   targetProtein = 150,
   currentCarbs,
@@ -38,6 +40,11 @@ export const MacroLedger: React.FC<MacroLedgerProps> = ({
             Metabolic Target
           </span>
           <h2 className="text-lg font-serif font-bold text-[#1f1b14]">Daily Nutrition Ledger</h2>
+          {offPlanCalories > 0 && (
+            <span className="text-[10px] font-mono font-bold text-[#ba1a1a] block mt-0.5">
+              ⚡ Includes +{offPlanCalories} kcal from different/off-plan meals
+            </span>
+          )}
         </div>
         <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-[#fcf2e6] text-[#1f1b14] border border-[#dfc0b7]">
           {currentCalories.toLocaleString()} / {targetCalories.toLocaleString()} kcal

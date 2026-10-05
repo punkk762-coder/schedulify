@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   type AlarmSoundId,
   ALARM_SOUND_OPTIONS,
   playSoundOnce,
 } from "@/lib/sound/alarmSynthesizer";
 import type { AlarmSettings, RoutineAlarmItem } from "@/components/alarm/AlarmManager";
+import { PhaseModal } from "@/components/today/PhaseModal";
+import type { WinterArcData } from "@/components/today/FitnessRecoveryCockpit";
 
 interface ManagedUser {
   id: string;
@@ -18,6 +21,7 @@ interface ManagedUser {
   proteinTarget: number;
   stepsTarget: number;
   waterTargetMl: number;
+  isSetupComplete?: boolean;
   createdAt: string;
 }
 
@@ -47,9 +51,10 @@ export default function SettingsPage() {
   const [seeding, setSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
 
-  // Profile names
+  // Profile names & role permissions
   const [adminName, setAdminName] = useState("Vrund");
   const [momName, setMomName] = useState("Mom");
+  const [isAdmin, setIsAdmin] = useState(true);
   const [savingNames, setSavingNames] = useState(false);
   const [nameMessage, setNameMessage] = useState<string | null>(null);
 
@@ -61,12 +66,12 @@ export default function SettingsPage() {
   const [adminPin, setAdminPin] = useState("");
   const [newUserName, setNewUserName] = useState("");
   const [newUserPin, setNewUserPin] = useState("");
-  const [newUserCalories, setNewUserCalories] = useState<number>(1600);
-  const [newUserProtein, setNewUserProtein] = useState<number>(130);
-  const [newUserSteps, setNewUserSteps] = useState<number>(8000);
+  const [generatingPin, setGeneratingPin] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
   const [userSuccess, setUserSuccess] = useState<string | null>(null);
+  const [createdUserModal, setCreatedUserModal] = useState<{ name: string; pin: string } | null>(null);
+  const [copiedPin, setCopiedPin] = useState<string | null>(null);
 
   // Gemini token quota and dynamic key management
   const [geminiStats, setGeminiStats] = useState<GeminiQuotaStats | null>(null);
@@ -99,6 +104,7 @@ export default function SettingsPage() {
         const data = await res.json();
         if (data.adminName) setAdminName(data.adminName);
         if (data.momName) setMomName(data.momName);
+        if (typeof data.isAdmin === "boolean") setIsAdmin(data.isAdmin);
         if (data.users) setUsers(data.users);
       }
     } catch (err) {
@@ -143,14 +149,35 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Active Phase State
+  const [currentPhase, setCurrentPhase] = useState<WinterArcData | null>(null);
+  const [loadingPhase, setLoadingPhase] = useState(true);
+  const [showPhaseModal, setShowPhaseModal] = useState(false);
+
+  const fetchPhase = useCallback(async () => {
+    try {
+      setLoadingPhase(true);
+      const res = await fetch("/api/phase");
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentPhase(data);
+      }
+    } catch (err) {
+      console.error("Failed to load active phase:", err);
+    } finally {
+      setLoadingPhase(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSettings();
     fetchGeminiStats();
     fetchAlarmSettings();
+    fetchPhase();
     if (typeof window !== "undefined" && "Notification" in window) {
       setNotifPermission(Notification.permission);
     }
-  }, [fetchSettings, fetchGeminiStats, fetchAlarmSettings]);
+  }, [fetchSettings, fetchGeminiStats, fetchAlarmSettings, fetchPhase]);
 
   const handleRequestNotifPermission = async () => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -281,6 +308,33 @@ export default function SettingsPage() {
     }
   };
 
+  const handleGeneratePin = useCallback(async () => {
+    try {
+      setGeneratingPin(true);
+      const res = await fetch("/api/settings/users/generate-pin");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.pin) {
+          setNewUserPin(data.pin);
+          return;
+        }
+      }
+      const rand = Math.floor(1000 + Math.random() * 9000).toString();
+      setNewUserPin(rand);
+    } catch {
+      const rand = Math.floor(1000 + Math.random() * 9000).toString();
+      setNewUserPin(rand);
+    } finally {
+      setGeneratingPin(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!newUserPin) {
+      handleGeneratePin();
+    }
+  }, [newUserPin, handleGeneratePin]);
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (creatingUser) return;
@@ -293,24 +347,24 @@ export default function SettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          adminPin,
+          adminPin: adminPin || undefined,
           name: newUserName,
           pin: newUserPin,
-          calorieTarget: newUserCalories,
-          proteinTarget: newUserProtein,
-          stepsTarget: newUserSteps,
         }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
+        const assignedPin = data.user?.pin || newUserPin;
         setUserSuccess(data.message || `User ${newUserName} created!`);
+        setCreatedUserModal({
+          name: data.user?.name || newUserName,
+          pin: assignedPin,
+        });
         setNewUserName("");
-        setNewUserPin("");
-        setNewUserCalories(1600);
         fetchSettings();
-        setTimeout(() => setUserSuccess(null), 4000);
+        handleGeneratePin();
       } else {
         setUserError(data.error || "Failed to create user.");
       }
@@ -322,16 +376,44 @@ export default function SettingsPage() {
     }
   };
 
+  const handleRegenerateUserPin = async (userId: string, userName: string) => {
+    if (!confirm(`Re-generate a new 4-digit PIN for ${userName}?`)) return;
+    try {
+      const res = await fetch(`/api/settings/users/${userId}/regenerate-pin`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCreatedUserModal({
+          name: userName,
+          pin: data.pin,
+        });
+        fetchSettings();
+      } else {
+        alert(data.error || "Failed to regenerate PIN");
+      }
+    } catch (err) {
+      console.error("Failed to regenerate PIN:", err);
+      alert("Error regenerating PIN");
+    }
+  };
+
+  const handleCopyPin = (pinToCopy: string, userName: string) => {
+    const text = `Hi ${userName}, your Schedulfy login PIN is: ${pinToCopy}. Log in to complete your personal protocol setup!`;
+    navigator.clipboard.writeText(text);
+    setCopiedPin(pinToCopy);
+    setTimeout(() => setCopiedPin(null), 3000);
+  };
+
   const handleDeleteUser = async (userId: string) => {
-    const enteredPin = prompt("Enter Admin PIN to confirm user deletion:");
-    if (!enteredPin) return;
+    if (!confirm("Are you sure you want to remove this user from the roster?")) return;
 
     try {
       const res = await fetch(`/api/settings/users/${userId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-pin": enteredPin,
+          "x-admin-pin": adminPin || "",
         },
       });
 
@@ -410,6 +492,232 @@ export default function SettingsPage() {
           Sign Out / Exit
         </button>
       </header>
+
+      {/* ─── Protocol Modules & Dedicated Hubs (Macros, History, Calendar, Mom's Deck, Setup) ─── */}
+      <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-linear-to-br from-white via-[#fcf2e6]/25 to-white shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]">
+          <div>
+            <span className="text-[10px] font-mono font-bold text-[#8b716a] uppercase tracking-wider block">
+              Core Protocol Modules
+            </span>
+            <h2 className="text-base font-serif font-bold text-[#1f1b14]">
+              System Navigation &amp; Feature Hubs
+            </h2>
+          </div>
+          <span className="text-[10px] font-mono text-[#a43716] font-bold bg-[#ffdbd1] px-2.5 py-1 rounded-full border border-[#a43716]/20">
+            All Features Accessible
+          </span>
+        </div>
+
+        <p className="text-xs text-[#58423c]">
+          Quick jump to all modules, macro analytics, historical timelines, and specialized decks.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Macros & Analytics */}
+          <Link
+            href="/analytics"
+            className="p-4 rounded-xl border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] hover:border-[#a43716]/40 transition-all group shadow-2xs space-y-2 block"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-[#fcf2e6] flex items-center justify-center text-base group-hover:scale-110 transition-transform">
+                📊
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#a43716] group-hover:translate-x-0.5 transition-transform">
+                Open →
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1f1b14] group-hover:text-[#a43716] transition-colors">
+                Macro Ledger &amp; Analytics
+              </h3>
+              <p className="text-[11px] text-[#58423c] leading-relaxed mt-0.5">
+                Calorie deficit breakdown, protein targets, off-plan foods, and longitudinal compliance trends.
+              </p>
+            </div>
+          </Link>
+
+          {/* Routine History */}
+          <Link
+            href="/history"
+            className="p-4 rounded-xl border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] hover:border-[#a43716]/40 transition-all group shadow-2xs space-y-2 block"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-[#fcf2e6] flex items-center justify-center text-base group-hover:scale-110 transition-transform">
+                📜
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#a43716] group-hover:translate-x-0.5 transition-transform">
+                Open →
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1f1b14] group-hover:text-[#a43716] transition-colors">
+                Routine History &amp; Audit
+              </h3>
+              <p className="text-[11px] text-[#58423c] leading-relaxed mt-0.5">
+                Chronological log of past occurrences, completions, skips, substitutes, and consistency streaks.
+              </p>
+            </div>
+          </Link>
+
+          {/* 3D Spatial Calendar */}
+          <Link
+            href="/calendar"
+            className="p-4 rounded-xl border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] hover:border-[#a43716]/40 transition-all group shadow-2xs space-y-2 block"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-[#fcf2e6] flex items-center justify-center text-base group-hover:scale-110 transition-transform">
+                📅
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#a43716] group-hover:translate-x-0.5 transition-transform">
+                Open →
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1f1b14] group-hover:text-[#a43716] transition-colors">
+                3D Spatial Calendar
+              </h3>
+              <p className="text-[11px] text-[#58423c] leading-relaxed mt-0.5">
+                Spatial day-by-day protocol calendar with consistency heatmaps and daily weigh-in tracking.
+              </p>
+            </div>
+          </Link>
+
+          {/* Full Setup Wizard */}
+          <Link
+            href="/setup"
+            className="p-4 rounded-xl border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] hover:border-[#a43716]/40 transition-all group shadow-2xs space-y-2 block"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-[#fcf2e6] flex items-center justify-center text-base group-hover:scale-110 transition-transform">
+                🚀
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#a43716] group-hover:translate-x-0.5 transition-transform">
+                Launch →
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1f1b14] group-hover:text-[#a43716] transition-colors">
+                Protocol Setup Wizard
+              </h3>
+              <p className="text-[11px] text-[#58423c] leading-relaxed mt-0.5">
+                Reconfigure biometrics, update Phase 1 completion dates, tune macro standards, and daily routine.
+              </p>
+            </div>
+          </Link>
+
+          {/* Mom's Kitchen Deck */}
+          <Link
+            href="/mom"
+            className="p-4 rounded-xl border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] hover:border-[#a43716]/40 transition-all group shadow-2xs space-y-2 block"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-[#fcf2e6] flex items-center justify-center text-base group-hover:scale-110 transition-transform">
+                🍲
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#a43716] group-hover:translate-x-0.5 transition-transform">
+                Open →
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1f1b14] group-hover:text-[#a43716] transition-colors">
+                Mom&apos;s Kitchen Deck
+              </h3>
+              <p className="text-[11px] text-[#58423c] leading-relaxed mt-0.5">
+                Household protocol hub for meal coordination, kitchen prep schedules, and dietary restrictions.
+              </p>
+            </div>
+          </Link>
+
+          {/* AI Coach Full Chat */}
+          <Link
+            href="/chat"
+            className="p-4 rounded-xl border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] hover:border-[#a43716]/40 transition-all group shadow-2xs space-y-2 block"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-[#fcf2e6] flex items-center justify-center text-base group-hover:scale-110 transition-transform">
+                💬
+              </div>
+              <span className="text-[10px] font-mono font-bold text-[#a43716] group-hover:translate-x-0.5 transition-transform">
+                Chat →
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1f1b14] group-hover:text-[#a43716] transition-colors">
+                AI Coach Cockpit
+              </h3>
+              <p className="text-[11px] text-[#58423c] leading-relaxed mt-0.5">
+                Full-screen conversational interface with Gemini routine analysis, macro queries, and logging.
+              </p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ─── User-Defined Active Phase Cockpit ─── */}
+      <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#dfc0b7] gap-3">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#a43716] animate-pulse" />
+              <span className="text-[10px] font-mono font-bold text-[#a43716] uppercase tracking-wider">
+                Current Active Routine Phase
+              </span>
+            </div>
+            <h2 className="text-lg font-serif font-bold text-[#1f1b14]">
+              {currentPhase?.phaseTitle || "Phase 1 — Winter Arc"}
+            </h2>
+            <p className="text-xs text-[#58423c]">
+              {currentPhase?.phaseSubtitle || "Current Running Phase"} • Theme: {currentPhase?.theme || "Discipline"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/setup"
+              className="px-4 py-2 rounded-xl bg-[#a43716] hover:bg-[#862201] text-white text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+            >
+              <span>🚀</span>
+              <span>Full Setup Wizard</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowPhaseModal(true)}
+              className="px-4 py-2 rounded-xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+            >
+              <span>⚙️</span>
+              <span>Edit / Change Phase</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7]">
+            <span className="text-[10px] font-mono uppercase text-[#58423c] block">Days Remaining</span>
+            <span className="text-lg font-mono font-bold text-[#a43716]">
+              {currentPhase?.daysRemainingInPhase ?? 30} Days
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7]">
+            <span className="text-[10px] font-mono uppercase text-[#58423c] block">Target Weight</span>
+            <span className="text-lg font-mono font-bold text-[#1f1b14]">
+              {currentPhase?.targetWeightKg ?? 72} kg
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7]">
+            <span className="text-[10px] font-mono uppercase text-[#58423c] block">Daily Calorie Target</span>
+            <span className="text-lg font-mono font-bold text-[#52652a]">
+              {currentPhase?.targetCalories ?? 1600} kcal
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7]">
+            <span className="text-[10px] font-mono uppercase text-[#58423c] block">Target Completion</span>
+            <span className="text-sm font-mono font-bold text-[#1f1b14] mt-1 block">
+              {currentPhase?.endDate || "Month End"}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* ─── Gemini AI Token Quota & API Key Cockpit ─── */}
       <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-5">
@@ -983,162 +1291,152 @@ export default function SettingsPage() {
         </form>
       </div>
 
-      {/* ─── Create New User Panel (Admin Verified via ENV PIN) ─── */}
-      <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-linear-to-br from-white via-[#fcf2e6]/30 to-white shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]">
-          <div>
-            <span className="text-[10px] font-mono font-bold text-[#a43716] uppercase tracking-wider block">
-              User Creation Engine
-            </span>
-            <h2 className="text-base font-serif font-bold text-[#1f1b14]">
-              Add New User (Admin Authorized)
+      {/* ─── Managed User Creation (Admin Exclusive Control) ─── */}
+      {!isAdmin ? (
+        <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🔒</span>
+            <h2 className="text-sm font-serif font-bold text-[#1f1b14]">
+              User Management Restricted
             </h2>
           </div>
-          <span className="text-[10px] font-mono text-[#a43716] font-bold bg-[#ffdbd1] px-2.5 py-1 rounded-full border border-[#a43716]/20">
-            1,600 kcal Default Target
-          </span>
+          <p className="text-xs text-[#58423c]">
+            Only Admin can create new users and manage protocol PINs. You are currently logged in with a managed user account. You can tune your own targets and routines anytime in the <Link href="/setup" className="font-bold text-[#a43716] underline">Setup Wizard</Link>.
+          </p>
         </div>
-
-        <p className="text-xs text-[#58423c]">
-          Enter your Admin PIN (from environment) to register a new user. The user will be initialized with a standard <strong>1,600 calorie</strong> deficit target, personal PIN access, and dedicated routine tracking.
-        </p>
-
-        {userError && (
-          <p className="text-xs font-semibold text-[#93000a] bg-[#ffdad6] p-2.5 rounded-xl border border-[#ba1a1a]/20">
-            {userError}
-          </p>
-        )}
-
-        {userSuccess && (
-          <p className="text-xs font-semibold text-[#52652a] bg-[#f7faef] p-2.5 rounded-xl border border-[#52652a]/20">
-            {userSuccess}
-          </p>
-        )}
-
-        <form onSubmit={handleCreateUser} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      ) : (
+        <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-linear-to-br from-white via-[#fcf2e6]/30 to-white shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]">
             <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
-                Admin ENV PIN *
-              </label>
-              <input
-                type="password"
-                maxLength={10}
-                value={adminPin}
-                onChange={(e) => setAdminPin(e.target.value)}
-                placeholder="Admin PIN (e.g. 1234)"
-                required
-                className="w-full px-3.5 py-2 rounded-xl border border-[#dfc0b7] text-xs font-mono font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
-                New User Name *
-              </label>
-              <input
-                type="text"
-                value={newUserName}
-                onChange={(e) => setNewUserName(e.target.value)}
-                placeholder="e.g. Rahul or Priya"
-                required
-                className="w-full px-3.5 py-2 rounded-xl border border-[#dfc0b7] text-xs font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
-                New User Login PIN *
-              </label>
-              <input
-                type="text"
-                maxLength={6}
-                value={newUserPin}
-                onChange={(e) => setNewUserPin(e.target.value)}
-                placeholder="4-digit Login PIN"
-                required
-                className="w-full px-3.5 py-2 rounded-xl border border-[#dfc0b7] text-xs font-mono font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
-                Daily Calorie Limit (kcal)
-              </label>
-              <input
-                type="number"
-                value={newUserCalories}
-                onChange={(e) => setNewUserCalories(parseInt(e.target.value, 10) || 1600)}
-                className="w-full px-3.5 py-2 rounded-xl border border-[#dfc0b7] text-xs font-mono font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
-              />
-              <span className="text-[10px] text-[#52652a] font-medium block mt-0.5">
-                Default: 1,600 kcal
+              <span className="text-[10px] font-mono font-bold text-[#a43716] uppercase tracking-wider block">
+                Admin Exclusive Control
               </span>
+              <h2 className="text-base font-serif font-bold text-[#1f1b14]">
+                Create User &amp; Generate PIN
+              </h2>
             </div>
-
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
-                Protein Target (g)
-              </label>
-              <input
-                type="number"
-                value={newUserProtein}
-                onChange={(e) => setNewUserProtein(parseInt(e.target.value, 10) || 130)}
-                className="w-full px-3.5 py-2 rounded-xl border border-[#dfc0b7] text-xs font-mono font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
-                Daily Steps Target
-              </label>
-              <input
-                type="number"
-                step="500"
-                value={newUserSteps}
-                onChange={(e) => setNewUserSteps(parseInt(e.target.value, 10) || 8000)}
-                className="w-full px-3.5 py-2 rounded-xl border border-[#dfc0b7] text-xs font-mono font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
-              />
-            </div>
+            <span className="text-[10px] font-mono text-[#52652a] font-bold bg-[#d4eca2] px-2.5 py-1 rounded-full border border-[#52652a]/20">
+              Self-Setup Flow
+            </span>
           </div>
 
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={creatingUser}
-              className="px-6 py-2.5 rounded-xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-40 shadow-xs flex items-center gap-2"
-            >
-              {creatingUser ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Creating User...</span>
-                </>
-              ) : (
-                <>
-                  <span>Create User Account</span>
-                  <span>➕</span>
-                </>
-              )}
-            </button>
+          <div className="p-3.5 rounded-xl bg-[#fcf2e6]/70 border border-[#dfc0b7] text-xs text-[#58423c] space-y-1">
+            <p className="font-bold text-[#1f1b14] flex items-center gap-1.5">
+              <span>💡</span>
+              <span>Self-Setup Workflow:</span>
+            </p>
+            <p className="leading-relaxed">
+              1. Type user name and use the generated 4-digit PIN (or click <strong>🎲 Re-roll</strong>).
+              <br />
+              2. Share the generated PIN with the user.
+              <br />
+              3. When they log in with this PIN, they will be automatically redirected to the <strong>Full Setup Wizard</strong> to configure their own weight, targets, Phase 1 dates, and daily routine blueprint!
+            </p>
           </div>
-        </form>
-      </div>
+
+          {userError && (
+            <p className="text-xs font-semibold text-[#93000a] bg-[#ffdad6] p-2.5 rounded-xl border border-[#ba1a1a]/20">
+              {userError}
+            </p>
+          )}
+
+          {userSuccess && (
+            <p className="text-xs font-semibold text-[#52652a] bg-[#f7faef] p-2.5 rounded-xl border border-[#52652a]/20">
+              {userSuccess}
+            </p>
+          )}
+
+          <form onSubmit={handleCreateUser} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a] mb-1">
+                  New User Name *
+                </label>
+                <input
+                  type="text"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="e.g. Rahul, Alex, or Priya"
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#dfc0b7] text-xs font-bold text-[#1f1b14] bg-white outline-none focus:ring-1 focus:ring-[#a43716]"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-mono font-bold uppercase text-[#8b716a]">
+                    Generated Login PIN *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGeneratePin}
+                    disabled={generatingPin}
+                    className="text-[10px] font-mono font-bold text-[#a43716] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>🎲</span>
+                    <span>{generatingPin ? "Generating..." : "Generate New PIN"}</span>
+                  </button>
+                </div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={newUserPin}
+                    onChange={(e) => setNewUserPin(e.target.value)}
+                    placeholder="Auto-generated 4-digit PIN"
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#dfc0b7] text-sm font-mono font-bold tracking-widest text-[#a43716] bg-[#fcf2e6]/40 outline-none focus:ring-1 focus:ring-[#a43716]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGeneratePin}
+                    className="absolute right-2 px-2 py-1 rounded-lg bg-white border border-[#dfc0b7] text-[10px] font-mono font-bold text-[#58423c] hover:bg-[#fcf2e6] transition-all cursor-pointer"
+                  >
+                    🎲 Re-roll
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+              <span className="text-[11px] text-[#8b716a]">
+                The user sets up their own biometrics, calorie standards, and daily blueprint upon first login.
+              </span>
+              <button
+                type="submit"
+                disabled={creatingUser || !newUserName.trim()}
+                className="px-6 py-2.5 rounded-xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-40 shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {creatingUser ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Creating User &amp; Assigning PIN...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create User &amp; Issue PIN</span>
+                    <span>➕</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* ─── Managed Users Directory Roster ─── */}
       <div className="p-6 rounded-2xl border border-[#dfc0b7] bg-white shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]">
           <div>
             <span className="text-[10px] font-mono font-bold text-[#8b716a] uppercase tracking-wider block">
-              Active Accounts
+              Active Accounts &amp; Access Keys
             </span>
             <h2 className="text-base font-serif font-bold text-[#1f1b14]">
               Registered Users Directory ({users.length})
             </h2>
           </div>
           <span className="text-[10px] font-mono text-[#58423c]">
-            Multi-User Isolation
+            {isAdmin ? "Admin View (PINs Visible)" : "Roster"}
           </span>
         </div>
 
@@ -1150,7 +1448,9 @@ export default function SettingsPage() {
           <div className="p-6 rounded-xl bg-[#fcf2e6]/50 border border-[#dfc0b7] text-center space-y-1">
             <p className="text-xs font-bold text-[#1f1b14]">No managed users created yet</p>
             <p className="text-[11px] text-[#58423c]">
-              Use the form above with your Admin PIN to create user accounts with 1,600 calorie defaults.
+              {isAdmin
+                ? "Use the form above to generate a PIN and create a user account."
+                : "No other user accounts found."}
             </p>
           </div>
         ) : (
@@ -1158,15 +1458,59 @@ export default function SettingsPage() {
             {users.map((u) => (
               <div
                 key={u.id}
-                className="p-4 rounded-xl border border-[#dfc0b7] bg-[#fcf2e6]/30 flex items-center justify-between shadow-2xs"
+                className="p-4 rounded-xl border border-[#dfc0b7] bg-[#fcf2e6]/30 flex flex-col justify-between shadow-2xs gap-3"
               >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-xs text-[#1f1b14]">{u.name}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#d4eca2] text-[#3b4d14] text-[9px] font-mono font-bold uppercase">
-                      {u.role}
-                    </span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-[#1f1b14]">{u.name}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#d4eca2] text-[#3b4d14] text-[9px] font-mono font-bold uppercase">
+                        {u.role}
+                      </span>
+                    </div>
+
+                    {/* Setup Status Badge */}
+                    {u.isSetupComplete ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#f7faef] text-[#52652a] text-[10px] font-bold border border-[#52652a]/20 flex items-center gap-1">
+                        <span>✓</span>
+                        <span>Protocol Active</span>
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#fff8eb] text-[#a43716] text-[10px] font-bold border border-[#a43716]/20 flex items-center gap-1 animate-pulse">
+                        <span>⏳</span>
+                        <span>Setup Pending</span>
+                      </span>
+                    )}
                   </div>
+
+                  {/* Generated PIN display for Admin */}
+                  {isAdmin && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#dfc0b7]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono uppercase text-[#8b716a] font-bold">Login PIN:</span>
+                        <span className="text-xs font-mono font-bold text-[#a43716] tracking-wider">{u.pin}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyPin(u.pin, u.name)}
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#fcf2e6] hover:bg-[#ffdad6] text-[#58423c] transition-all cursor-pointer"
+                          title="Copy invitation message with PIN"
+                        >
+                          {copiedPin === u.pin ? "✓ Copied!" : "📋 Copy PIN"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRegenerateUserPin(u.id, u.name)}
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white hover:bg-[#fcf2e6] text-[#8b716a] transition-all border border-[#dfc0b7] cursor-pointer"
+                          title="Re-issue a new random PIN"
+                        >
+                          🎲 Re-roll
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="text-[11px] text-[#58423c] flex items-center gap-2">
                     <span>🔥 {u.calorieTarget} kcal</span>
                     <span>•</span>
@@ -1175,23 +1519,74 @@ export default function SettingsPage() {
                     <span>🚶 {u.stepsTarget.toLocaleString()} steps</span>
                   </div>
                   <div className="text-[10px] font-mono text-[#8b716a]">
-                    PIN: •••• (Registered: {new Date(u.createdAt).toLocaleDateString()})
+                    Registered: {new Date(u.createdAt).toLocaleDateString()}
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleDeleteUser(u.id)}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-[#ba1a1a] hover:bg-[#ffdad6] transition-all"
-                  title="Remove user"
-                >
-                  Delete ✕
-                </button>
+                {isAdmin && (
+                  <div className="flex items-center justify-end pt-2 border-t border-[#dfc0b7]/50">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUser(u.id)}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#ba1a1a] hover:bg-[#ffdad6] transition-all cursor-pointer"
+                      title="Remove user"
+                    >
+                      Delete User ✕
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* ─── Modal: User Created PIN Confirmation ─── */}
+      {createdUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white border border-[#dfc0b7] p-6 shadow-2xl space-y-4">
+            <div className="text-center space-y-1">
+              <span className="text-3xl">🎉</span>
+              <h3 className="text-lg font-serif font-bold text-[#1f1b14]">
+                User Account Created!
+              </h3>
+              <p className="text-xs text-[#58423c]">
+                Give this generated PIN to <strong>{createdUserModal.name}</strong>
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#fcf2e6] border border-[#a43716]/20 text-center space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#8b716a] block">
+                Access PIN
+              </span>
+              <span className="text-2xl font-mono font-bold tracking-widest text-[#a43716]">
+                {createdUserModal.pin}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-[#58423c] leading-relaxed text-center">
+              When <strong>{createdUserModal.name}</strong> enters this PIN at login, they will be automatically redirected to the Setup Wizard to configure their own profile, weight, targets, Phase 1, and daily routine.
+            </p>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => handleCopyPin(createdUserModal.pin, createdUserModal.name)}
+                className="w-full py-2.5 rounded-xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold transition-all active:scale-95 shadow-xs cursor-pointer"
+              >
+                {copiedPin === createdUserModal.pin ? "✓ Copied to Clipboard!" : "📋 Copy PIN & Invite Message"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreatedUserModal(null)}
+                className="w-full py-2 rounded-xl bg-[#fcf2e6] text-[#58423c] text-xs font-bold hover:bg-[#dfc0b7]/50 transition-all cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grid Settings: Role & Routine Initialization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1281,6 +1676,14 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Phase Customization Modal */}
+      <PhaseModal
+        isOpen={showPhaseModal}
+        onClose={() => setShowPhaseModal(false)}
+        currentPhase={currentPhase}
+        onSaved={fetchPhase}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ThreeFluidOrb } from "../3d/ThreeFluidOrb";
+import { PhaseModal } from "./PhaseModal";
 
 export interface FitnessRecoveryData {
   sleepHours: number;
@@ -27,10 +28,16 @@ export interface WinterArcData {
   theme?: string;
   physiqueMilestone?: string;
   daysRemainingInPhase: number;
+  totalDurationDays?: number;
+  progressPercent?: number;
   targetWeightKg?: number;
   currentWeightKg?: number;
+  targetCalories?: number;
   dailyStepsTarget?: number;
   dailyWaterTargetMl?: number;
+  startDate?: string;
+  endDate?: string;
+  isConfigured?: boolean;
   isPhaseTransitionDue?: boolean;
   phase2PreviewNotes?: string;
   nextPhasePreview?: any;
@@ -59,6 +66,9 @@ export function FitnessRecoveryCockpit({
   winterArc,
   onRefresh,
 }: FitnessRecoveryCockpitProps) {
+  // Phase customization modal state
+  const [isPhaseModalOpen, setIsPhaseModalOpen] = useState(false);
+
   // Sliders state
   const [steps, setSteps] = useState<number>(initialSteps);
   const [stepsTimeOfDay, setStepsTimeOfDay] = useState<string>("EVENING");
@@ -172,76 +182,106 @@ export function FitnessRecoveryCockpit({
 
   return (
     <div className="bg-white rounded-3xl p-5 border border-[#dfc0b7] shadow-xs space-y-5">
-      {/* ─── WINTER ARC PHASE 1 / PHASE 2 HUD ─── */}
+      {/* ─── ACTIVE RUNNING PHASE HUD ─── */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1f1b14] via-[#33241b] to-[#1f1b14] p-4 text-white shadow-sm border border-[#a43716]/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#a43716] animate-pulse" />
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#ffdbd1]">
-              {winterArc?.phaseTitle || "Winter Arc — Phase 1"}
+        {/* If new user / unconfigured phase: Show prompt banner */}
+        {winterArc && winterArc.isConfigured === false && (
+          <div className="mb-3 p-2.5 rounded-xl bg-[#a43716]/25 border border-[#a43716]/50 flex items-center justify-between gap-2.5 text-xs animate-in fade-in duration-300">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🎯</span>
+              <div>
+                <span className="font-bold text-[#ffdbd1] block">Welcome! Set Up Your Phase</span>
+                <span className="text-[10px] text-white/80">Configure your target completion date, calories, and goals.</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPhaseModalOpen(true)}
+              className="px-2.5 py-1 rounded-lg bg-[#a43716] hover:bg-[#83260c] text-white font-bold text-[10px] shrink-0 transition-all shadow-xs"
+            >
+              Set Up Now
+            </button>
+          </div>
+        )}
+
+        {/* Phase Header: Title + Change Phase Action */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#a43716] animate-pulse shrink-0" />
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#ffdbd1] truncate">
+              {winterArc?.phaseTitle || "Phase 1 — Winter Arc"}
             </span>
           </div>
-          <span className="text-[10px] font-mono font-bold bg-[#a43716] px-2.5 py-0.5 rounded-full text-white shrink-0 whitespace-nowrap">
-            {winterArc?.daysRemainingInPhase ?? 26} Days Remaining
-          </span>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] font-mono font-bold bg-[#a43716] px-2 py-0.5 rounded-full text-white whitespace-nowrap">
+              {winterArc?.daysRemainingInPhase ?? 30} Days Remaining
+            </span>
+
+            {/* Change Phase Button */}
+            <button
+              type="button"
+              onClick={() => setIsPhaseModalOpen(true)}
+              className="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/25 border border-white/20 text-white font-bold text-[10px] flex items-center gap-1 transition-all active:scale-95"
+              title="Change active running phase"
+            >
+              <span>⚙️</span>
+              <span>Change Phase</span>
+            </button>
+          </div>
         </div>
 
+        {/* Phase Body: Focus Subtitle & Daily Targets */}
         <div className="mt-2 flex items-baseline justify-between gap-2">
           <div className="min-w-0">
             <h3 className="text-base font-serif font-bold text-white truncate">
-              {winterArc?.phaseSubtitle || "October Foundation & Consistency"}
+              {winterArc?.phaseSubtitle || "Current Running Phase"}
             </h3>
             <p className="text-[11px] text-white/70 mt-0.5">
-              Goal: {winterArc?.targetWeightKg || 72}kg Target • {winterArc?.dailyStepsTarget?.toLocaleString() || "8,000"} daily steps • 1,800 kcal
+              Goal: {winterArc?.targetWeightKg || 72}kg Target • {winterArc?.dailyStepsTarget?.toLocaleString() || "8,000"} daily steps • {winterArc?.targetCalories || 1600} kcal
             </p>
           </div>
           <div className="text-right shrink-0">
             <span className="text-[9px] font-mono uppercase text-white/60 block whitespace-nowrap">Transformation</span>
             <span className="text-xs font-mono font-bold text-[#d4eca2] whitespace-nowrap">
-              {winterArc?.theme || "Metabolic Baseline"}
+              {winterArc?.theme || "Consistency & Discipline"}
             </span>
           </div>
         </div>
 
-        {/* 5-Phase Winter Arc Roadmap Track */}
-        <div className="mt-3 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar py-1">
-          {[
-            { label: "P1: Oct", name: "Foundation" },
-            { label: "P2: Nov", name: "Hypertrophy" },
-            { label: "P3: Dec", name: "Defense" },
-            { label: "P4: Jan", name: "Shred" },
-            { label: "P5: Feb", name: "Dream Physique" },
-          ].map((item, pIdx) => {
-            const pNum = pIdx + 1;
-            const isCur = (winterArc?.phase || 1) === pNum;
-            const isPast = (winterArc?.phase || 1) > pNum;
-            return (
+        {/* Phase progress bar */}
+        {winterArc && (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex-1 h-1.5 rounded-full bg-white/15 overflow-hidden">
               <div
-                key={item.label}
-                className={`px-2 py-1 rounded-lg text-[9px] font-mono font-bold whitespace-nowrap flex items-center gap-1 border ${
-                  isCur
-                    ? "bg-[#a43716] text-white border-white/30 shadow-xs ring-1 ring-white/40"
-                    : isPast
-                    ? "bg-[#52652a]/60 text-white/90 border-[#52652a]"
-                    : "bg-white/10 text-white/50 border-white/10"
-                }`}
-              >
-                <span>{isPast ? "✓" : isCur ? "⚡" : "○"}</span>
-                <span>{item.label}</span>
-              </div>
-            );
-          })}
-        </div>
+                className="h-full rounded-full bg-gradient-to-r from-[#a43716] to-[#d4eca2] transition-all duration-700"
+                style={{
+                  width: `${winterArc.progressPercent !== undefined ? Math.max(5, winterArc.progressPercent) : 50}%`,
+                }}
+              />
+            </div>
+            <span className="text-[9px] font-mono text-white/70 shrink-0">
+              {winterArc.progressPercent !== undefined ? `${winterArc.progressPercent}% Completed` : `Phase 1`}
+            </span>
+          </div>
+        )}
 
         <div className="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-white/75 flex items-center justify-between">
-          <Link
-            href="/analytics"
-            className="text-[#ffdbd1] hover:underline flex items-center gap-1 font-bold"
-          >
-            <span>Open AI Retrospective &amp; Phase Dashboard</span>
-            <span>❯</span>
-          </Link>
-          <span className="text-[#d4eca2] font-mono text-[9px] font-bold">Dream Physique OS</span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/analytics"
+              className="text-[#ffdbd1] hover:underline flex items-center gap-1 font-bold"
+            >
+              <span>Open AI Retrospective &amp; Analytics</span>
+              <span>❯</span>
+            </Link>
+            {winterArc?.endDate && (
+              <span className="text-white/50 text-[9px] font-mono hidden sm:inline">
+                • Target End: {winterArc.endDate}
+              </span>
+            )}
+          </div>
+          <span className="text-[#d4eca2] font-mono text-[9px] font-bold">Schedulfy Routine OS</span>
         </div>
       </div>
 
@@ -625,6 +665,17 @@ export function FitnessRecoveryCockpit({
           )}
         </button>
       </div>
+
+      {/* User-Defined Phase Customization Modal */}
+      <PhaseModal
+        isOpen={isPhaseModalOpen}
+        onClose={() => setIsPhaseModalOpen(false)}
+        currentPhase={winterArc}
+        onSaved={() => {
+          if (onRefresh) onRefresh();
+        }}
+        isNewUser={winterArc?.isConfigured === false}
+      />
     </div>
   );
 }

@@ -21,16 +21,19 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     let userName = "Admin";
     let calorieLimit = 1800;
     let effectiveUserId = "";
+    let isAdmin = false;
 
     if (verifyPin(pin, userPin)) {
       role = "USER";
       const adminSetting = await prisma.systemSetting.findUnique({ where: { key: "admin_name" } });
       userName = adminSetting?.value || "Vrund";
       calorieLimit = 1800;
+      isAdmin = true;
     } else if (verifyPin(pin, momPin)) {
       role = "MOM";
       const momSetting = await prisma.systemSetting.findUnique({ where: { key: "mom_name" } });
       userName = momSetting?.value || "Mom";
+      isAdmin = false;
     } else {
       // Check created UserProfiles
       const profile = await prisma.userProfile.findUnique({ where: { pin } });
@@ -39,6 +42,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
         userName = profile.name;
         calorieLimit = profile.calorieTarget || 1600;
         effectiveUserId = profile.id;
+        isAdmin = Boolean(profile.isAdmin);
       }
     }
 
@@ -55,11 +59,29 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       effectiveUserId = user.id;
     }
 
+    // Determine initial redirect destination
+    let redirectTo = role === "MOM" ? "/mom" : "/today";
+    let isSetupPending = false;
+
+    if (role === "USER") {
+      if (!isAdmin && effectiveUserId) {
+        // Managed user profile: check if setup/onboarding completed
+        const setupSetting = await prisma.systemSetting.findUnique({
+          where: { key: `onboarding_${effectiveUserId}` },
+        });
+        if (setupSetting?.value !== "true") {
+          redirectTo = "/setup";
+          isSetupPending = true;
+        }
+      }
+    }
+
     setSession(res, {
       userId: effectiveUserId,
       role,
       name: userName,
       calorieTarget: calorieLimit,
+      isAdmin,
     });
 
     res.json({
@@ -67,7 +89,9 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       role,
       name: userName,
       calorieTarget: calorieLimit,
-      redirectTo: role === "MOM" ? "/mom" : "/today",
+      isAdmin,
+      redirectTo,
+      isSetupPending,
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -92,6 +116,7 @@ router.get("/session", (req: Request, res: Response): void => {
     role: session.role,
     name: session.name || (session.role === "MOM" ? "Mom" : "Vrund"),
     calorieTarget: session.calorieTarget || (session.role === "USER" ? 1600 : undefined),
+    isAdmin: Boolean(session.isAdmin),
   });
 });
 

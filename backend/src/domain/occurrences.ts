@@ -14,10 +14,15 @@ export const occurrenceService = {
     const dateKey = date.toISOString().split("T")[0];
     const cacheKey = `occurrences:${dateKey}`;
 
+    const isHistoricalPast = dateKey < todayUtc().toISOString().split("T")[0];
+
     return cache.wrap(cacheKey, 30, async () => {
       return prisma.occurrence.findMany({
         where: {
           scheduledDate: date,
+          ...(isHistoricalPast
+            ? {}
+            : { routineItem: { plan: { status: "ACTIVE" } } }),
         },
         include: {
           routineItem: {
@@ -220,6 +225,11 @@ export const occurrenceService = {
         where: {
           effectiveFrom: { lte: endDate },
           OR: [{ effectiveUntil: null }, { effectiveUntil: { gte: startDate } }],
+          routineItem: {
+            plan: {
+              status: "ACTIVE",
+            },
+          },
         },
         include: { routineItem: true },
       }),

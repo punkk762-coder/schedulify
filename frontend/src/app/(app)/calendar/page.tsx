@@ -24,8 +24,24 @@ interface CalendarApiResponse {
   days: CalendarDayItem[];
 }
 
+function getMonthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthLabel(key: string): string {
+  const [y, m] = key.split("-").map(Number);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[m - 1]} ${y}`;
+}
+
+function shiftMonth(key: string, delta: number): string {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return getMonthKey(d);
+}
+
 export default function CalendarPage() {
-  const [currentMonth, setCurrentMonth] = useState<string>("2026-10");
+  const [currentMonth, setCurrentMonth] = useState<string>(getMonthKey(new Date()));
   const [data, setData] = useState<CalendarApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<CalendarDayItem | null>(null);
@@ -49,13 +65,7 @@ export default function CalendarPage() {
     fetchCalendar(currentMonth);
   }, [currentMonth, fetchCalendar]);
 
-  const winterArcMonths = [
-    { key: "2026-10", label: "Oct '26 (Phase 1)" },
-    { key: "2026-11", label: "Nov '26 (Phase 2)" },
-    { key: "2026-12", label: "Dec '26 (Phase 3)" },
-    { key: "2027-01", label: "Jan '27 (Phase 4)" },
-    { key: "2027-02", label: "Feb '27 (Phase 5)" },
-  ];
+  const todayMonthKey = getMonthKey(new Date());
 
   const weekdayHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -75,28 +85,45 @@ export default function CalendarPage() {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1f1b14]">
-            {data?.monthName || "October 2026"} Routine Calendar
+            {data?.monthName || getMonthLabel(currentMonth)} Routine Calendar
           </h1>
           <p className="text-xs text-[#58423c] max-w-xl leading-relaxed">
             Every day is filled with a dynamic water level representing your habit compliance percentage. Track exactly what percentage you followed and identify every day a routine swap or adaptation was made.
           </p>
 
-          {/* Month Switcher Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 no-scrollbar">
-            {winterArcMonths.map((m) => (
+          {/* Month Navigation — prev / current label / next */}
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(shiftMonth(currentMonth, -1))}
+              className="p-2 rounded-xl bg-white border border-[#dfc0b7] text-[#58423c] hover:text-[#1f1b14] hover:border-[#8b716a] transition-all active:scale-95 text-sm font-bold"
+              aria-label="Previous month"
+            >
+              ←
+            </button>
+
+            <span className="px-4 py-1.5 rounded-xl bg-[#a43716] text-white text-xs font-bold shadow-xs select-none">
+              {getMonthLabel(currentMonth)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(shiftMonth(currentMonth, 1))}
+              className="p-2 rounded-xl bg-white border border-[#dfc0b7] text-[#58423c] hover:text-[#1f1b14] hover:border-[#8b716a] transition-all active:scale-95 text-sm font-bold"
+              aria-label="Next month"
+            >
+              →
+            </button>
+
+            {currentMonth !== todayMonthKey && (
               <button
-                key={m.key}
                 type="button"
-                onClick={() => setCurrentMonth(m.key)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
-                  currentMonth === m.key
-                    ? "bg-[#a43716] text-white shadow-xs"
-                    : "bg-white text-[#58423c] hover:text-[#1f1b14] border border-[#dfc0b7]"
-                }`}
+                onClick={() => setCurrentMonth(todayMonthKey)}
+                className="px-3 py-1.5 rounded-xl bg-white border border-[#dfc0b7] text-[#a43716] text-xs font-bold hover:bg-[#fcf2e6] transition-all active:scale-95"
               >
-                {m.label}
+                Today
               </button>
-            ))}
+            )}
           </div>
         </div>
 
@@ -104,13 +131,13 @@ export default function CalendarPage() {
         <div className="flex items-center gap-4 shrink-0 z-10">
           <div className="relative flex flex-col items-center">
             <ThreeFluidOrb
-              level={data?.summary?.averagePercentage || 85}
+              level={data?.summary?.averagePercentage || 0}
               size={150}
               color="#0ea5e9"
             />
             <div className="absolute -bottom-2 bg-white/90 backdrop-blur-xs px-3 py-0.5 rounded-full border border-[#dfc0b7] shadow-xs text-center">
               <span className="text-[10px] font-mono font-bold text-[#0369a1]">
-                💧 {data?.summary?.averagePercentage || 85}% Fluid
+                💧 {data?.summary?.averagePercentage || 0}% Fluid
               </span>
             </div>
           </div>
@@ -129,7 +156,7 @@ export default function CalendarPage() {
           </span>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-2xl font-serif font-bold text-[#a43716]">
-              {data?.summary?.averagePercentage ?? 85}
+              {data?.summary?.averagePercentage ?? 0}
             </span>
             <span className="text-xs font-mono font-bold text-[#8b716a]">% Followed</span>
           </div>

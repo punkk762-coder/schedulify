@@ -3,7 +3,7 @@ import { prisma } from "../db";
 import { todayUtc, subDays, addDays, formatInTz } from "../dates";
 import { requireUserMiddleware } from "../auth";
 import { cacheService } from "../cache";
-import { WINTER_ARC_PHASES, getWinterArcPhase, getNextWinterArcPhase } from "../winterArc";
+
 
 const router = Router();
 
@@ -106,6 +106,38 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
         }
       }
 
+      // Extract off-plan / different meals logged across the window
+      const differentMeals = activityLogs
+        .filter((l) => l.activityType === "OFF_PLAN_MEAL" || l.activityType === "DIFFERENT_MEAL")
+        .map((l) => {
+          let extra = { calories: l.caloriesBurned || 0, protein: 0, carbs: 0, fat: 0, mealSlot: "Extra", notes: "" };
+          try {
+            if (l.notes) extra = { ...extra, ...JSON.parse(l.notes) };
+          } catch {}
+          return {
+            id: l.id,
+            date: formatInTz(l.date, "yyyy-MM-dd"),
+            title: l.title,
+            calories: Number(extra.calories) || Number(l.caloriesBurned) || 0,
+            protein: Number(extra.protein) || 0,
+            carbs: Number(extra.carbs) || 0,
+            fat: Number(extra.fat) || 0,
+            mealSlot: extra.mealSlot || "Extra",
+            notes: extra.notes || "",
+            time: formatInTz(l.createdAt, "HH:mm"),
+          };
+        });
+
+      // Add off-plan calories into daily breakdown
+      for (const dm of differentMeals) {
+        if (dailyBreakdown[dm.date]) {
+          dailyBreakdown[dm.date].calories += dm.calories;
+          dailyBreakdown[dm.date].protein += dm.protein;
+          dailyBreakdown[dm.date].carbs += dm.carbs;
+          dailyBreakdown[dm.date].fat += dm.fat;
+        }
+      }
+
       let bestDayRate = -1;
       let bestDayLabel = "N/A";
       for (const key of Object.keys(dailyBreakdown)) {
@@ -138,7 +170,8 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
         rate: stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0,
       })).sort((a, b) => b.total - a.total);
 
-      // Average Nutrition computation
+      // Average Nutrition computation (planned + off-plan)
+      const totalOffPlanCalories = differentMeals.reduce((acc, m) => acc + m.calories, 0);
       let totalCalories = 0;
       let totalProtein = 0;
       let totalCarbs = 0;
@@ -411,105 +444,7 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
         },
       ];
 
-      const currentPhaseConfig = getWinterArcPhase(currentMonthKey);
-      const nextPhaseConfig = getNextWinterArcPhase(currentMonthKey);
 
-      const lastDayOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0)).getUTCDate();
-      const currentDayOfMonth = today.getUTCDate();
-      const daysRemainingInMonth = Math.max(0, lastDayOfMonth - currentDayOfMonth);
-
-      const effectiveDailySteps = averageStepsPerDay > 0 ? averageStepsPerDay : (totalWalkMinutes > 0 ? 6000 : 0);
-
-      const winterArc = {
-        currentPhase: {
-          phaseNumber: currentPhaseConfig.phaseNumber,
-          monthKey: currentPhaseConfig.monthKey,
-          monthName: currentPhaseConfig.monthName,
-          title: currentPhaseConfig.title,
-          subtitle: currentPhaseConfig.subtitle,
-          theme: currentPhaseConfig.theme,
-          physiqueMilestone: currentPhaseConfig.physiqueMilestone,
-          targetWeightKg: targetWeight,
-          currentWeightKg: currentWeight,
-          dailyStepsTarget: targetSteps,
-          dailyWaterTargetMl: activeMonthlyGoal?.dailyWaterTargetMl || currentPhaseConfig.dailyWaterTargetMl,
-          weeklyWorkoutsTarget: activeMonthlyGoal?.weeklyWorkoutsTarget || currentPhaseConfig.weeklyWorkoutsTarget,
-          daysRemainingInPhase: daysRemainingInMonth,
-          status: activeMonthlyGoal?.status || "IN_PROGRESS",
-          isTransitionDue: daysRemainingInMonth <= 1 || activeMonthlyGoal?.status === "ACHIEVED",
-        },
-        comparison: {
-          whatWasExpected: {
-            targetWeightKg: targetWeight,
-            dailySteps: targetSteps,
-            dailyWaterMl: activeMonthlyGoal?.dailyWaterTargetMl || currentPhaseConfig.dailyWaterTargetMl,
-            dailyCalories: currentPhaseConfig.expectedCaloricIntake,
-            dailyProtein: currentPhaseConfig.expectedProteinGrams,
-            targetAdherencePct: 85,
-          },
-          whatWeHadDone: {
-            currentWeightKg: currentWeight,
-            averageDailySteps: effectiveDailySteps,
-            averageDailyWaterMl: averageHydrationMl,
-            averageDailyCalories: averageNutrition.calories,
-            averageDailyProtein: averageNutrition.protein,
-            actualAdherencePct: adherence,
-            streakDays: streak,
-          },
-          variance: {
-            weightKgDelta: parseFloat((currentWeight - targetWeight).toFixed(1)),
-            stepsDelta: effectiveDailySteps - targetSteps,
-            waterMlDelta: averageHydrationMl - (activeMonthlyGoal?.dailyWaterTargetMl || currentPhaseConfig.dailyWaterTargetMl),
-            proteinGramsDelta: averageNutrition.protein - currentPhaseConfig.expectedProteinGrams,
-            adherencePctDelta: adherence - 85,
-          },
-        },
-        aiRecommendations: [
-          effectiveDailySteps >= targetSteps
-            ? `Step standard exceeded by ${(effectiveDailySteps - targetSteps).toLocaleString()} steps/day! Ready to elevate baseline to ${nextPhaseConfig ? nextPhaseConfig.dailyStepsTarget.toLocaleString() : 12000} steps.`
-            : `Step cadence is currently ${effectiveDailySteps.toLocaleString()} / ${targetSteps.toLocaleString()}. Add a non-negotiable 25-minute evening walk to bridge the ${Math.abs(targetSteps - effectiveDailySteps).toLocaleString()} step gap.`,
-          averageNutrition.protein >= 140
-            ? `Protein standard is solid at ~${averageNutrition.protein}g/day, preserving lean muscle mass and supporting muscular recovery.`
-            : `Protein intake is trailing (~${averageNutrition.protein}g vs 150g target). Add a post-workout whey isolate shake or 200g Greek yogurt snack.`,
-          averageHydrationMl >= 2500
-            ? `Hydration is dialed in at ${averageHydrationMl}ml/day, optimizing nutrient absorption and muscle cell volumization.`
-            : `Hydration standard at ${averageHydrationMl}ml needs escalation to 3,000ml to maximize performance and cellular recovery.`,
-          nextPhaseConfig
-            ? `Next Phase Target: ${nextPhaseConfig.title} (${nextPhaseConfig.monthName}). Objective: ${nextPhaseConfig.physiqueMilestone}.`
-            : `Final Phase: Maintain peak aesthetic dry conditioning and routine mastery.`,
-        ],
-        nextPhasePreview: nextPhaseConfig
-          ? {
-              phaseNumber: nextPhaseConfig.phaseNumber,
-              monthKey: nextPhaseConfig.monthKey,
-              monthName: nextPhaseConfig.monthName,
-              title: nextPhaseConfig.title,
-              subtitle: nextPhaseConfig.subtitle,
-              theme: nextPhaseConfig.theme,
-              targetWeightKg: nextPhaseConfig.targetWeightKg,
-              dailyStepsTarget: nextPhaseConfig.dailyStepsTarget,
-              dailyWaterTargetMl: nextPhaseConfig.dailyWaterTargetMl,
-              weeklyWorkoutsTarget: nextPhaseConfig.weeklyWorkoutsTarget,
-              physiqueMilestone: nextPhaseConfig.physiqueMilestone,
-              aiFocusPrompt: nextPhaseConfig.aiFocusPrompt,
-            }
-          : null,
-        allPhases: WINTER_ARC_PHASES.map((p) => {
-          const mg = monthlyGoals.find((g) => g.month === p.monthKey);
-          return {
-            phaseNumber: p.phaseNumber,
-            monthKey: p.monthKey,
-            monthName: p.monthName,
-            title: p.title,
-            theme: p.theme,
-            targetWeightKg: mg?.targetWeightKg || p.targetWeightKg,
-            dailyStepsTarget: mg?.dailyStepsTarget || p.dailyStepsTarget,
-            physiqueMilestone: p.physiqueMilestone,
-            status: mg?.status || (p.monthKey === currentMonthKey ? "ACTIVE" : p.phaseNumber < currentPhaseConfig.phaseNumber ? "COMPLETED" : "UPCOMING"),
-            retrospective: mg?.routineChanges || null,
-          };
-        }),
-      };
 
       return {
         summary: {
@@ -530,6 +465,17 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
         },
         averageNutrition,
         macroDistribution,
+        deviations: {
+          totalCount: differentMeals.length,
+          totalCalories: totalOffPlanCalories,
+          items: differentMeals,
+        },
+        caloriesSummary: {
+          totalPlanned: Math.max(0, totalCalories - totalOffPlanCalories),
+          totalOffPlan: totalOffPlanCalories,
+          totalAll: totalCalories,
+          averageDaily: Math.round(totalCalories / divisor),
+        },
         dailyTrend: Object.values(dailyBreakdown),
         categoryBreakdown,
         insights,
@@ -557,7 +503,7 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
           unchanged: unchangedItems,
           changed: changedOrAdaptedItems,
         },
-        winterArc,
+
       };
     });
 
@@ -568,151 +514,6 @@ router.get("/analytics", requireUserMiddleware, async (req: Request, res: Respon
   }
 });
 
-router.post("/analytics/phase-transition", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
-  try {
-    const today = todayUtc();
-    const currentMonthKey = formatInTz(today, "yyyy-MM");
-    const {
-      completedMonthKey = currentMonthKey,
-      nextMonthKey,
-      actualWeightKg,
-      nextTargetWeightKg,
-      nextDailyStepsTarget,
-      nextDailyWaterTargetMl,
-      nextWeeklyWorkoutsTarget,
-      notes,
-    } = req.body || {};
 
-    const completedPhase = getWinterArcPhase(completedMonthKey);
-    const resolvedNextPhase = nextMonthKey
-      ? getWinterArcPhase(nextMonthKey)
-      : getNextWinterArcPhase(completedMonthKey) || completedPhase;
-
-    // Fetch occurrences and logs for completed month
-    const startOfCompletedMonth = new Date(`${completedMonthKey}-01T00:00:00.000Z`);
-    const nextMonthDate = new Date(startOfCompletedMonth);
-    nextMonthDate.setUTCMonth(nextMonthDate.getUTCMonth() + 1);
-
-    const [monthOccurrences, monthActivityLogs, existingCompletedGoal] = await Promise.all([
-      prisma.occurrence.findMany({
-        where: {
-          scheduledDate: { gte: startOfCompletedMonth, lt: nextMonthDate },
-        },
-        include: { completion: true },
-      }),
-      prisma.activityLog.findMany({
-        where: {
-          date: { gte: startOfCompletedMonth, lt: nextMonthDate },
-        },
-      }),
-      prisma.monthlyGoal.findUnique({
-        where: { month: completedMonthKey },
-      }),
-    ]);
-
-    const totalOcc = monthOccurrences.length;
-    const completedOcc = monthOccurrences.filter((o) => o.status === "COMPLETED").length;
-    const actualAdherence = totalOcc > 0 ? Math.round((completedOcc / totalOcc) * 100) : 85;
-    const totalSteps = monthActivityLogs.reduce((acc, l) => acc + (l.steps || 0), 0);
-    const daysWithLogs = new Set(monthActivityLogs.map((l) => l.date.toISOString().split("T")[0])).size || 1;
-    const avgSteps = Math.round(totalSteps / daysWithLogs) || completedPhase.dailyStepsTarget;
-
-    const actualWeight = actualWeightKg !== undefined ? Number(actualWeightKg) : (existingCompletedGoal?.currentWeightKg || 72.4);
-
-    // Build Retrospective
-    const retrospective = {
-      phaseNumber: completedPhase.phaseNumber,
-      monthKey: completedMonthKey,
-      monthName: completedPhase.monthName,
-      title: completedPhase.title,
-      completedAt: new Date().toISOString(),
-      whatWeDone: [
-        `Maintained ${actualAdherence}% routine habit adherence across ${totalOcc} logged schedule occurrences.`,
-        `Averaged ${avgSteps.toLocaleString()} daily steps (${totalSteps.toLocaleString()} cumulative steps in phase).`,
-        `Current recorded weight: ${actualWeight}kg (target was ${completedPhase.targetWeightKg}kg).`,
-        `Zero historical data loss: all daily workout sessions and nutrition logs preserved in database ledger.`,
-      ],
-      whatWasExpected: [
-        `Target weight: ${completedPhase.targetWeightKg}kg with baseline metabolic anchoring.`,
-        `Daily step volume: ${completedPhase.dailyStepsTarget.toLocaleString()} steps/day.`,
-        `Daily hydration standard: ${completedPhase.dailyWaterTargetMl.toLocaleString()} ml.`,
-        `Minimum 85% habit consistency on foundational morning sunlight and evening mobility.`,
-      ],
-      aiRecommendations: [
-        `Phase ${resolvedNextPhase.phaseNumber} Escalation: Transition target weight to ${nextTargetWeightKg || resolvedNextPhase.targetWeightKg}kg.`,
-        `Step Volume: Scale target to ${(nextDailyStepsTarget || resolvedNextPhase.dailyStepsTarget).toLocaleString()} steps/day.`,
-        `Hydration & Creatine: Lock ${(nextDailyWaterTargetMl || resolvedNextPhase.dailyWaterTargetMl).toLocaleString()} ml daily to maintain intracellular muscle fullness.`,
-        `Tactical Focus: ${resolvedNextPhase.aiFocusPrompt}`,
-      ],
-      gainsSummary: `Phase ${completedPhase.phaseNumber} finalized. Habit consistency locked at ${actualAdherence}%. Ready for ${resolvedNextPhase.title}.`,
-      notes: notes || undefined,
-    };
-
-    // 1. Archive completed month in MonthlyGoal
-    await prisma.monthlyGoal.upsert({
-      where: { month: completedMonthKey },
-      create: {
-        month: completedMonthKey,
-        targetWeightKg: completedPhase.targetWeightKg,
-        currentWeightKg: actualWeight,
-        dailyStepsTarget: completedPhase.dailyStepsTarget,
-        dailyWaterTargetMl: completedPhase.dailyWaterTargetMl,
-        status: "ACHIEVED",
-        velocityNotes: retrospective.gainsSummary,
-        routineChanges: retrospective as any,
-      },
-      update: {
-        currentWeightKg: actualWeight,
-        status: "ACHIEVED",
-        velocityNotes: retrospective.gainsSummary,
-        routineChanges: retrospective as any,
-      },
-    });
-
-    // 2. Upsert next month in MonthlyGoal
-    const newPhaseTargetWeight = nextTargetWeightKg !== undefined ? Number(nextTargetWeightKg) : resolvedNextPhase.targetWeightKg;
-    const newPhaseDailySteps = nextDailyStepsTarget !== undefined ? Number(nextDailyStepsTarget) : resolvedNextPhase.dailyStepsTarget;
-    const newPhaseWater = nextDailyWaterTargetMl !== undefined ? Number(nextDailyWaterTargetMl) : resolvedNextPhase.dailyWaterTargetMl;
-    const newPhaseWorkouts = nextWeeklyWorkoutsTarget !== undefined ? Number(nextWeeklyWorkoutsTarget) : resolvedNextPhase.weeklyWorkoutsTarget;
-
-    const newGoal = await prisma.monthlyGoal.upsert({
-      where: { month: resolvedNextPhase.monthKey },
-      create: {
-        month: resolvedNextPhase.monthKey,
-        targetWeightKg: newPhaseTargetWeight,
-        currentWeightKg: actualWeight,
-        dailyStepsTarget: newPhaseDailySteps,
-        dailyWaterTargetMl: newPhaseWater,
-        weeklyWorkoutsTarget: newPhaseWorkouts,
-        status: "IN_PROGRESS",
-        velocityNotes: `Phase ${resolvedNextPhase.phaseNumber} launched: ${resolvedNextPhase.subtitle}`,
-      },
-      update: {
-        targetWeightKg: newPhaseTargetWeight,
-        currentWeightKg: actualWeight,
-        dailyStepsTarget: newPhaseDailySteps,
-        dailyWaterTargetMl: newPhaseWater,
-        weeklyWorkoutsTarget: newPhaseWorkouts,
-        status: "IN_PROGRESS",
-        velocityNotes: `Phase ${resolvedNextPhase.phaseNumber} updated: ${resolvedNextPhase.subtitle}`,
-      },
-    });
-
-    // Invalidate caches
-    await cacheService.invalidatePattern("analytics:");
-    await cacheService.invalidatePattern("today_payload:");
-
-    res.json({
-      success: true,
-      message: `Successfully transitioned to ${resolvedNextPhase.title}! New AI Dashboard deployed.`,
-      retrospective,
-      activeGoal: newGoal,
-      nextPhase: resolvedNextPhase,
-    });
-  } catch (err) {
-    console.error("POST /api/analytics/phase-transition error:", err);
-    res.status(500).json({ error: "Failed to transition Winter Arc phase" });
-  }
-});
 
 export default router;

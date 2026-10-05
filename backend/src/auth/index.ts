@@ -3,6 +3,7 @@ export {
   setSession,
   destroySession,
   requireUserMiddleware,
+  requireAdminMiddleware,
   requireMomMiddleware,
   verifyPin,
   type SessionData,

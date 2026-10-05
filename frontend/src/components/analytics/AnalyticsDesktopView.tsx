@@ -7,7 +7,8 @@ import { CategoryAdherenceList } from "./CategoryAdherenceList";
 import { AiCoachingInsights } from "./AiCoachingInsights";
 import { DailyGoalsAndBodyStatus } from "./DailyGoalsAndBodyStatus";
 import { MonthlyEvolutionCard } from "./MonthlyEvolutionCard";
-import { WinterArcCockpit } from "./WinterArcCockpit";
+import { DifferentMealsAnalyticsCard, DeviationsData, CaloriesSummaryData } from "./DifferentMealsAnalyticsCard";
+
 
 interface AnalyticsResponse {
   summary: {
@@ -103,7 +104,8 @@ interface AnalyticsResponse {
       velocityNotes?: string;
     } | null;
   };
-  winterArc?: any;
+  deviations?: DeviationsData;
+  caloriesSummary?: CaloriesSummaryData;
 }
 
 interface AnalyticsDesktopViewProps {
@@ -221,8 +223,7 @@ export function AnalyticsDesktopView({
         </div>
       </div>
 
-      {/* ─── Winter Arc 5-Phase Physique Command Center & AI Transition ─── */}
-      <WinterArcCockpit winterArc={data.winterArc} onRefresh={onRefresh} />
+
 
       {/* ─── Middle Section: Trend Chart & Daily Goals ─── */}
       <div className="grid grid-cols-12 gap-6 items-start">
@@ -239,6 +240,13 @@ export function AnalyticsDesktopView({
           <AiCoachingInsights insights={insights} adherence={summary.adherence} />
         </div>
       </div>
+
+      {/* ─── Nutrition Deviations & What You Had Differently ─── */}
+      <DifferentMealsAnalyticsCard
+        deviations={data.deviations}
+        caloriesSummary={data.caloriesSummary}
+        daysCount={daysCount}
+      />
 
       {/* ─── Monthly Milestone Progression & Longitudinal Velocity ─── */}
       {monthlyMilestone && (

@@ -59,6 +59,15 @@ export type DailyStats = {
   replaced: number;
   completionRate: number;
   nutrition: NutritionValues;
+  plannedNutrition?: NutritionValues;
+  consumedCalories?: number;
+  plannedCalories?: number;
+  offPlanCalories?: number;
+  offPlanProtein?: number;
+  offPlanCarbs?: number;
+  offPlanFat?: number;
+  totalCalories?: number;
+  hasDifferentFood?: boolean;
 };
 
 export type WeeklyStats = {

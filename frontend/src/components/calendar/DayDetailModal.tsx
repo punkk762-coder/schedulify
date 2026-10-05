@@ -80,8 +80,29 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({ day, onClose }) 
           </div>
         </div>
 
+        {/* ─── Off-Plan / Different Meals Audit ─── */}
+        {day.differentMeals && day.differentMeals.length > 0 && (
+          <div className="p-3.5 rounded-2xl bg-[#ffdad6]/40 border border-[#ba1a1a]/30 space-y-2 shrink-0">
+            <div className="flex items-center justify-between text-xs font-bold text-[#ba1a1a] font-mono">
+              <span className="flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Different / Off-Plan Meals ({day.differentMeals.length})</span>
+              </span>
+              <span>+{day.differentMeals.reduce((acc, m) => acc + (m.calories || 0), 0)} kcal</span>
+            </div>
+            <div className="divide-y divide-[#ba1a1a]/20 text-xs">
+              {day.differentMeals.map((dm) => (
+                <div key={dm.id} className="py-1.5 flex items-center justify-between gap-2">
+                  <span className="font-semibold text-[#1f1b14] truncate">{dm.title}</span>
+                  <span className="font-mono font-bold text-[#ba1a1a] shrink-0">+{dm.calories} kcal</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ─── Change Audit Notification ─── */}
-        {day.hasChanges && (
+        {day.hasChanges && (!day.differentMeals || day.differentMeals.length === 0) && (
           <div className="p-3.5 rounded-2xl bg-[#fff5f2] border border-[#a43716]/30 space-y-1.5 shrink-0">
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#a43716] font-mono">
               <span>🔄</span>

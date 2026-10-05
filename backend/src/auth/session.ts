@@ -5,6 +5,7 @@ export interface SessionData {
   role: "USER" | "MOM";
   name?: string;
   calorieTarget?: number;
+  isAdmin?: boolean;
 }
 
 export function getSession(req: Request): SessionData | null {
@@ -40,6 +41,16 @@ export function requireUserMiddleware(req: Request, res: Response, next: NextFun
   const session = getSession(req);
   if (!session || session.role !== "USER") {
     res.status(401).json({ error: "Unauthorized — USER role required" });
+    return;
+  }
+  (req as Request & { user: SessionData }).user = session;
+  next();
+}
+
+export function requireAdminMiddleware(req: Request, res: Response, next: NextFunction) {
+  const session = getSession(req);
+  if (!session || session.role !== "USER" || !session.isAdmin) {
+    res.status(403).json({ error: "Forbidden — Admin privileges required" });
     return;
   }
   (req as Request & { user: SessionData }).user = session;

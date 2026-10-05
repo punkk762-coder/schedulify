@@ -103,14 +103,14 @@ export function ThreeAiCore({
     observer.observe(container);
 
     // 4. Animation loop
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
     let spinBoost = 1.0;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       if (!isVisible) return;
 
-      const elapsed = clock.getElapsedTime();
+      const elapsed = (performance.now() - startTime) * 0.001;
       const speedMult = isThinking ? 3.2 : 1.0;
 
       outerMesh.rotation.x += 0.015 * speedMult * spinBoost;

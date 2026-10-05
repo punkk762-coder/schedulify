@@ -17,10 +17,25 @@ export const analyticsService = {
     const missed = occurrences.filter((o) => o.status === "MISSED").length;
     const replaced = occurrences.filter((o) => o.status === "REPLACED").length;
 
-    // Sum nutrition from actual snapshots, fall back to planned
-    const nutrition = occurrences.reduce<NutritionValues>((acc, occ) => {
+    // Sum nutrition consumed from completed and replaced items
+    const consumedOccs = occurrences.filter((o) => o.status === "COMPLETED" || o.status === "REPLACED");
+    const nutrition = consumedOccs.reduce<NutritionValues>((acc, occ) => {
       const snap =
         occ.nutritionSnapshots?.[0] || occ.routineItem?.nutritionSnapshots?.[0];
+      if (snap) {
+        acc.calories = (acc.calories || 0) + (snap.calories || 0);
+        acc.protein = (acc.protein || 0) + (snap.protein || 0);
+        acc.carbs = (acc.carbs || 0) + (snap.carbs || 0);
+        acc.fat = (acc.fat || 0) + (snap.fat || 0);
+        acc.fiber = (acc.fiber || 0) + (snap.fiber || 0);
+      }
+      return acc;
+    }, {});
+
+    // Planned nutrition across all scheduled items
+    const plannedNutrition = occurrences.reduce<NutritionValues>((acc, occ) => {
+      const snap =
+        occ.routineItem?.nutritionSnapshots?.[0] || occ.nutritionSnapshots?.[0];
       if (snap) {
         acc.calories = (acc.calories || 0) + (snap.calories || 0);
         acc.protein = (acc.protein || 0) + (snap.protein || 0);
@@ -40,6 +55,7 @@ export const analyticsService = {
       replaced,
       completionRate: total > 0 ? completed / total : 0,
       nutrition,
+      plannedNutrition,
     };
   },
 

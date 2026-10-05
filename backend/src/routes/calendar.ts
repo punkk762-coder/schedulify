@@ -11,11 +11,20 @@ router.get("/calendar", requireUserMiddleware, async (req: Request, res: Respons
     const today = todayUtc();
     const todayKey = formatInTz(today, "yyyy-MM-dd");
 
-    const rawMonth = (req.query.month as string) || formatInTz(today, "yyyy-MM");
-    // Normalize format "YYYY-MM"
-    const [yearStr, monthStr] = rawMonth.split("-");
-    const year = parseInt(yearStr, 10) || today.getUTCFullYear();
-    const month = parseInt(monthStr, 10) || today.getUTCMonth() + 1;
+    let year = today.getUTCFullYear();
+    let month = today.getUTCMonth() + 1;
+
+    const rawMonthQuery = req.query.month as string;
+    const rawYearQuery = req.query.year as string;
+
+    if (rawMonthQuery && rawMonthQuery.includes("-")) {
+      const parts = rawMonthQuery.split("-");
+      year = parseInt(parts[0], 10) || year;
+      month = parseInt(parts[1], 10) || month;
+    } else {
+      if (rawYearQuery) year = parseInt(rawYearQuery, 10) || year;
+      if (rawMonthQuery) month = parseInt(rawMonthQuery, 10) || month;
+    }
 
     const monthKey = `${year}-${String(month).padStart(2, "0")}`;
 
@@ -59,6 +68,8 @@ router.get("/calendar", requireUserMiddleware, async (req: Request, res: Respons
     }
 
     const dayActivityMap: Record<string, { steps: number; waterMl: number }> = {};
+    const dayDifferentMealsMap: Record<string, Array<{ id: string; title: string; calories: number; notes?: string }>> = {};
+
     for (const log of activityLogs) {
       const dKey = formatInTz(log.date, "yyyy-MM-dd");
       if (!dayActivityMap[dKey]) dayActivityMap[dKey] = { steps: 0, waterMl: 0 };
@@ -66,6 +77,20 @@ router.get("/calendar", requireUserMiddleware, async (req: Request, res: Respons
       if (log.notes && log.notes.includes("ml")) {
         const parsed = parseInt(log.notes, 10);
         if (!isNaN(parsed)) dayActivityMap[dKey].waterMl += parsed;
+      }
+
+      if (log.activityType === "OFF_PLAN_MEAL" || log.activityType === "DIFFERENT_MEAL") {
+        if (!dayDifferentMealsMap[dKey]) dayDifferentMealsMap[dKey] = [];
+        let extra = { calories: log.caloriesBurned || 0, notes: "" };
+        try {
+          if (log.notes) extra = { ...extra, ...JSON.parse(log.notes) };
+        } catch {}
+        dayDifferentMealsMap[dKey].push({
+          id: log.id,
+          title: log.title,
+          calories: Number(extra.calories) || Number(log.caloriesBurned) || 0,
+          notes: extra.notes || log.notes || "",
+        });
       }
     }
 
@@ -83,6 +108,7 @@ router.get("/calendar", requireUserMiddleware, async (req: Request, res: Respons
       const dayOfWeek = formatInTz(dayDate, "EEE");
       const dayOccs = dayOccurrencesMap[dateKey] || [];
       const dayAct = dayActivityMap[dateKey] || { steps: 0, waterMl: 0 };
+      const dayDiffMeals = dayDifferentMealsMap[dateKey] || [];
 
       const totalItems = dayOccs.length;
       const completedItems = dayOccs.filter((o) => o.status === "COMPLETED").length;
@@ -108,6 +134,11 @@ router.get("/calendar", requireUserMiddleware, async (req: Request, res: Respons
         }
       }
 
+      for (const dm of dayDiffMeals) {
+        changes.push(`Off-Plan Food: "${dm.title}" (+${dm.calories} kcal)`);
+      }
+
+      const hasDifferentFood = dayDiffMeals.length > 0 || replacedItems > 0;
       const hasChanges = changes.length > 0;
       if (hasChanges) totalChangedCount += changes.length;
 
@@ -147,6 +178,8 @@ router.get("/calendar", requireUserMiddleware, async (req: Request, res: Respons
         replacedItems,
         percentage,
         hasChanges,
+        hasDifferentFood,
+        differentMeals: dayDiffMeals,
         changes,
         waterMl: dayWater,
         waterPercentage,

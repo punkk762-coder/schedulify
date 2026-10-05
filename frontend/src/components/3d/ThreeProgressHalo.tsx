@@ -144,13 +144,13 @@ export function ThreeProgressHalo({
     observer.observe(container);
 
     // 6. Animation Loop
-    let clock = new THREE.Clock();
+    const startTime = performance.now();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       if (!isVisible) return;
 
-      const elapsed = clock.getElapsedTime();
+      const elapsed = (performance.now() - startTime) * 0.001;
 
       // Gyro gimbal rotations
       outerRing.rotation.x = Math.sin(elapsed * 0.8) * 0.3;

@@ -66,6 +66,7 @@ export type DailyStats = {
   replaced: number;
   completionRate: number;
   nutrition: NutritionValues;
+  plannedNutrition?: NutritionValues;
 };
 
 export type WeeklyStats = {

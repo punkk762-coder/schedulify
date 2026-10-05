@@ -7,6 +7,7 @@ import { TodayDesktopView } from "@/components/today/TodayDesktopView";
 import { TodayMobileView } from "@/components/today/TodayMobileView";
 import { SwapModal } from "@/components/today/SwapModal";
 import { CompleteConfirmationModal } from "@/components/today/CompleteConfirmationModal";
+import { DifferentMealModal } from "@/components/today/DifferentMealModal";
 import { TodaySkeleton } from "@/components/ui/BoneyardSkeleton";
 import { useToast } from "@/components/ui/Toast";
 
@@ -26,6 +27,17 @@ export default function TodayPage() {
   const [addingWater, setAddingWater] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [waterIntakeMl, setWaterIntakeMl] = useState(0);
+  const [differentMeals, setDifferentMeals] = useState<any[]>([]);
+  const [weightInfo, setWeightInfo] = useState<{
+    todayWeight: number | null;
+    defaultWeight: number;
+    isLoggedToday: boolean;
+  }>({
+    todayWeight: null,
+    defaultWeight: 74,
+    isLoggedToday: false,
+  });
+  const [isDifferentMealModalOpen, setIsDifferentMealModalOpen] = useState(false);
   const [activity, setActivity] = useState<{
     totalSteps: number;
     totalDistanceKm: number;
@@ -63,6 +75,8 @@ export default function TodayPage() {
         if (data.monthlyGoal) setMonthlyGoal(data.monthlyGoal);
         if (data.recovery) setRecovery(data.recovery);
         if (data.winterArc) setWinterArc(data.winterArc);
+        if (data.differentMeals) setDifferentMeals(data.differentMeals);
+        if (data.weightInfo) setWeightInfo(data.weightInfo);
       }
     } catch (err) {
       console.error("Error refreshing today routine:", err);
@@ -90,6 +104,8 @@ export default function TodayPage() {
           if (data.monthlyGoal) setMonthlyGoal(data.monthlyGoal);
           if (data.recovery) setRecovery(data.recovery);
           if (data.winterArc) setWinterArc(data.winterArc);
+          if (data.differentMeals) setDifferentMeals(data.differentMeals);
+          if (data.weightInfo) setWeightInfo(data.weightInfo);
         }
       } catch (err) {
         console.error("Error loading today routine:", err);
@@ -347,6 +363,9 @@ export default function TodayPage() {
           submittingQuick={submittingQuick}
           pendingActionIds={pendingActionIds}
           addingWater={addingWater}
+          differentMeals={differentMeals}
+          weightInfo={weightInfo}
+          onOpenDifferentMealModal={() => setIsDifferentMealModalOpen(true)}
         />
       </div>
 
@@ -377,6 +396,9 @@ export default function TodayPage() {
           submittingQuick={submittingQuick}
           pendingActionIds={pendingActionIds}
           addingWater={addingWater}
+          differentMeals={differentMeals}
+          weightInfo={weightInfo}
+          onOpenDifferentMealModal={() => setIsDifferentMealModalOpen(true)}
         />
       </div>
 
@@ -393,6 +415,14 @@ export default function TodayPage() {
         isOpen={Boolean(confirmingOccurrence)}
         onClose={() => setConfirmingOccurrence(null)}
         onConfirm={handleConfirmComplete}
+      />
+
+      {/* Off-Plan / Different Food Modal */}
+      <DifferentMealModal
+        isOpen={isDifferentMealModalOpen}
+        onClose={() => setIsDifferentMealModalOpen(false)}
+        onSaved={refreshData}
+        occurrences={occurrences}
       />
     </div>
   );
