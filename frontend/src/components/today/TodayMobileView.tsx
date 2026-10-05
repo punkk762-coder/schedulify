@@ -12,6 +12,8 @@ interface TodayMobileViewProps {
   waterIntakeMl: number;
   recovery?: FitnessRecoveryData | null;
   onUpdateRecovery?: (data: Partial<FitnessRecoveryData>) => void;
+  winterArc?: any;
+  onRefresh?: () => void;
   activity?: {
     totalSteps: number;
     totalDistanceKm: number;
@@ -55,6 +57,8 @@ export function TodayMobileView({
   waterIntakeMl,
   recovery,
   onUpdateRecovery,
+  winterArc,
+  onRefresh,
   activity,
   monthlyGoal,
   activeCategory,
@@ -213,7 +217,10 @@ export function TodayMobileView({
       {/* ─── Fitness Beyond The Gym (Recovery, NEAT & Supplement Stack) ─── */}
       <FitnessRecoveryCockpit
         recovery={recovery}
-        onUpdateRecovery={onUpdateRecovery}
+        initialSteps={activity?.totalSteps || 0}
+        initialWater={waterIntakeMl || 0}
+        winterArc={winterArc}
+        onRefresh={onRefresh}
       />
 
       {/* ─── Magnificent "Next Up" Focus Card ─── */}

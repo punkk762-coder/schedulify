@@ -133,17 +133,19 @@ export const DailyGoalsAndBodyStatus: React.FC<DailyGoalsAndBodyStatusProps> = (
               </div>
             </div>
 
-            {/* End of Month Predictive Horizon */}
-            <div className="p-3.5 rounded-xl bg-[#f7faef] border border-[#52652a]/30">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-[#52652a] animate-pulse" />
-                <span className="text-[10px] uppercase font-bold text-[#52652a] font-mono tracking-wider">
-                  End of Month Trajectory
+            {/* Winter Arc Phase 1 & Phase 2 Horizon */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#1f1b14] via-[#2d1e16] to-[#1f1b14] text-white border border-[#a43716]/40">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] uppercase font-bold text-[#ffdbd1] font-mono tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#a43716] animate-pulse" />
+                  Winter Arc — Phase 1 (October) → Phase 2 (November)
+                </span>
+                <span className="text-[10px] font-mono font-bold bg-[#a43716] px-2 py-0.5 rounded-full text-white">
+                  Phase 1 Active
                 </span>
               </div>
-              <p className="text-xs text-[#1f1b14] leading-relaxed">
-                {bodyStatus?.monthlyProjection ||
-                  "Awaiting initial occurrence completions to project monthly trajectory."}
+              <p className="text-xs text-white/85 leading-relaxed mt-1">
+                October is Phase 1 Foundation: locking in 72kg target, 8,000 daily steps, and 1,800 kcal adherence. On November 1st, our AI will deliver your complete October Retrospective and launch Phase 2 with your newly customized November goals.
               </p>
             </div>
           </div>

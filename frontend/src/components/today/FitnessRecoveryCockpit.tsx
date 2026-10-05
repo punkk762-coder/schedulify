@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export interface FitnessRecoveryData {
   sleepHours: number;
@@ -8,155 +8,513 @@ export interface FitnessRecoveryData {
   recoveryScore: number;
   sorenessLevel: "NONE" | "LOW" | "MILD" | "HIGH";
   electrolytesTaken: boolean;
+  electrolytesTimeOfDay?: string;
   creatineTaken: boolean;
+  creatineTimeOfDay?: string;
   magnesiumTaken: boolean;
+  magnesiumTimeOfDay?: string;
   morningMobilityDone: boolean;
   postMealWalksCount: number;
 }
 
+export interface WinterArcData {
+  phase: number;
+  phaseTitle: string;
+  phaseSubtitle: string;
+  daysRemainingInPhase: number;
+  targetWeightKg?: number;
+  currentWeightKg?: number;
+  dailyStepsTarget?: number;
+  dailyWaterTargetMl?: number;
+  isPhaseTransitionDue?: boolean;
+  phase2PreviewNotes?: string;
+}
+
 interface FitnessRecoveryCockpitProps {
   recovery?: FitnessRecoveryData | null;
-  onUpdateRecovery?: (data: Partial<FitnessRecoveryData>) => void;
+  initialSteps?: number;
+  initialWater?: number;
+  winterArc?: WinterArcData | null;
+  onRefresh?: () => void;
 }
 
 export function FitnessRecoveryCockpit({
   recovery,
-  onUpdateRecovery,
+  initialSteps = 0,
+  initialWater = 0,
+  winterArc,
+  onRefresh,
 }: FitnessRecoveryCockpitProps) {
-  const [localData, setLocalData] = useState<FitnessRecoveryData>({
+  // Sliders state
+  const [steps, setSteps] = useState<number>(initialSteps);
+  const [stepsTimeOfDay, setStepsTimeOfDay] = useState<string>("EVENING");
+
+  const [waterMl, setWaterMl] = useState<number>(initialWater);
+  const [waterTimeOfDay, setWaterTimeOfDay] = useState<string>("AFTERNOON");
+
+  // Recovery & Supplements state
+  const [localRecovery, setLocalRecovery] = useState<FitnessRecoveryData>({
     sleepHours: recovery?.sleepHours ?? 7.5,
     sleepQuality: recovery?.sleepQuality ?? "OPTIMAL",
     recoveryScore: recovery?.recoveryScore ?? 85,
     sorenessLevel: recovery?.sorenessLevel ?? "LOW",
     electrolytesTaken: recovery?.electrolytesTaken ?? false,
+    electrolytesTimeOfDay: recovery?.electrolytesTimeOfDay ?? "MORNING",
     creatineTaken: recovery?.creatineTaken ?? false,
+    creatineTimeOfDay: recovery?.creatineTimeOfDay ?? "MORNING",
     magnesiumTaken: recovery?.magnesiumTaken ?? false,
+    magnesiumTimeOfDay: recovery?.magnesiumTimeOfDay ?? "NIGHT",
     morningMobilityDone: recovery?.morningMobilityDone ?? false,
     postMealWalksCount: recovery?.postMealWalksCount ?? 0,
   });
 
-  const [saving, setSaving] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "saving" | "synced" | "manual_locked">("synced");
+  const [lastLockedAt, setLastLockedAt] = useState<string | null>(null);
 
-  // Sync with prop when updated externally
-  React.useEffect(() => {
+  // Sync with props
+  useEffect(() => {
+    if (initialSteps > 0 && steps === 0) setSteps(initialSteps);
+  }, [initialSteps, steps]);
+
+  useEffect(() => {
+    if (initialWater > 0 && waterMl === 0) setWaterMl(initialWater);
+  }, [initialWater, waterMl]);
+
+  useEffect(() => {
     if (recovery) {
-      setLocalData((prev) => ({ ...prev, ...recovery }));
+      setLocalRecovery((prev) => ({ ...prev, ...recovery }));
     }
   }, [recovery]);
 
-  const handlePatch = async (patch: Partial<FitnessRecoveryData>) => {
-    const updated = { ...localData, ...patch };
-    setLocalData(updated);
-    if (onUpdateRecovery) {
-      onUpdateRecovery(patch);
-    }
+  // Debounced auto-save timer ref
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    try {
-      setSaving(true);
-      await fetch("/api/today/fitness-recovery", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
+  const triggerPersist = (isManual: boolean = false) => {
+    setSyncStatus("saving");
+    fetch("/api/today/telemetry-submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        steps,
+        stepsTimeOfDay,
+        waterIntakeMl: waterMl,
+        waterTimeOfDay,
+        recovery: localRecovery,
+        isManualSubmit: isManual,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (isManual) {
+            setSyncStatus("manual_locked");
+            setLastLockedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+          } else {
+            setSyncStatus("synced");
+          }
+          if (data.recovery) {
+            setLocalRecovery((prev) => ({ ...prev, ...data.recovery }));
+          }
+          if (onRefresh) onRefresh();
+        }
+      })
+      .catch((err) => {
+        console.error("Telemetry auto-commit error:", err);
+        setSyncStatus("idle");
       });
-    } catch (err) {
-      console.error("Failed to sync fitness recovery telemetry:", err);
-    } finally {
-      setSaving(false);
-    }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-[#52652a] bg-[#d4eca2]/60 border-[#52652a]/30";
-    if (score >= 60) return "text-[#b45309] bg-[#fef3c7] border-[#f59e0b]/30";
-    return "text-[#93000a] bg-[#ffdad6] border-[#ba1a1a]/30";
+  // Auto-save whenever user drags sliders or toggles, so if they forget to submit, it commits automatically!
+  const queueAutoSave = () => {
+    setSyncStatus("saving");
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      triggerPersist(false);
+    }, 850);
   };
+
+  // Steps drag handler
+  const handleStepsChange = (val: number) => {
+    setSteps(val);
+    queueAutoSave();
+  };
+
+  // Water drag handler
+  const handleWaterChange = (val: number) => {
+    setWaterMl(val);
+    queueAutoSave();
+  };
+
+  // Recovery patch handler
+  const handleRecoveryPatch = (patch: Partial<FitnessRecoveryData>) => {
+    setLocalRecovery((prev) => ({ ...prev, ...patch }));
+    queueAutoSave();
+  };
+
+  const distanceKm = parseFloat((steps * 0.000762).toFixed(2));
+  const caloriesBurned = Math.round(steps * 0.04);
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-[#dfc0b7] shadow-xs space-y-4">
-      {/* ─── Header: Non-Gym Fitness & Recovery Cockpit ─── */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#dfc0b7]/70">
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="w-2 h-2 rounded-full bg-[#52652a] animate-pulse" />
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#52652a]">
-              Fitness Beyond The Gym
+    <div className="bg-white rounded-3xl p-5 border border-[#dfc0b7] shadow-xs space-y-5">
+      {/* ─── WINTER ARC PHASE 1 / PHASE 2 HUD ─── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1f1b14] via-[#33241b] to-[#1f1b14] p-4 text-white shadow-sm border border-[#a43716]/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#a43716] animate-pulse" />
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#ffdbd1]">
+              {winterArc?.phaseTitle || "Winter Arc — Phase 1"}
             </span>
           </div>
-          <h4 className="text-sm font-serif font-bold text-[#1f1b14]">
-            Recovery, NEAT &amp; Bio-Hygiene
-          </h4>
+          <span className="text-[10px] font-mono font-bold bg-[#a43716] px-2.5 py-0.5 rounded-full text-white">
+            {winterArc?.daysRemainingInPhase ?? 26} Days Remaining
+          </span>
         </div>
 
-        <div
-          className={`px-3 py-1 rounded-full border text-xs font-mono font-bold flex items-center gap-1.5 ${getScoreColor(
-            localData.recoveryScore
-          )}`}
-        >
-          <span>⚡</span>
-          <span>{localData.recoveryScore}% Readiness</span>
+        <div className="mt-2 flex items-baseline justify-between">
+          <div>
+            <h3 className="text-base font-serif font-bold text-white">
+              {winterArc?.phaseSubtitle || "October Foundation & Consistency"}
+            </h3>
+            <p className="text-[11px] text-white/70 mt-0.5">
+              Goal: {winterArc?.targetWeightKg || 72}kg Target • 8,000 daily steps • 1,800 kcal
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-[9px] font-mono uppercase text-white/60 block">Transition</span>
+            <span className="text-xs font-mono font-bold text-[#d4eca2]">Phase 2 on Nov 1</span>
+          </div>
+        </div>
+
+        <div className="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-white/75 flex items-center justify-between">
+          <span>📊 Full October Analytics Retrospective will unlock at Phase 1 end</span>
+          <span className="text-[#ffdbd1] font-bold">Auto-Logged</span>
         </div>
       </div>
 
-      {/* ─── PILLAR 1: Sleep Duration & Muscle Soreness ─── */}
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        {/* Sleep Hours */}
-        <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#58423c]">
-              Sleep Rest
+      {/* ─── DRAG SLIDER 1: STEPS & TIME OF DAY ─── */}
+      <div className="p-4 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#a43716] block">
+              Movement Drag Slider
             </span>
-            <span className="text-xs">🌙</span>
+            <h4 className="text-xs font-serif font-bold text-[#1f1b14]">
+              Steps &amp; Time of Day
+            </h4>
           </div>
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() =>
-                handlePatch({ sleepHours: Math.max(4, parseFloat((localData.sleepHours - 0.5).toFixed(1))) })
-              }
-              className="w-6 h-6 rounded-lg bg-white border border-[#dfc0b7] text-[#1f1b14] font-bold text-xs hover:bg-[#faebd9] flex items-center justify-center active:scale-90"
-            >
-              -
-            </button>
-            <div className="text-center font-mono">
-              <span className="text-base font-bold text-[#1f1b14]">{localData.sleepHours}</span>
-              <span className="text-[10px] text-[#58423c] ml-1">hrs</span>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                handlePatch({ sleepHours: Math.min(12, parseFloat((localData.sleepHours + 0.5).toFixed(1))) })
-              }
-              className="w-6 h-6 rounded-lg bg-white border border-[#dfc0b7] text-[#1f1b14] font-bold text-xs hover:bg-[#faebd9] flex items-center justify-center active:scale-90"
-            >
-              +
-            </button>
+
+          <div className="text-right font-mono">
+            <span className="text-base font-bold text-[#1f1b14]">{steps.toLocaleString()}</span>
+            <span className="text-[11px] text-[#58423c] ml-1">/ 8,000 target</span>
           </div>
         </div>
 
-        {/* DOMS & Muscle Soreness */}
-        <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#58423c]">
-              Muscle Soreness
-            </span>
-            <span className="text-xs">🩹</span>
+        {/* Tactile Range Drag Slider */}
+        <div className="space-y-1">
+          <input
+            type="range"
+            min="0"
+            max="20000"
+            step="250"
+            value={steps}
+            onChange={(e) => handleStepsChange(Number(e.target.value))}
+            className="w-full h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-[#a43716] border border-[#dfc0b7]"
+          />
+          <div className="flex items-center justify-between text-[10px] font-mono text-[#8b716a]">
+            <span>0</span>
+            <span>5k</span>
+            <span>8k (Goal)</span>
+            <span>12k</span>
+            <span>20k</span>
           </div>
-          <div className="grid grid-cols-3 gap-1 pt-0.5">
+        </div>
+
+        {/* Step Telemetry & Time Slot Selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-[#dfc0b7]/60">
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-[#58423c]">📍 {distanceKm} km</span>
+            <span className="text-[#a43716] font-semibold">🔥 {caloriesBurned} kcal</span>
+          </div>
+
+          <div className="flex items-center gap-1">
             {[
-              { id: "NONE", label: "Fresh", color: "text-[#52652a] bg-[#d4eca2]/60" },
-              { id: "LOW", label: "Mild", color: "text-[#b45309] bg-[#fef3c7]" },
-              { id: "HIGH", label: "High", color: "text-[#93000a] bg-[#ffdad6]" },
+              { id: "MORNING", label: "🌅 Morning" },
+              { id: "AFTERNOON", label: "☀️ Aft" },
+              { id: "EVENING", label: "🌆 Eve" },
+              { id: "NIGHT", label: "🌙 Night" },
+            ].map((slot) => {
+              const active = stepsTimeOfDay === slot.id;
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => {
+                    setStepsTimeOfDay(slot.id);
+                    queueAutoSave();
+                  }}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                    active
+                      ? "bg-[#a43716] text-white border-[#a43716] shadow-2xs"
+                      : "bg-white text-[#58423c] border-[#dfc0b7] hover:bg-[#faebd9]"
+                  }`}
+                >
+                  {slot.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── DRAG SLIDER 2: WATER INTAKE & TIME OF DAY ─── */}
+      <div className="p-4 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0284c7] block">
+              Hydration Drag Slider
+            </span>
+            <h4 className="text-xs font-serif font-bold text-[#1f1b14]">
+              Water Intake (ml) &amp; Time Slot
+            </h4>
+          </div>
+
+          <div className="text-right font-mono">
+            <span className="text-base font-bold text-[#0284c7]">{waterMl.toLocaleString()}</span>
+            <span className="text-[11px] text-[#58423c] ml-1">/ 3,000 ml</span>
+          </div>
+        </div>
+
+        {/* Water Range Drag Slider */}
+        <div className="space-y-1">
+          <input
+            type="range"
+            min="0"
+            max="5000"
+            step="100"
+            value={waterMl}
+            onChange={(e) => handleWaterChange(Number(e.target.value))}
+            className="w-full h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-[#0284c7] border border-[#dfc0b7]"
+          />
+          <div className="flex items-center justify-between text-[10px] font-mono text-[#8b716a]">
+            <span>0</span>
+            <span>1.5L</span>
+            <span>3L (Target)</span>
+            <span>4L</span>
+            <span>5L</span>
+          </div>
+        </div>
+
+        {/* Quick Water Time Slot Buttons */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-[#dfc0b7]/60">
+          <div className="text-xs font-mono text-[#58423c]">
+            💧 {((waterMl / 3000) * 100).toFixed(0)}% Hydrated
+          </div>
+
+          <div className="flex items-center gap-1">
+            {[
+              { id: "MORNING", label: "🌅 Wakeup" },
+              { id: "AFTERNOON", label: "☀️ Mid-day" },
+              { id: "EVENING", label: "🌆 Evening" },
+              { id: "NIGHT", label: "🌙 Night" },
+            ].map((slot) => {
+              const active = waterTimeOfDay === slot.id;
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => {
+                    setWaterTimeOfDay(slot.id);
+                    queueAutoSave();
+                  }}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                    active
+                      ? "bg-[#0284c7] text-white border-[#0284c7] shadow-2xs"
+                      : "bg-white text-[#58423c] border-[#dfc0b7] hover:bg-[#faebd9]"
+                  }`}
+                >
+                  {slot.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── MICRONUTRIENTS & SUPPLEMENTS WITH TIMING ─── */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8b716a]">
+            Daily Micronutrients &amp; Non-Gym Saturation
+          </span>
+          <span className="text-[10px] font-mono text-[#52652a] font-semibold">
+            {localRecovery.recoveryScore}% Readiness
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          {/* Creatine */}
+          <div className="p-3 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-2">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleRecoveryPatch({ creatineTaken: !localRecovery.creatineTaken })}
+                className="flex items-center gap-1.5 font-bold text-left"
+              >
+                <span>⚡</span>
+                <span className={localRecovery.creatineTaken ? "text-[#52652a]" : "text-[#1f1b14]"}>
+                  Creatine (5g)
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRecoveryPatch({ creatineTaken: !localRecovery.creatineTaken })}
+                className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] font-bold ${
+                  localRecovery.creatineTaken ? "bg-[#52652a] text-white border-[#52652a]" : "bg-white border-[#dfc0b7]"
+                }`}
+              >
+                {localRecovery.creatineTaken ? "✓" : ""}
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
+              {["MORNING", "POST_WORKOUT", "NIGHT"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleRecoveryPatch({ creatineTimeOfDay: t, creatineTaken: true })}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                    localRecovery.creatineTimeOfDay === t && localRecovery.creatineTaken
+                      ? "bg-[#52652a] text-white"
+                      : "bg-white/80 text-[#58423c] border border-[#dfc0b7]"
+                  }`}
+                >
+                  {t === "POST_WORKOUT" ? "Post" : t === "MORNING" ? "Morn" : "Night"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Electrolytes */}
+          <div className="p-3 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-2">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleRecoveryPatch({ electrolytesTaken: !localRecovery.electrolytesTaken })}
+                className="flex items-center gap-1.5 font-bold text-left"
+              >
+                <span>🧂</span>
+                <span className={localRecovery.electrolytesTaken ? "text-[#52652a]" : "text-[#1f1b14]"}>
+                  Pink Salt/Lime
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRecoveryPatch({ electrolytesTaken: !localRecovery.electrolytesTaken })}
+                className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] font-bold ${
+                  localRecovery.electrolytesTaken ? "bg-[#52652a] text-white border-[#52652a]" : "bg-white border-[#dfc0b7]"
+                }`}
+              >
+                {localRecovery.electrolytesTaken ? "✓" : ""}
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
+              {["MORNING", "AFTERNOON"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleRecoveryPatch({ electrolytesTimeOfDay: t, electrolytesTaken: true })}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                    localRecovery.electrolytesTimeOfDay === t && localRecovery.electrolytesTaken
+                      ? "bg-[#52652a] text-white"
+                      : "bg-white/80 text-[#58423c] border border-[#dfc0b7]"
+                  }`}
+                >
+                  {t === "MORNING" ? "Wakeup" : "Mid-day"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Magnesium */}
+          <div className="p-3 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-2">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleRecoveryPatch({ magnesiumTaken: !localRecovery.magnesiumTaken })}
+                className="flex items-center gap-1.5 font-bold text-left"
+              >
+                <span>💊</span>
+                <span className={localRecovery.magnesiumTaken ? "text-[#52652a]" : "text-[#1f1b14]"}>
+                  Magnesium (400mg)
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRecoveryPatch({ magnesiumTaken: !localRecovery.magnesiumTaken })}
+                className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] font-bold ${
+                  localRecovery.magnesiumTaken ? "bg-[#52652a] text-white border-[#52652a]" : "bg-white border-[#dfc0b7]"
+                }`}
+              >
+                {localRecovery.magnesiumTaken ? "✓" : ""}
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
+              {["PRE_BED", "NIGHT"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleRecoveryPatch({ magnesiumTimeOfDay: t, magnesiumTaken: true })}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                    localRecovery.magnesiumTimeOfDay === t && localRecovery.magnesiumTaken
+                      ? "bg-[#52652a] text-white"
+                      : "bg-white/80 text-[#58423c] border border-[#dfc0b7]"
+                  }`}
+                >
+                  {t === "PRE_BED" ? "30m Bed" : "Bedtime"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── SLEEP REST & SORENESS ─── */}
+      <div className="grid grid-cols-2 gap-3 text-xs">
+        {/* Sleep Slider */}
+        <div className="p-3 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold uppercase text-[#58423c]">Sleep Duration</span>
+            <span className="font-mono font-bold text-sm text-[#1f1b14]">{localRecovery.sleepHours} hrs</span>
+          </div>
+          <input
+            type="range"
+            min="4"
+            max="12"
+            step="0.5"
+            value={localRecovery.sleepHours}
+            onChange={(e) => handleRecoveryPatch({ sleepHours: Number(e.target.value) })}
+            className="w-full h-2 bg-white rounded-lg appearance-none cursor-pointer accent-[#52652a] border border-[#dfc0b7]"
+          />
+        </div>
+
+        {/* DOMS & Muscle Soreness */}
+        <div className="p-3 rounded-2xl bg-[#fcf2e6] border border-[#dfc0b7] space-y-1.5">
+          <span className="text-[10px] font-mono font-bold uppercase text-[#58423c] block">Muscle Soreness</span>
+          <div className="grid grid-cols-3 gap-1">
+            {[
+              { id: "NONE", label: "Fresh", color: "bg-[#d4eca2]/70 text-[#141f00]" },
+              { id: "LOW", label: "Mild", color: "bg-[#fef3c7] text-[#b45309]" },
+              { id: "HIGH", label: "High", color: "bg-[#ffdad6] text-[#93000a]" },
             ].map((lvl) => {
-              const active = localData.sorenessLevel === lvl.id;
+              const active = localRecovery.sorenessLevel === lvl.id;
               return (
                 <button
                   key={lvl.id}
                   type="button"
-                  onClick={() => handlePatch({ sorenessLevel: lvl.id as "NONE" | "LOW" | "HIGH" })}
+                  onClick={() => handleRecoveryPatch({ sorenessLevel: lvl.id as any })}
                   className={`py-1 rounded-md text-[10px] font-bold border transition-all ${
-                    active
-                      ? `${lvl.color} border-current font-extrabold shadow-2xs scale-102`
-                      : "bg-white text-[#58423c] border-[#dfc0b7]/70 hover:bg-[#faebd9]"
+                    active ? `${lvl.color} border-current shadow-2xs font-extrabold` : "bg-white text-[#58423c] border-[#dfc0b7]"
                   }`}
                 >
                   {lvl.label}
@@ -167,147 +525,35 @@ export function FitnessRecoveryCockpit({
         </div>
       </div>
 
-      {/* ─── PILLAR 2: Daily Essential Supplement Stack (Non-Gym) ─── */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8b716a]">
-            Daily Micronutrient &amp; Saturation Stack
-          </span>
-          <span className="text-[10px] font-mono text-[#52652a]">Essential Health</span>
+      {/* ─── SUBMIT AT DAY END & AUTO-COMMIT BADGE ─── */}
+      <div className="pt-2 border-t border-[#dfc0b7]/70 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {syncStatus === "saving" && (
+            <span className="text-xs font-mono font-semibold text-[#a43716] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#a43716] animate-ping" />
+              Auto-syncing to DB...
+            </span>
+          )}
+          {syncStatus === "synced" && (
+            <span className="text-xs font-mono font-semibold text-[#52652a] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#52652a]" />
+              Auto-synced to DB (Safe if forgotten)
+            </span>
+          )}
+          {syncStatus === "manual_locked" && (
+            <span className="text-xs font-mono font-bold text-[#52652a] flex items-center gap-1.5 bg-[#d4eca2]/50 px-2.5 py-1 rounded-lg">
+              ✓ Day End Locked in DB at {lastLockedAt}
+            </span>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-          {/* Creatine */}
-          <button
-            type="button"
-            onClick={() => handlePatch({ creatineTaken: !localData.creatineTaken })}
-            className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between ${
-              localData.creatineTaken
-                ? "bg-[#d4eca2]/50 border-[#52652a] text-[#141f00] font-bold shadow-2xs"
-                : "bg-[#fcf2e6] border-[#dfc0b7] text-[#1f1b14] hover:bg-[#faebd9]"
-            }`}
-          >
-            <div>
-              <div className="text-[11px] font-semibold flex items-center gap-1">
-                <span>⚡</span> Creatine (5g)
-              </div>
-              <div className="text-[9px] text-[#58423c] mt-0.5">Cellular ATP</div>
-            </div>
-            <span
-              className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] font-bold ${
-                localData.creatineTaken
-                  ? "bg-[#52652a] text-white border-[#52652a]"
-                  : "bg-white border-[#dfc0b7]"
-              }`}
-            >
-              {localData.creatineTaken ? "✓" : ""}
-            </span>
-          </button>
-
-          {/* Morning Electrolytes */}
-          <button
-            type="button"
-            onClick={() => handlePatch({ electrolytesTaken: !localData.electrolytesTaken })}
-            className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between ${
-              localData.electrolytesTaken
-                ? "bg-[#d4eca2]/50 border-[#52652a] text-[#141f00] font-bold shadow-2xs"
-                : "bg-[#fcf2e6] border-[#dfc0b7] text-[#1f1b14] hover:bg-[#faebd9]"
-            }`}
-          >
-            <div>
-              <div className="text-[11px] font-semibold flex items-center gap-1">
-                <span>🧂</span> Electrolytes
-              </div>
-              <div className="text-[9px] text-[#58423c] mt-0.5">Pink Salt/Lime</div>
-            </div>
-            <span
-              className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] font-bold ${
-                localData.electrolytesTaken
-                  ? "bg-[#52652a] text-white border-[#52652a]"
-                  : "bg-white border-[#dfc0b7]"
-              }`}
-            >
-              {localData.electrolytesTaken ? "✓" : ""}
-            </span>
-          </button>
-
-          {/* Night Magnesium */}
-          <button
-            type="button"
-            onClick={() => handlePatch({ magnesiumTaken: !localData.magnesiumTaken })}
-            className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between ${
-              localData.magnesiumTaken
-                ? "bg-[#d4eca2]/50 border-[#52652a] text-[#141f00] font-bold shadow-2xs"
-                : "bg-[#fcf2e6] border-[#dfc0b7] text-[#1f1b14] hover:bg-[#faebd9]"
-            }`}
-          >
-            <div>
-              <div className="text-[11px] font-semibold flex items-center gap-1">
-                <span>💊</span> Magnesium
-              </div>
-              <div className="text-[9px] text-[#58423c] mt-0.5">Delta Sleep</div>
-            </div>
-            <span
-              className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] font-bold ${
-                localData.magnesiumTaken
-                  ? "bg-[#52652a] text-white border-[#52652a]"
-                  : "bg-white border-[#dfc0b7]"
-              }`}
-            >
-              {localData.magnesiumTaken ? "✓" : ""}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* ─── PILLAR 3: Post-Meal Digestion Walks & Joint Mobility ─── */}
-      <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#dfc0b7]/60">
-        {/* Post-Meal Strolls (Glucose Blunting) */}
-        <div className="p-3 rounded-xl bg-[#fcf2e6] border border-[#dfc0b7] flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-mono font-bold uppercase text-[#58423c] block">
-              Post-Meal Walks
-            </span>
-            <div className="text-xs font-semibold text-[#1f1b14] mt-0.5">
-              {localData.postMealWalksCount} recorded
-            </div>
-            <div className="text-[9px] text-[#52652a] font-medium">-30% Glucose Spike</div>
-          </div>
-          <button
-            type="button"
-            onClick={() => handlePatch({ postMealWalksCount: localData.postMealWalksCount + 1 })}
-            className="px-2.5 py-1.5 rounded-lg bg-[#a43716] hover:bg-[#862201] text-white font-bold text-[10px] active:scale-95 shadow-xs"
-          >
-            +1 Walk
-          </button>
-        </div>
-
-        {/* 5-Min Morning Mobility & Posture Decompression */}
         <button
           type="button"
-          onClick={() => handlePatch({ morningMobilityDone: !localData.morningMobilityDone })}
-          className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-            localData.morningMobilityDone
-              ? "bg-[#d4eca2]/50 border-[#52652a] text-[#141f00] font-bold shadow-2xs"
-              : "bg-[#fcf2e6] border-[#dfc0b7] text-[#1f1b14] hover:bg-[#faebd9]"
-          }`}
+          onClick={() => triggerPersist(true)}
+          className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-[#52652a] hover:bg-[#3b4d14] text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
         >
-          <div>
-            <span className="text-[10px] font-mono font-bold uppercase text-[#58423c] block">
-              Joint Mobility
-            </span>
-            <div className="text-xs font-semibold mt-0.5">5-Min Decompression</div>
-            <div className="text-[9px] text-[#58423c]">Cat-cow &amp; Hip flexors</div>
-          </div>
-          <span
-            className={`w-5 h-5 rounded-md border flex items-center justify-center text-xs font-bold shrink-0 ml-1 ${
-              localData.morningMobilityDone
-                ? "bg-[#52652a] text-white border-[#52652a]"
-                : "bg-white border-[#dfc0b7]"
-            }`}
-          >
-            {localData.morningMobilityDone ? "✓" : ""}
-          </span>
+          <span>💾</span>
+          <span>Submit Day End Telemetry &amp; Lock in DB</span>
         </button>
       </div>
     </div>

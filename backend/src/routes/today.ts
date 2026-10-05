@@ -122,6 +122,22 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
       }
     }
 
+    const currentDayOfMonth = today.getUTCDate();
+    const daysRemainingInOct = Math.max(0, 31 - currentDayOfMonth);
+
+    const winterArc = {
+      phase: monthKey === "2026-10" ? 1 : 2,
+      phaseTitle: monthKey === "2026-10" ? "Winter Arc — Phase 1" : "Winter Arc — Phase 2",
+      phaseSubtitle: monthKey === "2026-10" ? "October Foundation & Metabolic Baseline" : "November Progressive Overload",
+      targetWeightKg: currentMonthGoal?.targetWeightKg || 72,
+      currentWeightKg: currentMonthGoal?.currentWeightKg || 74,
+      daysRemainingInPhase: daysRemainingInOct,
+      dailyStepsTarget: currentMonthGoal?.dailyStepsTarget || 8000,
+      dailyWaterTargetMl: 3000,
+      isPhaseTransitionDue: daysRemainingInOct <= 1,
+      phase2PreviewNotes: "October retrospective locked in. Phase 2 (Nov) will recalibrate strength milestones and higher step intensity.",
+    };
+
     const payload = {
       date: formatInTz(today, "EEEE, MMMM d, yyyy"),
       isoDate: today.toISOString(),
@@ -129,6 +145,7 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
       stats,
       waterIntakeMl,
       recovery: recoveryData,
+      winterArc,
       activity: {
         totalSteps,
         totalDistanceKm,
@@ -363,6 +380,190 @@ router.post("/today/fitness-recovery", requireUserMiddleware, async (req: Reques
   } catch (err) {
     console.error("POST /api/today/fitness-recovery error:", err);
     res.status(500).json({ error: "Failed to update fitness recovery" });
+  }
+});
+
+// Unified Day-End Telemetry Submit (Drag Sliders for Steps, Water, Creatine/Electrolytes + Auto/Manual Lock)
+router.post("/today/telemetry-submit", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const today = todayUtc();
+    const dateKey = today.toISOString().split("T")[0];
+    const {
+      steps = 0,
+      stepsTimeOfDay = "EVENING",
+      waterIntakeMl = 0,
+      waterTimeOfDay = "AFTERNOON",
+      recovery = {},
+      isManualSubmit = false,
+    } = req.body || {};
+
+    // 1. Upsert or update today's steps in ActivityLog
+    if (steps > 0) {
+      const distanceKm = parseFloat((steps * 0.000762).toFixed(2));
+      const caloriesBurned = Math.round(steps * 0.04);
+      const title = `${steps.toLocaleString()} Steps (${stepsTimeOfDay.toLowerCase()})`;
+
+      const existingStepLog = await prisma.activityLog.findFirst({
+        where: { date: today, activityType: "STEPS" },
+      });
+
+      if (existingStepLog) {
+        await prisma.activityLog.update({
+          where: { id: existingStepLog.id },
+          data: {
+            steps,
+            distanceKm,
+            caloriesBurned,
+            title,
+            notes: `${stepsTimeOfDay} logged • ${distanceKm} km • ${caloriesBurned} kcal`,
+          },
+        });
+      } else {
+        await prisma.activityLog.create({
+          data: {
+            date: today,
+            activityType: "STEPS",
+            title,
+            steps,
+            distanceKm,
+            caloriesBurned,
+            notes: `${stepsTimeOfDay} logged • ${distanceKm} km • ${caloriesBurned} kcal`,
+          },
+        });
+      }
+    }
+
+    // 2. Update water intake in DB occurrence
+    if (waterIntakeMl > 0) {
+      let rawOccurrences = await occurrenceService.getForDate(today);
+      let hydrationOcc = rawOccurrences.find((o) => o.routineItem.category === "HYDRATION");
+      if (!hydrationOcc) {
+        let plan = await prisma.plan.findFirst({ where: { status: "ACTIVE" } }) || await prisma.plan.findFirst();
+        if (plan) {
+          let item = await prisma.routineItem.findFirst({ where: { planId: plan.id, category: "HYDRATION" } });
+          if (!item) {
+            item = await prisma.routineItem.create({
+              data: { planId: plan.id, title: "Hydration Protocol (3L Target)", category: "HYDRATION" },
+            });
+          }
+          let sched = await prisma.schedule.findFirst({ where: { routineItemId: item.id } });
+          if (!sched) {
+            sched = await prisma.schedule.create({
+              data: { routineItemId: item.id, recurrenceRule: "DAILY", scheduledTime: "08:00", effectiveFrom: today },
+            });
+          }
+          hydrationOcc = await prisma.occurrence.upsert({
+            where: { scheduleId_scheduledDate: { scheduleId: sched.id, scheduledDate: today } },
+            update: {},
+            create: { scheduleId: sched.id, routineItemId: item.id, scheduledDate: today, scheduledTime: "08:00", status: "PENDING" },
+            include: { completion: true, routineItem: true },
+          }) as any;
+        }
+      }
+
+      if (hydrationOcc) {
+        const nextStatus = waterIntakeMl >= 3000 ? "COMPLETED" : "PARTIAL";
+        await prisma.occurrence.update({
+          where: { id: hydrationOcc.id },
+          data: { status: nextStatus },
+        });
+        await prisma.completion.upsert({
+          where: { occurrenceId: hydrationOcc.id },
+          update: {
+            status: nextStatus,
+            notes: waterIntakeMl.toString(),
+            completedAt: new Date(),
+          },
+          create: {
+            occurrenceId: hydrationOcc.id,
+            status: nextStatus,
+            notes: waterIntakeMl.toString(),
+          },
+        });
+      }
+    }
+
+    // 3. Upsert or update recovery telemetry
+    let recoveryLog = await prisma.activityLog.findFirst({
+      where: { date: today, activityType: "RECOVERY" },
+    });
+
+    let currentRec = {
+      sleepHours: 7.5,
+      sleepQuality: "OPTIMAL",
+      sorenessLevel: "LOW",
+      electrolytesTaken: false,
+      electrolytesTimeOfDay: "MORNING",
+      creatineTaken: false,
+      creatineTimeOfDay: "MORNING",
+      magnesiumTaken: false,
+      magnesiumTimeOfDay: "NIGHT",
+      morningMobilityDone: false,
+      postMealWalksCount: 0,
+      recoveryScore: 85,
+    };
+
+    if (recoveryLog?.notes) {
+      try {
+        currentRec = { ...currentRec, ...JSON.parse(recoveryLog.notes) };
+      } catch {}
+    }
+
+    const mergedRec = { ...currentRec, ...recovery };
+    let score = 0;
+    if (mergedRec.sleepHours >= 7.5) score += 35;
+    else if (mergedRec.sleepHours >= 6.5) score += 25;
+    else score += 15;
+
+    if (mergedRec.sorenessLevel === "NONE") score += 20;
+    else if (mergedRec.sorenessLevel === "LOW") score += 18;
+    else if (mergedRec.sorenessLevel === "MILD") score += 12;
+    else score += 5;
+
+    if (mergedRec.electrolytesTaken) score += 10;
+    if (mergedRec.creatineTaken) score += 10;
+    if (mergedRec.magnesiumTaken) score += 10;
+    if (mergedRec.morningMobilityDone) score += 15;
+
+    mergedRec.recoveryScore = Math.min(100, score);
+
+    if (recoveryLog) {
+      await prisma.activityLog.update({
+        where: { id: recoveryLog.id },
+        data: {
+          notes: JSON.stringify(mergedRec),
+          title: `Recovery Readiness (${mergedRec.recoveryScore}%)`,
+        },
+      });
+    } else {
+      await prisma.activityLog.create({
+        data: {
+          date: today,
+          activityType: "RECOVERY",
+          title: `Recovery Readiness (${mergedRec.recoveryScore}%)`,
+          notes: JSON.stringify(mergedRec),
+        },
+      });
+    }
+
+    // Invalidate caches
+    await cache.del(`today_payload:${dateKey}`);
+    await cache.del(`occurrences:${dateKey}`);
+    await cache.invalidatePattern("today_payload:");
+    await cache.invalidatePattern("occurrences:");
+    await cache.invalidatePattern("analytics:");
+
+    res.json({
+      success: true,
+      message: isManualSubmit
+        ? "Day end telemetry locked in database successfully!"
+        : "Auto-synced telemetry to database.",
+      committedAt: new Date().toISOString(),
+      recovery: mergedRec,
+    });
+  } catch (err) {
+    console.error("POST /api/today/telemetry-submit error:", err);
+    res.status(500).json({ error: "Failed to submit day telemetry" });
   }
 });
 
