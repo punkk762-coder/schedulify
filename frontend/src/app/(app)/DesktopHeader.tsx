@@ -8,9 +8,8 @@ export default function DesktopHeader() {
 
   const navItems = [
     { label: "☀️ Today", href: "/today" },
-    { label: "🍲 Hearth", href: "/mom" },
-    { label: "💬 AI Coach", href: "/chat" },
     { label: "📊 Analytics", href: "/analytics" },
+    { label: "💬 AI Coach", href: "/chat" },
     { label: "📜 History", href: "/history" },
     { label: "⚙️ Settings", href: "/settings" },
   ];
@@ -45,7 +44,7 @@ export default function DesktopHeader() {
                 href={item.href}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                   isActive
-                    ? "bg-white text-[#1f1b14] shadow-2xs"
+                    ? "bg-white text-[#1f1b14] shadow-2xs font-bold"
                     : "text-[#58423c] hover:text-[#1f1b14]"
                 }`}
               >
@@ -55,15 +54,15 @@ export default function DesktopHeader() {
           })}
         </nav>
 
-        {/* Trailing Status Cluster: Hearth Sync + Timezone */}
+        {/* Trailing Status Cluster: Database Live Status + Timezone */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fcf2e6] border border-[#dfc0b7] text-xs text-[#58423c] font-medium whitespace-nowrap">
+          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fcf2e6] border border-[#dfc0b7] text-xs text-[#58423c] font-medium whitespace-nowrap font-mono">
             <span className="w-2 h-2 rounded-full bg-[#52652a] animate-pulse"></span>
-            <span>Hearth: <strong className="text-[#1f1b14]">Linked</strong></span>
+            <span>DB: <strong className="text-[#1f1b14]">PostgreSQL Live</strong></span>
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4eca2] text-[#3b4d14] border border-[#52652a]/30 text-xs font-semibold whitespace-nowrap font-mono">
-            <span>IST • Live</span>
+            <span>IST • Active</span>
           </div>
         </div>
       </div>

@@ -195,7 +195,7 @@ export function TodayMobileView({
           href="/mom"
           className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-2xl border border-[#52652a]/30 text-[#52652a] shadow-xs active:scale-95 transition-all text-xs font-bold whitespace-nowrap shrink-0"
         >
-          <span>🍲 Mom&apos;s Hearth ({queuedMeals})</span>
+          <span>🍲 Mom&apos;s Kitchen ({queuedMeals})</span>
         </Link>
         <Link
           href="/chat"
