@@ -32,6 +32,13 @@ export function todayUtc(tz: string = DEFAULT_TZ): Date {
 }
 
 /**
+ * Parse YYYY-MM-DD date string to start of day in app timezone as UTC Date.
+ */
+export function dateStrToUtc(dateStr: string, tz: string = DEFAULT_TZ): Date {
+  return fromZonedTime(`${dateStr}T00:00:00`, tz);
+}
+
+/**
  * Format a date in app timezone.
  */
 export function formatInTz(date: Date, fmt: string, tz: string = DEFAULT_TZ): string {

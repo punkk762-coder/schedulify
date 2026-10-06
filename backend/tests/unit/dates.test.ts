@@ -50,3 +50,11 @@ describe("matchesRecurrence", () => {
     expect(matchesRecurrence(monday, "ONCE", "UTC")).toBe(true);
   });
 });
+
+describe("dateStrToUtc", () => {
+  it("parses YYYY-MM-DD to UTC date in given timezone", async () => {
+    const { dateStrToUtc, formatInTz } = await import("../../src/dates");
+    const d = dateStrToUtc("2026-10-07", "Asia/Kolkata");
+    expect(formatInTz(d, "yyyy-MM-dd", "Asia/Kolkata")).toBe("2026-10-07");
+  });
+});

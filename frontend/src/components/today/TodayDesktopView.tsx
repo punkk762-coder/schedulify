@@ -395,7 +395,10 @@ export function TodayDesktopView({
           />
 
           {/* Mom's Kitchen Hub Link */}
-          <MomKitchenHub queuedCount={queuedMeals} />
+          <MomKitchenHub
+            queuedCount={queuedMeals}
+            meals={occurrences.filter((o) => o.category === "MEAL")}
+          />
 
           {/* Quick Links / Coach Quick Prompt */}
           <div className="bg-[#fcf2e6] rounded-2xl p-5 border border-[#dfc0b7] space-y-2.5">

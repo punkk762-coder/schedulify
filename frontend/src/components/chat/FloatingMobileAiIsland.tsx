@@ -114,13 +114,13 @@ export function FloatingMobileAiIsland() {
 
           <div className="w-full max-w-md mx-auto bg-[#14120e]/95 backdrop-blur-3xl text-white rounded-3xl border border-white/20 shadow-2xl p-4 space-y-3 max-h-[80vh] flex flex-col animate-in slide-in-from-bottom duration-250">
             {/* Top Notch & Island Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between pb-2.5 border-b border-white/15 shrink-0">
               <div className="flex items-center gap-2">
-                <ThreeAiCore isThinking={loading} size={24} />
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-white">
+                <ThreeAiCore isThinking={loading} size={26} />
+                <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
                   AI Routine Coach
                 </span>
-                <span className="text-[9px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-[#d4eca2]">
+                <span className="text-[11px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-[#d4eca2]">
                   Floating Assistant
                 </span>
               </div>
@@ -128,36 +128,36 @@ export function FloatingMobileAiIsland() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="w-7 h-7 rounded-full bg-white/10 border border-white/15 text-white/80 hover:text-white flex items-center justify-center text-xs font-bold active:scale-90 transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/10 border border-white/15 text-white/80 hover:text-white flex items-center justify-center text-sm font-bold active:scale-90 transition-all cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Messages Stream */}
-            <div className="flex-1 overflow-y-auto space-y-2.5 py-1 pr-1 text-xs">
+            <div className="flex-1 overflow-y-auto space-y-3 py-1 pr-1 text-sm">
               {messages.map((m) => {
                 const isUser = m.role === "USER";
                 return (
                   <div key={m.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`max-w-[85%] rounded-2xl p-3 leading-relaxed ${
+                      className={`max-w-[88%] rounded-2xl p-3.5 leading-relaxed ${
                         isUser
                           ? "bg-[#a43716] text-white rounded-br-xs font-medium"
-                          : "bg-white/10 border border-white/10 text-white rounded-bl-xs"
+                          : "bg-white/10 border border-white/15 text-white rounded-bl-xs"
                       }`}
                     >
                       {!isUser && (
-                        <span className="text-[9px] font-mono font-bold uppercase text-[#ffb5a0] block mb-0.5">
+                        <span className="text-xs font-mono font-bold uppercase text-[#ffb5a0] block mb-1">
                           Schedulfy Coach
                         </span>
                       )}
-                      <p className="whitespace-pre-wrap text-[11px]">{m.content}</p>
+                      <p className="whitespace-pre-wrap text-[13.5px] sm:text-[14px] leading-relaxed">{m.content}</p>
 
                       {m.actionType && (
-                        <div className="mt-1.5 pt-1 border-t border-white/15 flex items-center justify-between text-[9px] font-mono">
+                        <div className="mt-2 pt-1.5 border-t border-white/15 flex items-center justify-between text-[11px] font-mono">
                           <span className="text-[#d4eca2] font-bold">{m.actionType}</span>
-                          <span className="text-white/70">{m.actionStatus || "SUCCESS"}</span>
+                          <span className="text-white/80">{m.actionStatus || "SUCCESS"}</span>
                         </div>
                       )}
                     </div>
@@ -167,9 +167,9 @@ export function FloatingMobileAiIsland() {
 
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-white/10 border border-white/10 rounded-2xl px-3 py-2 text-[11px] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#ffb5a0] animate-ping" />
-                    <span className="text-white/80 italic font-serif">Analyzing routine...</span>
+                  <div className="bg-white/10 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#ffb5a0] animate-ping" />
+                    <span className="text-white/90 italic font-serif">Analyzing routine...</span>
                   </div>
                 </div>
               )}
@@ -177,14 +177,14 @@ export function FloatingMobileAiIsland() {
             </div>
 
             {/* Floating Prompt Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar shrink-0">
+            <div className="flex items-center gap-2 overflow-x-auto py-1.5 no-scrollbar shrink-0">
               {quickChips.map((chip, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleSendMessage(undefined, chip)}
                   disabled={loading}
-                  className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-[10px] text-white/90 whitespace-nowrap active:scale-95 transition-all shrink-0 cursor-pointer"
+                  className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-xs text-white/95 whitespace-nowrap active:scale-95 transition-all shrink-0 cursor-pointer font-medium"
                 >
                   {chip}
                 </button>
@@ -194,21 +194,21 @@ export function FloatingMobileAiIsland() {
             {/* Floating Input Pill */}
             <form
               onSubmit={(e) => handleSendMessage(e)}
-              className="bg-white/10 rounded-full p-1.5 border border-white/20 flex items-center gap-2 shrink-0"
+              className="bg-white/10 rounded-full p-2 border border-white/20 flex items-center gap-2 shrink-0"
             >
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Ask AI Coach or log routine..."
-                className="flex-1 bg-transparent px-3 text-xs text-white placeholder-white/50 outline-none font-medium"
+                className="flex-1 bg-transparent px-3 text-sm text-white placeholder-white/50 outline-none font-medium"
                 disabled={loading}
               />
 
               <button
                 type="submit"
                 disabled={!inputText.trim() || loading}
-                className="px-3.5 py-1.5 rounded-full bg-[#a43716] text-white text-xs font-bold disabled:opacity-40 active:scale-95 transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                className="px-4 py-2 rounded-full bg-[#a43716] text-white text-xs sm:text-sm font-bold disabled:opacity-40 active:scale-95 transition-all shadow-xs flex items-center gap-1 cursor-pointer"
               >
                 <span>Send</span>
                 <span>↑</span>

@@ -165,11 +165,10 @@ function parseKitchenComponents(
  * Kitchen service — Mom's view. Simplest possible query.
  */
 export const kitchenService = {
-  async getTodayMeals(): Promise<KitchenMeal[]> {
-    const today = todayUtc();
+  async getMealsForDate(date: Date): Promise<KitchenMeal[]> {
     const occurrences = await prisma.occurrence.findMany({
       where: {
-        scheduledDate: today,
+        scheduledDate: date,
         routineItem: { category: "MEAL" },
       },
       include: {
@@ -184,9 +183,12 @@ export const kitchenService = {
     });
 
     return occurrences.map((occ) => ({
+      id: occ.id,
       time: occ.scheduledTime,
       mealType: occ.routineItem.meal?.mealType || "OTHER",
       title: occ.routineItem.title,
+      status: occ.status,
+      isPrepared: occ.status === "COMPLETED",
       components: parseKitchenComponents(occ.routineItem.meal?.components || [], occ.routineItem.title),
       nutrition: occ.routineItem.nutritionSnapshots[0]
         ? {
@@ -198,4 +200,9 @@ export const kitchenService = {
         : undefined,
     }));
   },
+
+  async getTodayMeals(): Promise<KitchenMeal[]> {
+    return this.getMealsForDate(todayUtc());
+  },
 };
+

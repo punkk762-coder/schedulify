@@ -42,9 +42,12 @@ export type MealComponentInfo = {
 };
 
 export type KitchenMeal = {
+  id?: string;
   time: string;
   mealType: string;
   title: string;
+  status?: string;
+  isPrepared?: boolean;
   components: MealComponentInfo[];
   notes?: string;
   nutrition?: NutritionValues;

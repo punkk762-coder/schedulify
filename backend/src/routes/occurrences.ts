@@ -1,10 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { occurrenceService } from "../domain";
-import { requireUserMiddleware } from "../auth";
+import { requireUserMiddleware, requireMomMiddleware } from "../auth";
 
 const router = Router();
 
-router.post("/occurrences/:id/complete", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+router.post("/occurrences/:id/complete", requireMomMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { notes } = req.body || {};
@@ -16,7 +16,7 @@ router.post("/occurrences/:id/complete", requireUserMiddleware, async (req: Requ
   }
 });
 
-router.post("/occurrences/:id/undo", requireUserMiddleware, async (req: Request, res: Response): Promise<void> => {
+router.post("/occurrences/:id/undo", requireMomMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     await occurrenceService.undo(id);

@@ -558,23 +558,23 @@ function MobileTimelineCard({
           : "bg-white border-[#dfc0b7] shadow-2xs"
       }`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-lg shrink-0">{categoryIcons[item.category] || "✨"}</span>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-xl shrink-0">{categoryIcons[item.category] || "✨"}</span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-mono text-[11px] font-bold text-[#a43716]">{item.scheduledTime}</span>
-              <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded-full bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7]">
+              <span className="font-mono text-xs sm:text-sm font-bold text-[#a43716]">{item.scheduledTime}</span>
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7]">
                 {item.category}
               </span>
               {isDone && isRecentlyCompleted && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#52652a] text-white animate-pulse shadow-2xs">
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#52652a] text-white animate-pulse shadow-2xs">
                   ✓ Just Completed
                 </span>
               )}
             </div>
             <h4
-              className={`text-xs font-serif font-bold text-[#1f1b14] truncate mt-0.5 ${
+              className={`text-sm sm:text-base font-serif font-bold text-[#1f1b14] truncate mt-0.5 ${
                 isDone ? "line-through text-[#58423c]" : ""
               }`}
             >
@@ -590,11 +590,11 @@ function MobileTimelineCard({
               type="button"
               onClick={() => onUndo(item.id)}
               disabled={isActionPending}
-              className="text-[11px] font-bold text-[#52652a] px-2.5 py-1 rounded-xl bg-white border border-[#52652a]/30 shadow-2xs active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="text-xs font-bold text-[#52652a] px-3 py-1.5 rounded-xl bg-white border border-[#52652a]/30 shadow-2xs active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {isActionPending ? (
                 <>
-                  <span className="w-2.5 h-2.5 border-2 border-[#52652a] border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 border-2 border-[#52652a] border-t-transparent rounded-full animate-spin" />
                   <span>Restoring...</span>
                 </>
               ) : (
@@ -606,11 +606,11 @@ function MobileTimelineCard({
               type="button"
               onClick={() => onUndo(item.id)}
               disabled={isActionPending}
-              className="text-[11px] font-bold text-[#8b716a] px-2.5 py-1 rounded-xl bg-white border border-gray-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="text-xs font-bold text-[#8b716a] px-3 py-1.5 rounded-xl bg-white border border-gray-300 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {isActionPending ? (
                 <>
-                  <span className="w-2.5 h-2.5 border-2 border-[#8b716a] border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 border-2 border-[#8b716a] border-t-transparent rounded-full animate-spin" />
                   <span>Restoring...</span>
                 </>
               ) : (
@@ -624,7 +624,7 @@ function MobileTimelineCard({
                   type="button"
                   onClick={() => onOpenSwap(item)}
                   disabled={isActionPending}
-                  className="w-7 h-7 rounded-xl bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] text-xs font-bold flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 rounded-xl bg-[#fcf2e6] text-[#a43716] border border-[#dfc0b7] text-xs font-bold flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Swap meal"
                 >
                   ⇄
@@ -634,11 +634,11 @@ function MobileTimelineCard({
                 type="button"
                 onClick={() => onComplete(item.id)}
                 disabled={isActionPending}
-                className="w-8 h-8 rounded-xl bg-[#52652a] hover:bg-[#3f4f20] text-white text-xs font-bold flex items-center justify-center active:scale-95 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 rounded-xl bg-[#52652a] hover:bg-[#3f4f20] text-white text-xs font-bold flex items-center justify-center active:scale-95 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Mark complete"
               >
                 {isActionPending ? (
-                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   "✓"
                 )}
