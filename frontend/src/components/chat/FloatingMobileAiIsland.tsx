@@ -222,7 +222,7 @@ export function FloatingMobileAiIsland() {
       {!isOpen && (
         <aside
           aria-label="Floating AI Coach"
-          className="lg:hidden fixed bottom-24 right-4 sm:bottom-28 sm:right-6 z-40"
+          className="lg:hidden fixed bottom-6 right-4 sm:bottom-6 sm:right-6 z-40"
         >
           <button
             type="button"

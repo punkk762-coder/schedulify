@@ -33,20 +33,20 @@ export function ChatMobileView({
   ];
 
   return (
-    <div className="w-full flex flex-col h-[calc(100vh-170px)] pb-2 animate-in fade-in duration-300">
+    <div className="w-full flex flex-col h-[calc(100dvh-105px)] sm:h-[calc(100dvh-120px)] min-h-0 animate-in fade-in duration-300">
       {/* ─── Mobile iPhone Dynamic Island Header ─── */}
-      <div className="bg-[#14120e] text-white rounded-full px-4 py-2.5 border border-white/20 shadow-xl flex items-center justify-between shrink-0 mb-3">
+      <div className="bg-[#14120e] text-white rounded-full px-4 py-2 border border-white/20 shadow-xl flex items-center justify-between shrink-0 mb-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-linear-to-tr from-[#a43716] via-[#d4eca2] to-[#a43716] p-0.5 flex items-center justify-center shrink-0 animate-pulse">
-            <div className="w-full h-full bg-[#14120e] rounded-full flex items-center justify-center text-sm">
+          <div className="w-7 h-7 rounded-full bg-linear-to-tr from-[#a43716] via-[#d4eca2] to-[#a43716] p-0.5 flex items-center justify-center shrink-0 animate-pulse">
+            <div className="w-full h-full bg-[#14120e] rounded-full flex items-center justify-center text-xs">
               ⚡
             </div>
           </div>
           <div className="truncate">
-            <h2 className="text-sm font-bold text-white truncate">AI Coach Studio</h2>
+            <h2 className="text-xs sm:text-sm font-bold text-white truncate">AI Coach Studio</h2>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#d4eca2] animate-pulse" />
-              <span className="text-xs font-mono text-[#d4eca2]">Dynamic Island Active</span>
+              <span className="text-[10px] sm:text-xs font-mono text-[#d4eca2]">Dynamic Island Active</span>
             </div>
           </div>
         </div>
@@ -54,15 +54,15 @@ export function ChatMobileView({
         <button
           type="button"
           onClick={onOpenImport}
-          className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-mono font-bold active:scale-95 transition-all border border-white/15 flex items-center gap-1 shrink-0"
+          className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-mono font-bold active:scale-95 transition-all border border-white/15 flex items-center gap-1 shrink-0"
         >
           <span>⚡</span>
           <span>Intake</span>
         </button>
       </div>
 
-      {/* ─── Messages Stream (Clearer & Bigger Text) ─── */}
-      <div className="flex-1 overflow-y-auto space-y-3.5 px-1">
+      {/* ─── Messages Stream (min-h-0 enables proper scrolling without pushing input down) ─── */}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-3 px-1 py-1">
         {messages.map((m) => {
           const isUser = m.role === "USER";
 
@@ -131,14 +131,14 @@ export function ChatMobileView({
       </div>
 
       {/* ─── Floating Prompt Chips ─── */}
-      <div className="flex items-center gap-2 overflow-x-auto py-2.5 no-scrollbar shrink-0">
+      <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 no-scrollbar shrink-0">
         {quickPrompts.map((p, idx) => (
           <button
             key={idx}
             type="button"
             onClick={() => onSendPreset(p)}
             disabled={loading}
-            className="px-3.5 py-1.5 rounded-full bg-white border border-[#dfc0b7] text-xs font-semibold text-[#58423c] whitespace-nowrap active:scale-95 shadow-2xs shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded-full bg-white border border-[#dfc0b7] text-[11px] font-semibold text-[#58423c] whitespace-nowrap active:scale-95 shadow-2xs shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {p}
           </button>
@@ -148,7 +148,7 @@ export function ChatMobileView({
       {/* ─── Mobile iPhone Floating Input Pill ─── */}
       <form
         onSubmit={onSendMessage}
-        className="bg-[#14120e]/95 backdrop-blur-2xl text-white rounded-full p-2.5 border border-white/20 shadow-2xl flex items-center gap-2 shrink-0"
+        className="bg-[#14120e]/95 backdrop-blur-2xl text-white rounded-full p-2 border border-white/20 shadow-2xl flex items-center gap-2 shrink-0"
       >
         <input
           type="text"

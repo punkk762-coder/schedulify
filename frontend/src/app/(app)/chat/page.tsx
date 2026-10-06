@@ -176,7 +176,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="w-full text-[#1f1b14] space-y-4">
+    <div className="w-full text-[#1f1b14] space-y-2 lg:space-y-4">
       {intakeBanner && (
         <div className="p-3.5 rounded-2xl bg-[#d4eca2] border border-[#52652a]/40 text-[#141f00] text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2">

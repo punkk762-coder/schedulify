@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useNavigation } from "@/components/navigation/NavigationProvider";
 
 export default function DesktopHeader() {
   const pathname = usePathname();
+  const { toggleSidebar } = useNavigation();
 
   const navItems = [
     { label: "☀️ Today", href: "/today" },
+    { label: "📅 Calendar", href: "/calendar" },
     { label: "📊 Analytics", href: "/analytics" },
     { label: "💬 AI Coach", href: "/chat" },
     { label: "⚙️ Settings", href: "/settings" },
@@ -33,8 +36,19 @@ export default function DesktopHeader() {
           </div>
         </Link>
 
-        {/* Desktop View Switcher Tabs (Never wrap, perfect horizontal pills) */}
-        <nav className="flex items-center gap-1 bg-[#fcf2e6] p-1 rounded-full border border-[#dfc0b7] shrink-0">
+        {/* Desktop View Switcher Tabs & Sidebar Menu Button */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#dfc0b7] bg-white hover:bg-[#fcf2e6] text-xs font-bold text-[#1f1b14] active:scale-95 transition-all shadow-2xs cursor-pointer"
+            title="Open Full Sidebar (All Pages)"
+          >
+            <span className="text-sm">☰</span>
+            <span>Menu</span>
+          </button>
+
+          <nav className="flex items-center gap-1 bg-[#fcf2e6] p-1 rounded-full border border-[#dfc0b7]">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -52,6 +66,7 @@ export default function DesktopHeader() {
             );
           })}
         </nav>
+      </div>
 
         {/* Trailing Status Cluster: Database Live Status + Timezone */}
         <div className="flex items-center gap-2 shrink-0">
