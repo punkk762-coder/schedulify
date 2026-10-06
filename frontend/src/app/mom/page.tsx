@@ -190,14 +190,14 @@ export default function MomKitchenPage() {
 
   if (loading && meals.length === 0) {
     return (
-      <main className="min-h-screen text-[#1f1b14] p-3.5 sm:p-8 max-w-6xl mx-auto">
+      <main className="min-h-screen text-[#1f1b14] px-2.5 py-3 sm:px-6 sm:py-8 max-w-5xl mx-auto">
         <MomDeckSkeleton />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen text-[#1f1b14] p-3.5 sm:p-8 max-w-6xl mx-auto">
+    <main className="min-h-screen text-[#1f1b14] px-2.5 py-3 sm:px-6 sm:py-8 max-w-5xl mx-auto">
       {/* Desktop Clean Executive View (lg+) */}
       <div className="hidden lg:block">
         <MomDesktopView

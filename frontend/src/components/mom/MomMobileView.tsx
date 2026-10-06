@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import type { KitchenMeal } from "@/lib/domain/types";
-import { MomCalendarBar } from "./MomCalendarBar";
+import { MomVerticalCalendar } from "./MomVerticalCalendar";
 
 interface MomMobileViewProps {
   meals: KitchenMeal[];
@@ -46,147 +46,180 @@ export function MomMobileView({
   const progressPct = meals.length > 0 ? Math.round((preparedCount / meals.length) * 100) : 0;
 
   return (
-    <div className="w-full space-y-5 pb-24 animate-in fade-in duration-300">
-      {/* ─── Magnificent Mobile Hearth Header ─── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#52652a] via-[#435322] to-[#2c3814] text-white rounded-3xl p-6 shadow-xl shadow-[#52652a]/20">
-        <div className="absolute top-0 right-0 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-12 -mt-12" />
+    <div className="w-full space-y-4 pb-20 animate-in fade-in duration-300">
+      {/* ─── Mobile Hearth Header Card ─── */}
+      <header className="relative overflow-hidden bg-gradient-to-br from-[#435322] via-[#52652a] to-[#2c3814] text-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-[#52652a]/15">
+        <div className="absolute top-0 right-0 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none -mr-8 -mt-8" />
 
-        <div className="relative z-10 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
+        <div className="relative z-10 space-y-3">
+          {/* Top Row: Brand & Actions */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#d4eca2] animate-pulse" />
-              <span className="text-xs font-mono uppercase tracking-widest text-[#fcf2e6] font-bold">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-[#fcf2e6] font-bold">
                 Household Hearth
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-black text-white">
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Link
+                href="/today"
+                className="px-2.5 py-1.5 rounded-xl bg-white/20 backdrop-blur-xs text-white text-xs font-bold active:scale-95 transition-all border border-white/20 flex items-center gap-1"
+              >
+                <span>Son&apos;s Plan</span>
+                <span>➔</span>
+              </Link>
+              <button
+                type="button"
+                onClick={onLogout}
+                className="px-2.5 py-1.5 rounded-xl bg-[#ffdad6]/20 backdrop-blur-xs text-[#ffdad6] text-xs font-bold active:scale-95 transition-all border border-[#ffdad6]/20"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+
+          {/* Title & Date Headline */}
+          <div>
+            <h1 className="text-xl sm:text-2xl font-serif font-black text-white leading-tight">
               Mom&apos;s Meal Board
             </h1>
-            <p className="text-sm text-[#fcf2e6]/90 font-medium mt-0.5">
+            <p className="text-xs text-[#fcf2e6]/90 font-medium mt-0.5">
               {isToday ? "Today" : isTomorrow ? "Tomorrow" : dateStr ? dateStr.split(",")[0] : "Today"} • Real-Time Recipe Specs
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/today"
-              className="px-3.5 py-2 rounded-2xl bg-white/20 backdrop-blur-xs text-white text-sm font-bold active:scale-95 transition-all border border-white/20"
-            >
-              Today
-            </Link>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="px-3.5 py-2 rounded-2xl bg-[#ffdad6]/25 backdrop-blur-xs text-[#ffdad6] text-sm font-bold active:scale-95 transition-all border border-[#ffdad6]/20"
-            >
-              Logout
-            </button>
+          {/* Prepared Progress Meter */}
+          <div className="pt-2 border-t border-white/20">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-white/90 font-medium">Prepared for Family:</span>
+              <span className="font-mono font-black text-[#d4eca2]">
+                {preparedCount} / {meals.length} Ready ({progressPct}%)
+              </span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-2.5 rounded-full bg-[#d4eca2] transition-all duration-500 shadow-xs"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Prepared Counter Meter */}
-        <div className="mt-5 pt-3.5 border-t border-white/20">
-          <div className="flex items-center justify-between text-sm sm:text-base mb-2">
-            <span className="text-white/90 font-semibold">Prepared for Family:</span>
-            <span className="font-mono font-extrabold text-[#d4eca2]">
-              {preparedCount} / {meals.length} Ready ({progressPct}%)
+      {/* ─── Vertical Calendar (Up There For Mom) ─── */}
+      <section aria-label="Kitchen Calendar">
+        <MomVerticalCalendar
+          dateStr={dateStr}
+          dateKey={dateKey}
+          isToday={isToday}
+          isTomorrow={isTomorrow}
+          isYesterday={isYesterday}
+          onSelectDate={onSelectDate}
+          onPrevDay={onPrevDay}
+          onNextDay={onNextDay}
+          onToday={onToday}
+          onTomorrow={onTomorrow}
+        />
+      </section>
+
+      {/* ─── Meals Cards Stack (Mobile Kitchen Ergonomics) ─── */}
+      <section aria-label="Daily Meal Cards" className="space-y-3.5">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-mono font-black uppercase tracking-wider text-[#58423c] flex items-center gap-1.5">
+            <span>🍲</span>
+            <span>Daily Menu ({meals.length} Meals)</span>
+          </h2>
+          {meals.length > 0 && (
+            <span className="text-xs font-mono font-bold text-[#52652a]">
+              {preparedCount}/{meals.length} Done
             </span>
-          </div>
-          <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-            <div
-              className="h-3 rounded-full bg-[#d4eca2] transition-all duration-700"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* ─── Calendar Navigation Bar ─── */}
-      <MomCalendarBar
-        dateStr={dateStr}
-        dateKey={dateKey}
-        isToday={isToday}
-        isTomorrow={isTomorrow}
-        isYesterday={isYesterday}
-        onSelectDate={onSelectDate}
-        onPrevDay={onPrevDay}
-        onNextDay={onNextDay}
-        onToday={onToday}
-        onTomorrow={onTomorrow}
-      />
-
-      {/* ─── Meals Cards Stack (BIGGER TEXT FOR MOM) ─── */}
-      {meals.length === 0 ? (
-        <div className="bg-white rounded-3xl p-8 sm:p-10 text-center border-2 border-dashed border-[#dfc0b7] shadow-xs space-y-3">
-          <span className="text-4xl block">🍲</span>
-          <h3 className="font-serif font-black text-xl text-[#1f1b14]">
-            No meals scheduled for {isToday ? "today" : isTomorrow ? "tomorrow" : dateStr}
-          </h3>
-          <p className="text-sm text-[#58423c]">
-            Meals scheduled in your family routine will appear here with exact ingredient portions.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {meals.map((meal, index) => {
+        {meals.length === 0 ? (
+          <div className="bg-white rounded-2xl p-6 text-center border-2 border-dashed border-[#dfc0b7] shadow-xs space-y-3">
+            <span className="text-4xl block">🍲</span>
+            <h3 className="font-serif font-black text-lg text-[#1f1b14]">
+              No meals scheduled for {isToday ? "today" : isTomorrow ? "tomorrow" : dateStr || "this date"}
+            </h3>
+            <p className="text-xs text-[#58423c] max-w-xs mx-auto">
+              Meals scheduled in your family routine will appear here with exact ingredient portions.
+            </p>
+            {!isToday && (
+              <button
+                type="button"
+                onClick={onToday}
+                className="mt-2 px-4 py-2 rounded-xl bg-[#52652a] text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+              >
+                Return to Today
+              </button>
+            )}
+          </div>
+        ) : (
+          meals.map((meal, index) => {
             const key = meal.id || String(index);
             const isPrepared = Boolean(preparedMap[key]) || Boolean(meal.isPrepared);
             const isPending = pendingPreparedKey === key;
 
             return (
-              <div
+              <article
                 key={key}
-                className={`rounded-3xl p-6 border-2 transition-all duration-300 shadow-md ${
+                className={`rounded-2xl p-4 border-2 transition-all duration-200 shadow-xs ${
                   isPrepared
                     ? "bg-[#f7faef] border-[#52652a]/50"
                     : "bg-white border-[#dfc0b7]"
                 }`}
               >
-                {/* Header: Time & Meal Type (Larger & clearer) */}
-                <div className="flex items-center justify-between pb-3 border-b border-[#dfc0b7]/70">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-xl sm:text-2xl font-mono font-black text-[#a43716]">
+                {/* Header: Time & Meal Type */}
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#dfc0b7]/60">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-mono font-black text-[#a43716]">
                       {meal.time}
                     </span>
-                    <span className="text-xs sm:text-sm font-black uppercase tracking-wider px-3 py-1 rounded-full bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7]">
+                    <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#fcf2e6] text-[#58423c] border border-[#dfc0b7]">
                       {meal.mealType}
                     </span>
                   </div>
 
-                  {isPrepared && (
-                    <span className="text-xs sm:text-sm font-black px-3 py-1 rounded-full bg-[#d4eca2] text-[#141f00] border border-[#52652a]/30">
-                      ✓ Prepared &amp; Eaten
+                  {isPrepared ? (
+                    <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-[#d4eca2] text-[#141f00] border border-[#52652a]/30">
+                      ✓ Ready
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#fcf2e6] text-[#8b716a]">
+                      Pending
                     </span>
                   )}
                 </div>
 
-                {/* Recipe Title (Much bigger & bolder) */}
+                {/* Recipe Title */}
                 <h3
-                  className={`text-xl sm:text-2xl font-serif font-black text-[#1f1b14] mt-3.5 leading-snug ${
+                  className={`text-lg font-serif font-black text-[#1f1b14] mt-2.5 leading-snug ${
                     isPrepared ? "line-through text-[#8b716a]" : ""
                   }`}
                 >
                   {meal.title}
                 </h3>
 
-                {/* Ingredients checklist (Extra large text for kitchen readability) */}
+                {/* Ingredients checklist (Extra large readable text for kitchen) */}
                 {meal.components && meal.components.length > 0 && (
-                  <div className="mt-4 bg-[#fcf2e6] rounded-2xl p-4 border border-[#dfc0b7] space-y-2.5">
-                    <span className="text-xs sm:text-sm font-black text-[#8b716a] uppercase tracking-wider block font-mono">
+                  <div className="mt-3 bg-[#fcf2e6] rounded-xl p-3 border border-[#dfc0b7] space-y-2">
+                    <span className="text-[10px] font-black text-[#8b716a] uppercase tracking-wider block font-mono">
                       Ingredients &amp; Exact Portions:
                     </span>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {meal.components.map((comp, cIdx) => (
                         <div
                           key={cIdx}
                           className="flex items-center justify-between py-1 border-b border-[#dfc0b7]/30 last:border-0"
                         >
-                          <span className="flex items-center gap-2.5 text-base sm:text-lg font-bold text-[#1f1b14]">
-                            <span className="w-2 h-2 rounded-full bg-[#a43716] shrink-0" />
+                          <span className="flex items-center gap-2 text-sm font-bold text-[#1f1b14]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#a43716] shrink-0" />
                             <span>{comp.name}</span>
                           </span>
                           {(comp.quantity || comp.unit) && (
-                            <span className="font-mono text-[#a43716] font-black bg-white px-3 py-1 rounded-xl border border-[#dfc0b7] text-sm sm:text-base shadow-xs">
+                            <span className="font-mono text-[#a43716] font-black bg-white px-2 py-0.5 rounded-lg border border-[#dfc0b7] text-xs shadow-2xs">
                               {comp.quantity} {comp.unit}
                             </span>
                           )}
@@ -196,39 +229,39 @@ export function MomMobileView({
                   </div>
                 )}
 
-                {/* Giant Tactile Toggle Button with Confirm Popup */}
+                {/* Full-Width Tactile Toggle Button with Confirm Modal */}
                 <button
                   type="button"
                   onClick={() => onOpenConfirmMeal(meal, index)}
                   disabled={isPending}
-                  className={`w-full mt-5 py-4 rounded-2xl font-black text-base sm:text-lg flex items-center justify-center gap-2.5 shadow-md transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
+                  className={`w-full mt-3.5 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed ${
                     isPrepared
-                      ? "bg-[#52652a] text-white hover:bg-[#3f4f20]"
+                      ? "bg-[#52652a] text-white hover:bg-[#435322]"
                       : "bg-[#fcf2e6] text-[#58423c] border-2 border-[#dfc0b7] hover:bg-[#52652a] hover:text-white"
                   }`}
                 >
                   {isPending ? (
                     <>
-                      <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       <span>Updating...</span>
                     </>
                   ) : isPrepared ? (
                     <>
-                      <span className="text-xl">✓</span>
-                      <span>Prepared &amp; Eaten (Tap to Change)</span>
+                      <span className="text-base">✓</span>
+                      <span>Prepared &amp; Ready (Tap to Change)</span>
                     </>
                   ) : (
                     <>
-                      <span className="text-xl">🍲</span>
+                      <span className="text-base">🍲</span>
                       <span>Mark as Prepared ✓</span>
                     </>
                   )}
                 </button>
-              </div>
+              </article>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </section>
     </div>
   );
 }

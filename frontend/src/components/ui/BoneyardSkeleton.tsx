@@ -152,20 +152,41 @@ export function MomDeckSkeleton() {
   return (
     <div className="w-full space-y-6 pb-20 animate-in fade-in duration-300">
       {/* Header Skeleton */}
-      <div className="bg-white rounded-2xl p-6 border border-[#dfc0b7] shadow-xs flex items-center justify-between">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-[#dfc0b7] shadow-xs flex items-center justify-between">
         <div className="space-y-2">
           <Bone className="w-36 h-4 rounded-full" />
-          <Bone className="w-64 h-8 rounded-xl" />
-          <Bone className="w-48 h-3.5 rounded-full" />
+          <Bone className="w-56 h-7 rounded-xl" />
+          <Bone className="w-40 h-3 rounded-full" />
         </div>
-        <div className="flex items-center gap-3">
-          <Bone className="w-32 h-10 rounded-xl" />
-          <Bone className="w-24 h-10 rounded-xl" />
+        <div className="flex items-center gap-2">
+          <Bone className="w-24 h-9 rounded-xl" />
         </div>
       </div>
 
-      {/* 4 Meal Cards Grid Skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Calendar Skeleton */}
+      <div className="bg-white rounded-2xl p-3.5 border border-[#dfc0b7] space-y-2">
+        <div className="flex items-center justify-between pb-2 border-b border-[#dfc0b7]/50">
+          <Bone className="w-32 h-4 rounded-full" />
+          <Bone className="w-20 h-7 rounded-xl" />
+        </div>
+        <div className="space-y-1.5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between p-2.5 rounded-xl border border-[#dfc0b7]/40">
+              <div className="flex items-center gap-2">
+                <Bone className="w-10 h-10 rounded-lg" />
+                <div className="space-y-1">
+                  <Bone className="w-24 h-3.5 rounded-full" />
+                  <Bone className="w-16 h-2.5 rounded-full" />
+                </div>
+              </div>
+              <Bone className="w-14 h-6 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Meal Cards Grid Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
