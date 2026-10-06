@@ -1,5 +1,6 @@
 import { prisma } from "../db";
-import { todayUtc } from "../dates";
+import { todayUtc, dateKeyInTz } from "../dates";
+import { cache } from "../cache";
 import type { KitchenMeal, DailyStats, NutritionValues, MealComponentInfo } from "./types";
 
 /**
@@ -166,39 +167,44 @@ function parseKitchenComponents(
  */
 export const kitchenService = {
   async getMealsForDate(date: Date): Promise<KitchenMeal[]> {
-    const occurrences = await prisma.occurrence.findMany({
-      where: {
-        scheduledDate: date,
-        routineItem: { category: "MEAL" },
-      },
-      include: {
-        routineItem: {
-          include: {
-            meal: { include: { components: { orderBy: { sortOrder: "asc" } } } },
-            nutritionSnapshots: { where: { source: "PLANNED" } },
+    const dateKey = dateKeyInTz(date);
+    const cacheKey = `kitchen_meals:${dateKey}`;
+
+    return cache.wrap(cacheKey, 120, async () => {
+      const occurrences = await prisma.occurrence.findMany({
+        where: {
+          scheduledDate: date,
+          routineItem: { category: "MEAL" },
+        },
+        include: {
+          routineItem: {
+            include: {
+              meal: { include: { components: { orderBy: { sortOrder: "asc" } } } },
+              nutritionSnapshots: { where: { source: "PLANNED" } },
+            },
           },
         },
-      },
-      orderBy: { scheduledTime: "asc" },
-    });
+        orderBy: { scheduledTime: "asc" },
+      });
 
-    return occurrences.map((occ) => ({
-      id: occ.id,
-      time: occ.scheduledTime,
-      mealType: occ.routineItem.meal?.mealType || "OTHER",
-      title: occ.routineItem.title,
-      status: occ.status,
-      isPrepared: occ.status === "COMPLETED",
-      components: parseKitchenComponents(occ.routineItem.meal?.components || [], occ.routineItem.title),
-      nutrition: occ.routineItem.nutritionSnapshots[0]
-        ? {
-            calories: occ.routineItem.nutritionSnapshots[0].calories || undefined,
-            protein: occ.routineItem.nutritionSnapshots[0].protein || undefined,
-            carbs: occ.routineItem.nutritionSnapshots[0].carbs || undefined,
-            fat: occ.routineItem.nutritionSnapshots[0].fat || undefined,
-          }
-        : undefined,
-    }));
+      return occurrences.map((occ) => ({
+        id: occ.id,
+        time: occ.scheduledTime,
+        mealType: occ.routineItem.meal?.mealType || "OTHER",
+        title: occ.routineItem.title,
+        status: occ.status,
+        isPrepared: occ.status === "COMPLETED",
+        components: parseKitchenComponents(occ.routineItem.meal?.components || [], occ.routineItem.title),
+        nutrition: occ.routineItem.nutritionSnapshots[0]
+          ? {
+              calories: occ.routineItem.nutritionSnapshots[0].calories || undefined,
+              protein: occ.routineItem.nutritionSnapshots[0].protein || undefined,
+              carbs: occ.routineItem.nutritionSnapshots[0].carbs || undefined,
+              fat: occ.routineItem.nutritionSnapshots[0].fat || undefined,
+            }
+          : undefined,
+      }));
+    });
   },
 
   async getTodayMeals(): Promise<KitchenMeal[]> {

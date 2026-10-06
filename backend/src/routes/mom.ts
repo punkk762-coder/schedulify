@@ -1,8 +1,9 @@
 import { Router, type Request, type Response } from "express";
 import { kitchenService, occurrenceService } from "../domain";
-import { todayUtc, formatInTz, dateStrToUtc, addDays, subDays } from "../dates";
+import { todayUtc, formatInTz, dateStrToUtc, dateKeyInTz, addDays, subDays } from "../dates";
 import { requireMomMiddleware } from "../auth";
 import { prisma } from "../db";
+import { cache } from "../cache";
 
 const router = Router();
 
@@ -15,24 +16,41 @@ router.get("/mom/kitchen", requireMomMiddleware, async (req: Request, res: Respo
       targetDate = dateStrToUtc(rawDateQuery);
     }
 
-    // Generate occurrences if not present for the target date
+    const today = todayUtc();
+    const todayKey = dateKeyInTz(today);
+    const targetKey = dateKeyInTz(targetDate);
+    const cacheKey = `mom_kitchen_payload:${targetKey}`;
+
+    // HTTP performance headers: client cache with background revalidation
+    res.setHeader("Cache-Control", "private, max-age=5, stale-while-revalidate=30");
+
+    // Fast path: serve cached payload in <1ms
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      res.json(cached);
+      return;
+    }
+
+    // Ensure occurrences generated for target date
     await occurrenceService.generateForRange(targetDate, targetDate);
     const meals = await kitchenService.getMealsForDate(targetDate);
 
-    const today = todayUtc();
-    const todayKey = formatInTz(today, "yyyy-MM-dd");
-    const targetKey = formatInTz(targetDate, "yyyy-MM-dd");
-    const tomorrowKey = formatInTz(addDays(today, 1), "yyyy-MM-dd");
-    const yesterdayKey = formatInTz(subDays(today, 1), "yyyy-MM-dd");
+    const tomorrowKey = dateKeyInTz(addDays(today, 1));
+    const yesterdayKey = dateKeyInTz(subDays(today, 1));
 
-    res.json({
+    const payload = {
       date: formatInTz(targetDate, "EEEE, MMMM d, yyyy"),
       dateKey: targetKey,
       isToday: targetKey === todayKey,
       isTomorrow: targetKey === tomorrowKey,
       isYesterday: targetKey === yesterdayKey,
       meals,
-    });
+    };
+
+    // Store in-memory cache for 60 seconds
+    await cache.set(cacheKey, payload, 60);
+
+    res.json(payload);
   } catch (err) {
     console.error("GET /api/mom/kitchen error:", err);
     res.status(500).json({ error: "Failed to fetch kitchen meals" });
@@ -50,6 +68,7 @@ router.post("/mom/kitchen/toggle", requireMomMiddleware, async (req: Request, re
 
     const occurrence = await prisma.occurrence.findUnique({
       where: { id: occurrenceId },
+      select: { id: true, status: true, scheduledDate: true },
     });
 
     if (!occurrence) {
@@ -77,6 +96,7 @@ router.post("/mom/kitchen/:id/toggle", requireMomMiddleware, async (req: Request
     const occurrenceId = req.params.id;
     const occurrence = await prisma.occurrence.findUnique({
       where: { id: occurrenceId },
+      select: { id: true, status: true, scheduledDate: true },
     });
 
     if (!occurrence) {

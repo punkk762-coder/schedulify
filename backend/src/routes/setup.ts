@@ -390,11 +390,15 @@ router.post("/setup/complete", requireUserMiddleware, async (req: Request, res: 
     });
 
     // Invalidate caches
+    await cache.del("setting:current_phase");
+    await cache.del(`goal:${currentMonthKey}`);
     await cache.invalidatePattern("today_payload:");
     await cache.invalidatePattern("occurrences:");
     await cache.invalidatePattern("gen_range:");
     await cache.invalidatePattern("analytics:");
     await cache.invalidatePattern("calendar:");
+    await cache.invalidatePattern("mom_kitchen_payload:");
+    await cache.invalidatePattern("kitchen_meals:");
 
     res.json({
       success: true,

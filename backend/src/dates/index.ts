@@ -47,6 +47,13 @@ export function formatInTz(date: Date, fmt: string, tz: string = DEFAULT_TZ): st
 }
 
 /**
+ * Get YYYY-MM-DD date key in app timezone.
+ */
+export function dateKeyInTz(date: Date, tz: string = DEFAULT_TZ): string {
+  return formatInTz(date, "yyyy-MM-dd", tz);
+}
+
+/**
  * Parse HH:mm time string to { hours, minutes }.
  */
 export function parseTime(time: string): { hours: number; minutes: number } {

@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { occurrenceService, analyticsService, type TodayOccurrence } from "../domain";
-import { todayUtc, formatInTz } from "../dates";
+import { todayUtc, formatInTz, dateKeyInTz } from "../dates";
 import { requireUserMiddleware } from "../auth";
 import { cache } from "../cache";
 import { prisma } from "../db";
@@ -11,11 +11,11 @@ const router = Router();
 router.get("/today", requireUserMiddleware, async (_req: Request, res: Response): Promise<void> => {
   try {
     const today = todayUtc();
-    const dateKey = today.toISOString().split("T")[0];
+    const dateKey = dateKeyInTz(today);
     const cacheKey = `today_payload:${dateKey}`;
 
     // Set HTTP performance headers: connection keep-alive & stale-while-revalidate
-    res.setHeader("Cache-Control", "private, max-age=5, stale-while-revalidate=15");
+    res.setHeader("Cache-Control", "private, max-age=5, stale-while-revalidate=30");
 
     // Fast path: serve cached payload if fresh (<1ms latency)
     const cachedPayload = await cache.get(cacheKey);
@@ -91,15 +91,21 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
         where: { date: today },
         orderBy: { createdAt: "desc" },
       }),
-      prisma.monthlyGoal.findUnique({
-        where: { month: monthKey },
-      }),
-      prisma.systemSetting.findUnique({
-        where: { key: "current_phase" },
-      }),
-      prisma.systemSetting.findUnique({
-        where: { key: "last_weight" },
-      }),
+      cache.wrap(`goal:${monthKey}`, 120, () =>
+        prisma.monthlyGoal.findUnique({
+          where: { month: monthKey },
+        })
+      ),
+      cache.wrap("setting:current_phase", 120, () =>
+        prisma.systemSetting.findUnique({
+          where: { key: "current_phase" },
+        })
+      ),
+      cache.wrap("setting:last_weight", 120, () =>
+        prisma.systemSetting.findUnique({
+          where: { key: "last_weight" },
+        })
+      ),
     ]);
 
     // Extract off-plan / different meals logged for today
@@ -288,8 +294,8 @@ router.get("/today", requireUserMiddleware, async (_req: Request, res: Response)
           },
     };
 
-    // Cache payload for 30s (invalidated automatically on complete/skip/replace/plan import)
-    await cache.set(cacheKey, payload, 30);
+    // Cache payload for 60s (invalidated automatically on complete/skip/replace/plan import)
+    await cache.set(cacheKey, payload, 60);
 
     res.json(payload);
   } catch (err) {
@@ -804,8 +810,10 @@ router.post(["/phase", "/today/phase"], requireUserMiddleware, async (req: Reque
     });
 
     // Invalidate caches so UI sees new phase immediately
-    const dateKey = today.toISOString().split("T")[0];
+    const dateKey = dateKeyInTz(today);
     await cache.del(`today_payload:${dateKey}`);
+    await cache.del("setting:current_phase");
+    await cache.del(`goal:${monthKey}`);
     await cache.invalidatePattern("today_payload:");
     await cache.invalidatePattern("analytics:");
 
@@ -984,6 +992,8 @@ router.post(["/today/weight", "/weight"], requireUserMiddleware, async (req: Req
     });
 
     await cache.del(`today_payload:${dateKey}`);
+    await cache.del("setting:last_weight");
+    await cache.del(`goal:${monthKey}`);
     await cache.invalidatePattern("today_payload:");
     await cache.invalidatePattern("analytics:");
 

@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { todayUtc, matchesRecurrence, addDays } from "../dates";
+import { todayUtc, matchesRecurrence, addDays, dateKeyInTz } from "../dates";
 import { cache } from "../cache";
 
 /**
@@ -8,15 +8,15 @@ import { cache } from "../cache";
  */
 export const occurrenceService = {
   /**
-   * Get all occurrences for a specific date (cached with 30s TTL).
+   * Get all occurrences for a specific date (cached with 60s TTL).
    */
   async getForDate(date: Date) {
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = dateKeyInTz(date);
     const cacheKey = `occurrences:${dateKey}`;
 
-    const isHistoricalPast = dateKey < todayUtc().toISOString().split("T")[0];
+    const isHistoricalPast = dateKey < dateKeyInTz(todayUtc());
 
-    return cache.wrap(cacheKey, 30, async () => {
+    return cache.wrap(cacheKey, 60, async () => {
       return prisma.occurrence.findMany({
         where: {
           scheduledDate: date,
@@ -67,140 +67,134 @@ export const occurrenceService = {
    * Invalidate occurrence caches for date
    */
   async invalidateDateCache(date: Date) {
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = dateKeyInTz(date);
     await cache.del(`occurrences:${dateKey}`);
     await cache.del(`today_payload:${dateKey}`);
+    await cache.del(`mom_kitchen_payload:${dateKey}`);
+    await cache.del(`kitchen_meals:${dateKey}`);
     await cache.invalidatePattern("analytics:");
   },
 
   /**
-   * Complete an occurrence.
+   * Complete an occurrence (single-roundtrip batch).
    */
   async complete(occurrenceId: string, notes?: string) {
-    const result = await prisma.$transaction(async (tx) => {
-      const occurrence = await tx.occurrence.findUniqueOrThrow({
-        where: { id: occurrenceId },
-      });
+    const occurrence = await prisma.occurrence.findUniqueOrThrow({
+      where: { id: occurrenceId },
+      select: { id: true, status: true, scheduledDate: true },
+    });
 
-      // Don't allow re-completing
-      if (occurrence.status !== "PENDING") {
-        throw new Error(`Occurrence ${occurrenceId} is already ${occurrence.status}`);
-      }
+    if (occurrence.status !== "PENDING") {
+      throw new Error(`Occurrence ${occurrenceId} is already ${occurrence.status}`);
+    }
 
-      await tx.occurrence.update({
+    const [, comp] = await prisma.$transaction([
+      prisma.occurrence.update({
         where: { id: occurrenceId },
         data: { status: "COMPLETED" },
-      });
-
-      const comp = await tx.completion.create({
+      }),
+      prisma.completion.create({
         data: {
           occurrenceId,
           status: "COMPLETED",
           notes,
         },
-      });
+      }),
+    ]);
 
-      return { comp, scheduledDate: occurrence.scheduledDate };
-    });
-
-    await this.invalidateDateCache(result.scheduledDate);
-    return result.comp;
+    await this.invalidateDateCache(occurrence.scheduledDate);
+    return comp;
   },
 
   /**
-   * Skip an occurrence.
+   * Skip an occurrence (single-roundtrip batch).
    */
   async skip(occurrenceId: string, notes?: string) {
-    const result = await prisma.$transaction(async (tx) => {
-      const occurrence = await tx.occurrence.findUniqueOrThrow({
-        where: { id: occurrenceId },
-      });
+    const occurrence = await prisma.occurrence.findUniqueOrThrow({
+      where: { id: occurrenceId },
+      select: { id: true, status: true, scheduledDate: true },
+    });
 
-      if (occurrence.status !== "PENDING") {
-        throw new Error(`Occurrence ${occurrenceId} is already ${occurrence.status}`);
-      }
+    if (occurrence.status !== "PENDING") {
+      throw new Error(`Occurrence ${occurrenceId} is already ${occurrence.status}`);
+    }
 
-      await tx.occurrence.update({
+    const [, comp] = await prisma.$transaction([
+      prisma.occurrence.update({
         where: { id: occurrenceId },
         data: { status: "SKIPPED" },
-      });
-
-      const comp = await tx.completion.create({
+      }),
+      prisma.completion.create({
         data: {
           occurrenceId,
           status: "SKIPPED",
           notes,
         },
-      });
+      }),
+    ]);
 
-      return { comp, scheduledDate: occurrence.scheduledDate };
-    });
-
-    await this.invalidateDateCache(result.scheduledDate);
-    return result.comp;
+    await this.invalidateDateCache(occurrence.scheduledDate);
+    return comp;
   },
 
   /**
    * Replace an occurrence with an alternative item.
    */
   async replace(occurrenceId: string, alternativeItemId: string, notes?: string) {
-    const result = await prisma.$transaction(async (tx) => {
-      const occurrence = await tx.occurrence.findUniqueOrThrow({
-        where: { id: occurrenceId },
-      });
+    const occurrence = await prisma.occurrence.findUniqueOrThrow({
+      where: { id: occurrenceId },
+      select: { id: true, status: true, scheduledDate: true },
+    });
 
-      if (occurrence.status !== "PENDING") {
-        throw new Error(`Occurrence ${occurrenceId} is already ${occurrence.status}`);
-      }
+    if (occurrence.status !== "PENDING") {
+      throw new Error(`Occurrence ${occurrenceId} is already ${occurrence.status}`);
+    }
 
-      // Verify the alternative exists
-      await tx.routineItem.findUniqueOrThrow({
-        where: { id: alternativeItemId },
-      });
+    // Verify the alternative exists
+    await prisma.routineItem.findUniqueOrThrow({
+      where: { id: alternativeItemId },
+      select: { id: true },
+    });
 
-      await tx.occurrence.update({
+    const [, comp] = await prisma.$transaction([
+      prisma.occurrence.update({
         where: { id: occurrenceId },
         data: { status: "REPLACED" },
-      });
-
-      const comp = await tx.completion.create({
+      }),
+      prisma.completion.create({
         data: {
           occurrenceId,
           status: "REPLACED",
           actualItemId: alternativeItemId,
           notes,
         },
-      });
+      }),
+    ]);
 
-      return { comp, scheduledDate: occurrence.scheduledDate };
-    });
-
-    await this.invalidateDateCache(result.scheduledDate);
-    return result.comp;
+    await this.invalidateDateCache(occurrence.scheduledDate);
+    return comp;
   },
 
   /**
-   * Undo / restore an occurrence to PENDING.
+   * Undo / restore an occurrence to PENDING (single-roundtrip batch).
    */
   async undo(occurrenceId: string) {
-    const result = await prisma.$transaction(async (tx) => {
-      const occurrence = await tx.occurrence.findUniqueOrThrow({
-        where: { id: occurrenceId },
-      });
-
-      await tx.occurrence.update({
-        where: { id: occurrenceId },
-        data: { status: "PENDING" },
-      });
-
-      await tx.completion.deleteMany({
-        where: { occurrenceId },
-      });
-
-      return { scheduledDate: occurrence.scheduledDate };
+    const occurrence = await prisma.occurrence.findUniqueOrThrow({
+      where: { id: occurrenceId },
+      select: { id: true, scheduledDate: true },
     });
 
-    await this.invalidateDateCache(result.scheduledDate);
+    await prisma.$transaction([
+      prisma.occurrence.update({
+        where: { id: occurrenceId },
+        data: { status: "PENDING" },
+      }),
+      prisma.completion.deleteMany({
+        where: { occurrenceId },
+      }),
+    ]);
+
+    await this.invalidateDateCache(occurrence.scheduledDate);
     return { success: true };
   },
 
@@ -209,11 +203,11 @@ export const occurrenceService = {
    * Single-shot batch query + batch insertion.
    */
   async generateForRange(startDate: Date, endDate: Date) {
-    const startStr = startDate.toISOString().split("T")[0];
-    const endStr = endDate.toISOString().split("T")[0];
+    const startStr = dateKeyInTz(startDate);
+    const endStr = dateKeyInTz(endDate);
     const cacheKey = `gen_range:${startStr}_${endStr}`;
 
-    // Fast check: if generated within last 5 minutes and no schedules changed, skip!
+    // Fast check: if generated within last 1 hour and no schedules changed, skip!
     const alreadyGenerated = await cache.get<boolean>(cacheKey);
     if (alreadyGenerated) {
       return [];
